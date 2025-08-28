@@ -25,6 +25,16 @@ class $modify(EffectGameObject) {
         }
 
         switch (m_objectID) {
+            case 32:
+            case 33: {
+                GhostType type = m_objectID == 32 ? GhostType::Enabled : GhostType::Disabled;
+
+                gameLayer->m_player1->toggleGhostEffect(type);
+                if (gameLayer->m_gameState.m_isDualMode) {
+                    gameLayer->m_player2->toggleGhostEffect(type);
+                }
+                break;
+            }
             case 1818:
             case 1819:
                 toggleBGEffectVisibility(m_objectID == 1818);
