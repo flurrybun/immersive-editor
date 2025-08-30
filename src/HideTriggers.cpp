@@ -76,6 +76,9 @@ class $modify(LevelEditorLayer) {
         bool isToggleBlock = id == 3643;
         if (isToggleBlock) return false;
 
+        bool isKeyframe = id == 3032;
+        if (isKeyframe) return false;
+
         if (type == GameObjectType::Modifier) return false;
         if (type == GameObjectType::EnterEffectObject) return false;
         if (type == GameObjectType::CollisionObject) return false;
@@ -94,10 +97,13 @@ class $modify(LevelEditorLayer) {
         }
 
         CCArray* prevCGT = m_cameraGuideTriggers;
+        CCDictionary* prevKG = m_keyframeGroups;
         m_cameraGuideTriggers = CCArray::create();
+        m_keyframeGroups = CCDictionary::create();
 
         LevelEditorLayer::updateDebugDraw();
 
         m_cameraGuideTriggers = prevCGT;
+        m_keyframeGroups = prevKG;
     }
 };
