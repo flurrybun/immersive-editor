@@ -124,6 +124,8 @@ class $modify(PlayerObject) {
         PlayerObject::ringJump(ring, p1);
         ring->playTriggerEffect();
 
+        if (ring->m_hasNoEffects) return;
+
         CCCircleWave* circleWave = CCCircleWave::create(
             ring->getType() == GameObjectType::RedJumpRing ? 42.f : 35.f,
             5.f, 0.35f, true, true
@@ -416,15 +418,21 @@ class $modify(GameObject) {
 
 class $modify(RingObject) {
     $override
-    void powerOnObject(int p0) {
+    void powerOnObject(int state) {
         // ⏺️ circle wave on hovering over orb
 
-        bool poweredOn = m_isRingPoweredOn;
+        if (!LevelEditorLayer::get()) {
+            RingObject::powerOnObject(state);
+            return;
+        }
 
-        RingObject::powerOnObject(p0);
+        m_poweredOn = true;
+        m_state = state;
 
-        if (poweredOn || !m_editorEnabled || GameManager::get()->m_performanceMode) return;
-        if (m_objectID == 3643) return; // touch toggle block
+        if (!m_isRingPoweredOn) return;
+        m_isRingPoweredOn = true;
+
+        if (m_hasNoEffects || GameManager::get()->m_performanceMode) return;
 
         CCCircleWave* circleWave = CCCircleWave::create(5.f, 55.f, 0.25f, false, true);
 
