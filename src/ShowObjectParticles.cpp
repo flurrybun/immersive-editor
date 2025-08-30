@@ -144,6 +144,8 @@ class $modify(GameObject) {
 class $modify(LevelEditorLayer) {
     $override
     void updateVisibility(float dt) {
+        // ⏺️ update particle visibility based on 'no particles' setting
+
         LevelEditorLayer::updateVisibility(dt);
 
         for (const auto& object : m_activeObjects) {
