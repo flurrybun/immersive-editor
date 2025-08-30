@@ -70,8 +70,10 @@ class $modify(LevelEditorLayer) {
         bool isSpeedPortal = (id >= 200 && id <= 203) || id == 1334;
         if (isSpeedPortal) return true;
 
+        // particle icons handled in BetterParticleIcons.cpp
+
         bool isParticle = id == 1586 || id == 1700 || id == 2065;
-        if (isParticle) return false;
+        if (isParticle) return true;
 
         bool isToggleBlock = id == 3643;
         if (isToggleBlock) return false;
