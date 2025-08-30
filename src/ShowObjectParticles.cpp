@@ -1,5 +1,6 @@
 #include <Geode/modify/EnhancedGameObject.hpp>
 #include <Geode/modify/GameObject.hpp>
+#include <Geode/modify/LevelEditorLayer.hpp>
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
@@ -14,8 +15,13 @@ class $modify(EnhancedGameObject) {
             return;
         }
 
+        bool prevHNP = m_hasNoParticles;
+        m_hasNoParticles = false;
         m_editorEnabled = false;
+
         EnhancedGameObject::customSetup();
+
+        m_hasNoParticles = prevHNP;
         m_editorEnabled = true;
     }
 
@@ -87,15 +93,20 @@ class $modify(GameObject) {
     void customSetup() {
         // ⏺️ particles for 2.1 particle objects
 
-        bool isParticle = m_objectID == 1586 || m_objectID == 1700;
+        bool is21Particle = m_objectID == 1586 || m_objectID == 1700;
 
-        if (!LevelEditorLayer::get() || !isParticle) {
+        if (!LevelEditorLayer::get() || !is21Particle) {
             GameObject::customSetup();
             return;
         }
 
+        bool prevHNP = m_hasNoParticles;
+        m_hasNoParticles = false;
         m_editorEnabled = false;
+
         GameObject::customSetup();
+
+        m_hasNoParticles = prevHNP;
         m_editorEnabled = true;
     }
 
@@ -127,5 +138,18 @@ class $modify(GameObject) {
 
         GameManager::get()->m_playLayer = nullptr;
         return ret;
+    }
+};
+
+class $modify(LevelEditorLayer) {
+    $override
+    void updateVisibility(float dt) {
+        LevelEditorLayer::updateVisibility(dt);
+
+        for (const auto& object : m_activeObjects) {
+            if (!object->m_particle || object->m_objectID == 2065) continue;
+
+            object->m_particle->setVisible(!object->m_hasNoParticles);
+        }
     }
 };
