@@ -123,8 +123,10 @@ class $modify(LevelEditorLayer) {
     ) {
         if (!object->m_isFadingBlock || !m_previewMode) return;
 
+        float layerOpacity = ie::isObjectLayerVisible(object, this) ? 1.f : 0.2f;
+
         if (object->m_isSelected) {
-            object->setOpacity(255);
+            object->setOpacity(layerOpacity * 255.f);
             return;
         }
 
@@ -138,8 +140,6 @@ class $modify(LevelEditorLayer) {
             leftFadeWidth /= zoom * 2.f;
             rightFadeWidth /= zoom * 2.f;
         }
-
-        float layerOpacity = ie::isObjectLayerVisible(object, this) ? 1.f : 0.2f;
 
         // i have to decomp PlayLayer::updateInvisibleBlock because it's inlined in android64 of all platforms 😭
         // tested it and this decomp is like 99.999% accurate
