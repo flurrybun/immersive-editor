@@ -182,7 +182,10 @@ class $modify(LevelEditorLayer) {
             float glowFade = (ratio * 0.85f + 0.15f) * 255.f;
             glowFade = std::min(cameraFade, glowFade);
 
-            object->m_glowSprite->setOpacity(glowFade * object->m_opacityMod * layerOpacity);
+            GLubyte opacity = glowFade * object->m_opacityMod * layerOpacity;
+
+            object->m_glowSprite->setOpacity(opacity);
+            object->m_glowSprite->setChildOpacity(opacity);
         }
 
         float opacity = object->getOpacity() / 255.f;
