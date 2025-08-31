@@ -10,5 +10,8 @@
     "name": "Immersive Editor",
     "version": "v1.0.0",
     "developer": "NinKaz",
-    "description": ""
+    "description": "",
+    "dependencies": {
+        "alphalaneous.good_grid": ">=v1.1.0"
+    }
 }
