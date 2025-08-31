@@ -1,5 +1,6 @@
 #include <Geode/modify/GameObject.hpp>
 #include <Geode/modify/LevelEditorLayer.hpp>
+#include "misc/Utils.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
@@ -127,6 +128,8 @@ class $modify(LevelEditorLayer) {
             return;
         }
 
+        float layerOpacity = ie::isObjectLayerVisible(object, this) ? 1.f : 0.2f;
+
         // i have to decomp PlayLayer::updateInvisibleBlock because it's inlined in android64 of all platforms 😭
         // tested it and this decomp is like 99.999% accurate
 
@@ -171,7 +174,7 @@ class $modify(LevelEditorLayer) {
 
         // set final opacity based on both fades:
 
-        object->setOpacity(std::min(cameraFade, playerFade));
+        object->setOpacity(std::min(cameraFade, playerFade) * layerOpacity);
 
         // set glow opacity and color:
 
@@ -179,7 +182,7 @@ class $modify(LevelEditorLayer) {
             float glowFade = (ratio * 0.85f + 0.15f) * 255.f;
             glowFade = std::min(cameraFade, glowFade);
 
-            object->m_glowSprite->setOpacity(glowFade * object->m_opacityMod);
+            object->m_glowSprite->setOpacity(glowFade * object->m_opacityMod * layerOpacity);
         }
 
         float opacity = object->getOpacity() / 255.f;
