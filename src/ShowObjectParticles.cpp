@@ -44,6 +44,7 @@ class $modify(EnhancedGameObject) {
             case 1751:
             case 3004:
             case 3005:
+            case 3027:
 
             // gamemode portals
 
