@@ -128,6 +128,17 @@ class $modify(LevelEditorLayer) {
             return;
         }
 
+        bool isPlaying = m_playbackMode == PlaybackMode::Playing;
+
+        if (!isPlaying) {
+            float zoom = m_objectLayer->getScale();
+
+            rightFadeBound /= zoom;
+            leftFadeBound /= zoom;
+            leftFadeWidth /= zoom * 2.f;
+            rightFadeWidth /= zoom * 2.f;
+        }
+
         float layerOpacity = ie::isObjectLayerVisible(object, this) ? 1.f : 0.2f;
 
         // i have to decomp PlayLayer::updateInvisibleBlock because it's inlined in android64 of all platforms 😭
@@ -169,8 +180,11 @@ class $modify(LevelEditorLayer) {
 
         if (divisor <= 1.f) divisor = 1.f;
 
+        // normally fixed as 0.05
+        float minOpacity = isPlaying ? 0.05f : 0.5f;
+
         float ratio = std::clamp(distance / divisor, 0.f, 1.f);
-        float playerFade = (ratio * 0.95f + 0.05f) * 255.f;
+        float playerFade = (ratio * (1.f - minOpacity) + minOpacity) * 255.f;
 
         // set final opacity based on both fades:
 
