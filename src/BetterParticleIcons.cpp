@@ -1,4 +1,5 @@
 #include <Geode/modify/LevelEditorLayer.hpp>
+#include "misc/Utils.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
@@ -15,7 +16,7 @@ class $modify(LevelEditorLayer) {
             unsigned char opacity = 0;
 
             if (m_playbackMode != PlaybackMode::Playing && !m_hideParticleIcons) {
-                opacity = isObjectLayerVisible(object) ? 50 : 8;
+                opacity = ie::isObjectLayerVisible(object, this) ? 50 : 8;
             }
 
             if (object->m_objectID == 1586 || object->m_objectID == 1700) {
@@ -38,12 +39,5 @@ class $modify(LevelEditorLayer) {
                 }
             }
         }
-    }
-
-    bool isObjectLayerVisible(GameObject* object) {
-        if (m_currentLayer == -1 || m_playbackMode == PlaybackMode::Playing) return true;
-
-        if (object->m_editorLayer2 != 0 && object->m_editorLayer2 == m_currentLayer) return true;
-        return object->m_editorLayer == m_currentLayer;
     }
 };
