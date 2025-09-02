@@ -123,6 +123,9 @@ class $modify(LevelEditorLayer) {
     ) {
         if (!object->m_isFadingBlock || !m_previewMode) return;
 
+        std::string style = Mod::get()->getSettingValue<std::string>("invisible-block-style");
+        bool isInGame = m_playbackMode == PlaybackMode::Playing || style == "In-Game";
+
         float layerOpacity = ie::isObjectLayerVisible(object, this) ? 1.f : 0.2f;
 
         if (object->m_isSelected) {
@@ -130,9 +133,13 @@ class $modify(LevelEditorLayer) {
             return;
         }
 
-        bool isPlaying = m_playbackMode == PlaybackMode::Playing;
+        if (style == "No Fade") {
+            object->setOpacity(layerOpacity * 255.f);
+            object->setGlowColor(getMixedColor(lbgColor, m_lighterBGColor, 0.9f));
+            return;
+        }
 
-        if (!isPlaying) {
+        if (m_playbackMode != PlaybackMode::Playing) {
             float zoom = m_objectLayer->getScale();
 
             rightFadeBound /= zoom;
@@ -180,8 +187,8 @@ class $modify(LevelEditorLayer) {
 
         if (divisor <= 1.f) divisor = 1.f;
 
-        // normally fixed as 0.05
-        float minOpacity = isPlaying ? 0.05f : 0.5f;
+        // normally fixed at 0.05
+        float minOpacity = isInGame ? 0.05f : 0.3f;
 
         float ratio = std::clamp(distance / divisor, 0.f, 1.f);
         float playerFade = (ratio * (1.f - minOpacity) + minOpacity) * 255.f;
@@ -193,7 +200,10 @@ class $modify(LevelEditorLayer) {
         // set glow opacity and color:
 
         if (object->m_glowSprite) {
-            float glowFade = (ratio * 0.85f + 0.15f) * 255.f;
+            // normally fixed at 0.15
+            float minOpacity = isInGame ? 0.15f : 0.25f;
+
+            float glowFade = (ratio * (1.f - minOpacity) + minOpacity) * 255.f;
             glowFade = std::min(cameraFade, glowFade);
 
             GLubyte opacity = glowFade * object->m_opacityMod * layerOpacity;

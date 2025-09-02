@@ -13,5 +13,14 @@
     "description": "",
     "dependencies": {
         "alphalaneous.good_grid": ">=v1.1.0"
+    },
+    "settings": {
+        "invisible-block-style": {
+            "name": "Invisible Block Style",
+            "description": "Determines how invisible blocks are shown when not playtesting.\n- Balanced: Minimum opacity of 30% and more visible at the edges of the screen\n- In-Game: Same as in-game\n- No Fade: Always fully visible",
+            "type": "string",
+            "default": "Balanced",
+            "one-of": ["Balanced", "In-Game", "No Fade"]
+        }
     }
 }
