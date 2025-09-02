@@ -39,14 +39,14 @@ class $modify(GameObject) {
     void selectObject(ccColor3B color) {
         // temporarily unset variables which would prevent glow from being colored
 
-        bool prevGULBG = m_glowUsesLighterBG;
+        bool prevGCILBG = m_glowColorIsLBG;
         bool prevCCG = m_cantColorGlow;
-        m_glowUsesLighterBG = false;
+        m_glowColorIsLBG = false;
         m_cantColorGlow = false;
 
         GameObject::selectObject(color);
 
-        m_glowUsesLighterBG = prevGULBG;
+        m_glowColorIsLBG = prevGCILBG;
         m_cantColorGlow = prevCCG;
     }
 };
@@ -93,7 +93,7 @@ class $modify(LevelEditorLayer) {
 
         // id 143 is for breakable blocks, which are a special case
         if (object->m_objectID != 143 &&
-            !object->m_glowUsesLighterBG &&
+            !object->m_glowColorIsLBG &&
             !specialGlowColor.has_value()
         ) return;
 
@@ -101,12 +101,12 @@ class $modify(LevelEditorLayer) {
 
         if (specialGlowColor.has_value()) {
             glowColor = specialGlowColor.value();
-        } else if (object->m_glowCopiesLBG) {
+        } else if (object->m_glowColorIsLBG) {
             if (ColorActionSprite* lbgAction = m_effectManager->m_colorActionSpriteVector[1007]) {
                 glowColor = lbgAction->m_color;
             }
         } else {
-            glowColor = m_lighterBGColor;
+            glowColor = m_lightBGColor;
         }
 
         bool prevCCG = object->m_cantColorGlow;
@@ -121,7 +121,7 @@ class $modify(LevelEditorLayer) {
         GameObject* object, float rightFadeBound, float leftFadeBound,
         float leftFadeWidth, float rightFadeWidth, const ccColor3B& lbgColor
     ) {
-        if (!object->m_isFadingBlock || !m_previewMode) return;
+        if (!object->m_isInvisibleBlock || !m_previewMode) return;
 
         std::string style = Mod::get()->getSettingValue<std::string>("invisible-block-style");
         bool isInGame = m_playbackMode == PlaybackMode::Playing || style == "In-Game";
@@ -135,7 +135,7 @@ class $modify(LevelEditorLayer) {
 
         if (style == "No Fade") {
             object->setOpacity(layerOpacity * 255.f);
-            object->setGlowColor(getMixedColor(lbgColor, m_lighterBGColor, 0.9f));
+            object->setGlowColor(getMixedColor(lbgColor, m_lightBGColor, 0.9f));
             return;
         }
 
@@ -216,9 +216,9 @@ class $modify(LevelEditorLayer) {
 
         if (opacity > 0.8f) {
             float ratio = (1.0f - (opacity - 0.8f) / 0.2f) * 0.3f + 0.7f;
-            object->setGlowColor(getMixedColor(lbgColor, m_lighterBGColor, ratio));
+            object->setGlowColor(getMixedColor(lbgColor, m_lightBGColor, ratio));
         } else {
-            object->setGlowColor(m_lighterBGColor);
+            object->setGlowColor(m_lightBGColor);
         }
     }
 
@@ -250,7 +250,7 @@ class $modify(LevelEditorLayer) {
                 return ccc3(255, 100, 100);
             case 1330: // black orb
             case 1594: // toggle orb
-                return m_lighterBGColor;
+                return m_lightBGColor;
             case 1022: // green orb
             case 1704: // green dash orb
                 return ccc3(25, 255, 25);

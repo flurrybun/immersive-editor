@@ -11,7 +11,7 @@ class $modify(GameObject) {
         GameObject::customSetup();
 
         if (m_isTrigger) {
-            m_activateInEditor = true;
+            m_activateTriggerInEditor = true;
         }
     }
 };
