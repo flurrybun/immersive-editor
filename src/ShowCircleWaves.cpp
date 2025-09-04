@@ -397,6 +397,7 @@ class $modify(GameObject) {
         shine->setScaleX(getScaleX());
         shine->setScaleY(getScaleY());
 
+        shine->setOpacity(0);
         shine->setBlendFunc({ GL_SRC_ALPHA, GL_ONE });
         shine->followSprite(this);
 
