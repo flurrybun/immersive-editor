@@ -1,5 +1,6 @@
 #include <Geode/modify/PlayerObject.hpp>
 #include <Geode/modify/GJBaseGameLayer.hpp>
+#include <Geode/modify/LevelEditorLayer.hpp>
 #include <Geode/modify/GameObject.hpp>
 #include <Geode/modify/RingObject.hpp>
 
@@ -265,6 +266,25 @@ class $modify(PlayerObject) {
         }
     }
 
+    $override
+    void spawnCircle() {
+        // ⏺️ circle wave on respawning
+
+        if (!LevelEditorLayer::get()) {
+            PlayerObject::spawnCircle();
+            return;
+        }
+
+        if (GameManager::get()->m_performanceMode) return;
+
+        CCCircleWave* circleWave = CCCircleWave::create(70.f, 2.f, 0.3f, true, true);
+
+        circleWave->m_circleMode = CircleMode::Outline;
+        circleWave->m_color = m_playerColor1;
+        circleWave->followObject(this, true);
+        m_parentLayer->addChild(circleWave);
+    }
+
     ccColor3B getCircleWaveColor(GameObject* object) {
         switch (object->m_objectID) {
             case 36: // yellow orb
@@ -326,6 +346,19 @@ class $modify(GJBaseGameLayer) {
         m_isEditor = false;
         GJBaseGameLayer::checkRepellPlayer();
         m_isEditor = LevelEditorLayer::get();
+    }
+};
+
+class $modify(LevelEditorLayer) {
+    $override
+    void onPlaytest() {
+        // ⏺️ show respawn effect on playtesting from start position
+
+        LevelEditorLayer::onPlaytest();
+        if (!m_startPosObject) return;
+
+        m_player1->playSpawnEffect();
+        if (m_gameState.m_isDualMode) m_player2->playSpawnEffect();
     }
 };
 
