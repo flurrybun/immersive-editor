@@ -92,6 +92,8 @@ class $modify(LevelEditorLayer) {
     $override
     void updateDebugDraw() {
         // ⏺️ hide guide trigger lines when playtesting
+        // ⏺️ hide keyframe lines when playtesting
+        // ⏺️ hide trigger boxes when playtesting
 
         if (m_playbackMode != PlaybackMode::Playing) {
             LevelEditorLayer::updateDebugDraw();
@@ -99,13 +101,18 @@ class $modify(LevelEditorLayer) {
         }
 
         CCArray* prevCGT = m_cameraGuideTriggers;
-        CCDictionary* prevKG = m_keyframeGroups;
         m_cameraGuideTriggers = CCArray::create();
+
+        CCDictionary* prevKG = m_keyframeGroups;
         m_keyframeGroups = CCDictionary::create();
+
+        bool prevDTB = m_drawTriggerBoxes;
+        m_drawTriggerBoxes = false;
 
         LevelEditorLayer::updateDebugDraw();
 
         m_cameraGuideTriggers = prevCGT;
         m_keyframeGroups = prevKG;
+        m_drawTriggerBoxes = prevDTB;
     }
 };
