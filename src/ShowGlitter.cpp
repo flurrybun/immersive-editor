@@ -36,8 +36,6 @@ class $modify(SGLevelEditorLayer, LevelEditorLayer) {
 
     $override
     void toggleGlitter(bool visible) {
-        log::info("toggleGlitter {}", visible);
-
         if (GameManager::get()->m_performanceMode) return;
 
         m_fields->glitterVisible = visible;
