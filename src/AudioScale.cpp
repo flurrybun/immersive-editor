@@ -125,7 +125,7 @@ class $modify(LevelEditorLayer) {
         if (m_player2) m_player2->m_audioScale = audioScale;
 
         for (const auto& object : CCArrayExt<GameObject*>(m_objects)) {
-            if (!object->m_isAudioScale || object->m_hasNoAudioScale) continue;
+            if (!object->m_usesAudioScale || object->m_hasNoAudioScale) continue;
 
             // orbs have their own audio scale logic in RingObject::setRScale, which only runs when
             // m_editorEnabled is false? otherwise it's the same as GameObject::setRScale. weird
