@@ -1,4 +1,5 @@
 #include <Geode/modify/PlayerObject.hpp>
+#include <Geode/modify/LevelEditorLayer.hpp>
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
@@ -105,5 +106,20 @@ class $modify(PlayerObject) {
         if (LevelEditorLayer::get()) {
             m_waveTrail->setColor(m_switchWaveTrailColor ? m_playerColor2 : m_playerColor1);
         }
+    }
+};
+
+class $modify(LevelEditorLayer) {
+    $override
+    bool init(GJGameLevel* p0, bool p1) {
+        // ⏺️ wave trail drag fix mod compatibility
+
+        if (!LevelEditorLayer::init(p0, p1)) return false;
+
+        if (auto mod = Loader::get()->getLoadedMod("nytelyte.wave_trail_drag_fix")) {
+            mod->setSavedValue("show-in-editor", true);
+        }
+
+        return true;
     }
 };
