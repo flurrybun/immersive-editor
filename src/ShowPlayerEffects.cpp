@@ -20,6 +20,22 @@ class $modify(PlayerObject) {
     }
 
     $override
+    void flipGravity(bool p0, bool p1) {
+        // ⏺️ show hard streak when entering gravity portal
+
+        if (!LevelEditorLayer::get()) {
+            PlayerObject::flipGravity(p0, p1);
+            return;
+        }
+
+        GameManager::get()->m_playLayer = reinterpret_cast<PlayLayer*>(GJBaseGameLayer::get());
+
+        PlayerObject::flipGravity(p0, p1);
+
+        GameManager::get()->m_playLayer = nullptr;
+    }
+
+    $override
     void updateTimeMod(float p0, bool p1) {
         // ⏺️ speed particles
 
