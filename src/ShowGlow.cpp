@@ -93,7 +93,7 @@ class $modify(LevelEditorLayer) {
 
         // id 143 is for breakable blocks, which are a special case
         if (object->m_objectID != 143 &&
-            !object->m_glowColorIsLBG &&
+            !object->m_customGlowColor &&
             !specialGlowColor.has_value()
         ) return;
 
