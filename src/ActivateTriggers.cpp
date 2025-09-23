@@ -1,5 +1,7 @@
 #include <Geode/modify/GameObject.hpp>
 #include <Geode/modify/EffectGameObject.hpp>
+#include <Geode/modify/LevelEditorLayer.hpp>
+#include <Geode/utils/VMTHookManager.hpp>
 #include "ShowGlitter.hpp"
 
 #include <Geode/Geode.hpp>
@@ -8,6 +10,8 @@ using namespace geode::prelude;
 class $modify(GameObject) {
     $override
     void customSetup() {
+        // ⏺️ prevent some triggers not activating in editor
+
         GameObject::customSetup();
 
         if (m_isTrigger) {
@@ -19,6 +23,9 @@ class $modify(GameObject) {
 class $modify(EffectGameObject) {
     $override
     void triggerObject(GJBaseGameLayer* gameLayer, int p1, gd::vector<int> const* p2) {
+        // ⏺️ activate ghost effect triggers
+        // ⏺️ activate bg effect triggers
+
         if (!LevelEditorLayer::get()) {
             EffectGameObject::triggerObject(gameLayer, p1, p2);
             return;
@@ -43,5 +50,34 @@ class $modify(EffectGameObject) {
                 EffectGameObject::triggerObject(gameLayer, p1, p2);
                 break;
         }
+    }
+};
+
+class $modify(ATLevelEditorLayer, LevelEditorLayer) {
+    $override
+    bool init(GJGameLevel* p0, bool p1) {
+        // ⏺️ show hide ground/mg options in option triggers
+
+        if (!LevelEditorLayer::init(p0, p1)) return false;
+
+        (void)VMTHookManager::get().addHook<
+            ResolveC<ATLevelEditorLayer>::func(&ATLevelEditorLayer::toggleGroundVisibility)
+        >(this, "LevelEditorLayer::toggleGroundVisibility");
+
+        (void)VMTHookManager::get().addHook<
+            ResolveC<ATLevelEditorLayer>::func(&ATLevelEditorLayer::toggleMGVisibility)
+        >(this, "LevelEditorLayer::toggleMGVisibility");
+
+        return true;
+    }
+
+    void toggleGroundVisibility(bool visible) {
+        m_groundLayer->toggleVisible02(visible);
+        m_groundLayer2->toggleVisible02(visible);
+    }
+
+    void toggleMGVisibility(bool visible) {
+        if (!m_middleground) return;
+        m_middleground->toggleVisible02(visible);
     }
 };
