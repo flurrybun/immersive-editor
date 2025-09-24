@@ -39,14 +39,14 @@ class $modify(GameObject) {
     void selectObject(ccColor3B color) {
         // temporarily unset variables which would prevent glow from being colored
 
-        bool prevGCILBG = m_glowColorIsLBG;
+        bool prevCGC = m_customGlowColor;
         bool prevCCG = m_cantColorGlow;
-        m_glowColorIsLBG = false;
+        m_customGlowColor = false;
         m_cantColorGlow = false;
 
         GameObject::selectObject(color);
 
-        m_glowColorIsLBG = prevGCILBG;
+        m_customGlowColor = prevCGC;
         m_cantColorGlow = prevCCG;
     }
 };
@@ -92,10 +92,7 @@ class $modify(LevelEditorLayer) {
         std::optional<ccColor3B> specialGlowColor = getSpecialGlowColor(object);
 
         // id 143 is for breakable blocks, which are a special case
-        if (object->m_objectID != 143 &&
-            !object->m_customGlowColor &&
-            !specialGlowColor.has_value()
-        ) return;
+        if (object->m_objectID != 143 && !object->m_customGlowColor && !specialGlowColor.has_value()) return;
 
         ccColor3B glowColor = {};
 
