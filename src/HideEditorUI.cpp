@@ -33,11 +33,13 @@ class $modify(LevelEditorLayer) {
                 GameManager::get()->setGameVariable("0152", true);
 
                 m_fields->showGround = m_showGround;
-                toggleGround(true);
+                m_hideGround = false;
+                updateCameraBGArt(m_gameState.m_cameraPosition, m_gameState.m_cameraZoom);
             } else {
                 GameManager::get()->setGameVariable("0152", m_fields->hidePath);
 
                 toggleGround(m_fields->showGround);
+                if (m_middleground) m_middleground->toggleVisible02(true);
             }
 
             DrawGridAPI::get().getNode<Bounds>("bounds").inspect([isPlaying](Bounds& bounds) {
