@@ -1,5 +1,4 @@
 #include <Geode/modify/LevelEditorLayer.hpp>
-#include <Geode/modify/GJBaseGameLayer.hpp>
 #include "misc/ObjectEvent.hpp"
 
 #include <Geode/Geode.hpp>
@@ -9,6 +8,10 @@ class $modify(LevelEditorLayer) {
     struct Fields {
         int prevAudioTrack = -1;
         int prevSongID = -1;
+
+        ~Fields() {
+            FMODAudioEngine::get()->disableMetering();
+        }
     };
 
     $override
@@ -16,6 +19,7 @@ class $modify(LevelEditorLayer) {
         if (!LevelEditorLayer::init(p0, p1)) return false;
 
         FMODAudioEngine::get()->enableMetering();
+        m_fields.self();
 
         return true;
     }
@@ -87,15 +91,5 @@ class $modify(LevelEditorLayer) {
 
             object->m_editorEnabled = true;
         }
-    }
-};
-
-class $modify(GJBaseGameLayer) {
-    // i can't hook ~LevelEditorLayer() but this works just fine
-
-    $override
-    void destructor() {
-        GJBaseGameLayer::~GJBaseGameLayer();
-        FMODAudioEngine::get()->disableMetering();
     }
 };
