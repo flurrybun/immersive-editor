@@ -1,5 +1,6 @@
 #include <Geode/modify/LevelEditorLayer.hpp>
 #include <Geode/modify/GJBaseGameLayer.hpp>
+#include "misc/ObjectEvent.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
@@ -8,9 +9,6 @@ class $modify(LevelEditorLayer) {
     struct Fields {
         int prevAudioTrack = -1;
         int prevSongID = -1;
-
-        std::unordered_map<WeakRef<GameObject>, Ref<CCSprite>> pulseRods;
-        short pulseRodIndex = 0;
     };
 
     $override
@@ -19,55 +17,7 @@ class $modify(LevelEditorLayer) {
 
         FMODAudioEngine::get()->enableMetering();
 
-        generateRodIndex();
-
-        for (const auto& object : CCArrayExt<GameObject*>(m_objects)) {
-            tryAddPulseRodBall(object);
-        }
-
         return true;
-    }
-
-    $override
-    GameObject* createObject(int p0, CCPoint p1, bool p2) {
-        GameObject* object = LevelEditorLayer::createObject(p0, p1, p2);
-
-        tryAddPulseRodBall(object);
-
-        return object;
-    }
-
-    void generateRodIndex() {
-        m_fields->pulseRodIndex = rand() % 3 + 1;
-    }
-
-    void tryAddPulseRodBall(GameObject* object) {
-        if (
-            object->m_objectID != 15 &&
-            object->m_objectID != 16 &&
-            object->m_objectID != 17
-        ) return;
-
-        std::string frame = fmt::format("rod_ball_{:02}_001.png", m_fields->pulseRodIndex);
-        CCSprite* ball = CCSprite::createWithSpriteFrameName("rod_ball_01_001.png");
-
-        m_fields->pulseRods[object] = ball;
-    }
-
-    $override
-    void onPlaytest() {
-        LevelEditorLayer::onPlaytest();
-
-        // if (m_audioEffectsLayer) {
-        //     m_audioEffectsLayer->m_timeElapsed = 0.f;
-        // }
-
-        generateRodIndex();
-        std::string frame = fmt::format("rod_ball_{:02}_001.png", m_fields->pulseRodIndex);
-
-        for (const auto& [rod, ball] : m_fields->pulseRods) {
-            ball->setDisplayFrame(CCSpriteFrameCache::get()->spriteFrameByName(frame.c_str()));
-        }
     }
 
     $override
@@ -97,15 +47,9 @@ class $modify(LevelEditorLayer) {
     void updateVisibility(float dt) {
         LevelEditorLayer::updateVisibility(dt);
 
-        updatePulseRods();
-
         if (m_playbackMode == PlaybackMode::Not && !m_editorUI->m_isPlayingMusic) {
             for (const auto& object : CCArrayExt<GameObject*>(m_objects)) {
                 object->setRScale(1.f);
-            }
-
-            for (const auto& [rod, ball] : m_fields->pulseRods) {
-                ball->setScale(1.f);
             }
 
             return;
@@ -142,60 +86,6 @@ class $modify(LevelEditorLayer) {
             }
 
             object->m_editorEnabled = true;
-        }
-
-        for (const auto& [rod, ball] : m_fields->pulseRods) {
-            ball->setScale(audioScale);
-        }
-    }
-
-    void updatePulseRods() {
-        // not sure how necessary using weak refs is here because deleted
-        // objects don't seem to be freed until exiting the editor
-        // i guess it can't hurt to be safe?
-
-        for (auto it = m_fields->pulseRods.begin(); it != m_fields->pulseRods.end(); ) {
-            GameObject* rod = it->first.lock();
-            CCSprite* ball = it->second;
-
-            if (!rod) {
-                ball->removeFromParent();
-                it = m_fields->pulseRods.erase(it);
-                continue;
-            }
-
-            ++it;
-
-            int rodColorID = rod->m_baseColor->m_colorID;
-            bool isBallBlending = false;
-
-            if (rodColorID == 0 || rodColorID == 1004) rodColorID = 1005;
-
-            if (ColorActionSprite* colorAction = m_effectManager->m_colorActionSpriteVector[rodColorID]) {
-                ball->setColor(colorAction->m_color);
-                isBallBlending = m_blendingColors[rodColorID];
-            }
-
-            CCNode* rodParent = rod->getParent();
-            CCNode* ballParent = ball->getParent();
-            CCSpriteBatchNode* ballLayer = isBallBlending ? m_gameBlendingLayerB1 : m_gameLayerB1;
-
-            if (rodParent && !ballParent) {
-                ballLayer->addChild(ball);
-            } else if (!rodParent && ballParent) {
-                ball->removeFromParent();
-                continue;
-            } else if (ballParent && ballParent != ballLayer) {
-                ball->removeFromParent();
-                ballLayer->addChild(ball);
-            } else if (!rodParent && !ballParent) {
-                continue;
-            }
-
-            CCPoint relativeBallPos = ccp(rod->getContentWidth() * 0.5f, rod->getContentHeight() + 10.f);
-            CCPoint ballPos = ballLayer->convertToNodeSpace(rod->convertToWorldSpace(relativeBallPos));
-
-            ball->setPosition(ballPos);
         }
     }
 };

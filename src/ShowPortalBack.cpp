@@ -1,54 +1,58 @@
 #include <Geode/modify/LevelEditorLayer.hpp>
+#include "misc/ObjectEvent.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
 
-// instead of trying to port how gd shows the backs of portals into the editor, i just reimplemented it differently.
-// this is because portal backs are their own object (id 38) created when the level is loaded with all the portal's
-// properties duplicated over. if you've ever wondered why portals can't be used as center points, that's because
-// the portal and portal back are two separate objects but with the same groups.
-
-// trying to replicate that behavior would open up a whole can of worms, so i just do it this way.
+// portal backs are a special object (id 38) with the portal's properties duplicated over, but this method
+// wouldn't work in the editor. instead, each portal gets a back sprite that follows its pos/rot/scale/color/opacity
 
 class $modify(LevelEditorLayer) {
     struct Fields {
-        std::unordered_map<GameObject*, CCSprite*> portalBacks;
+        ObjectEventListener objectListener;
+        std::unordered_map<WeakRef<GameObject>, Ref<CCSprite>> portalBacks;
     };
 
     $override
     bool init(GJGameLevel* p0, bool p1) {
         if (!LevelEditorLayer::init(p0, p1)) return false;
 
-        for (const auto& object : CCArrayExt<GameObject>(m_objects)) {
-            tryAddPortalBack(object);
-        }
+        m_fields->objectListener.bind([&](ObjectEvent* event) {
+            if (!isPortal(event->object->m_objectID)) return ListenerResult::Propagate;
+
+            if (event->isAdded) {
+                addPortalBack(event->object);
+            } else {
+                removePortalBack(event->object);
+            }
+
+            return ListenerResult::Propagate;
+        });
 
         return true;
-    }
-
-    $override
-    GameObject* createObject(int p0, CCPoint p1, bool p2) {
-        GameObject* object = LevelEditorLayer::createObject(p0, p1, p2);
-
-        tryAddPortalBack(object);
-
-        return object;
     }
 
     $override
     void updateVisibility(float dt) {
         LevelEditorLayer::updateVisibility(dt);
 
-        for (const auto& [portal, back] : m_fields->portalBacks) {
-            bool isLinkedOrangeTeleport = portal->m_objectID == 749;
+        for (auto it = m_fields->portalBacks.begin(); it != m_fields->portalBacks.end(); ) {
+            GameObject* portal = it->first.lock();
+            CCSprite* back = it->second;
+
+            if (!portal) {
+                back->removeFromParent();
+                it = m_fields->portalBacks.erase(it);
+                continue;
+            }
+
+            ++it;
 
             back->setPosition(portal->getPosition());
             back->setRotationX(portal->getRotationX());
             back->setRotationY(portal->getRotationY());
             back->setScaleX(portal->getScaleX());
             back->setScaleY(portal->getScaleY());
-            back->setFlipX(isLinkedOrangeTeleport ? !portal->isFlipX() : portal->isFlipX());
-            back->setFlipY(portal->isFlipY());
 
             back->setVisible(portal->isVisible());
             back->setOpacity(portal->getOpacity());
@@ -56,20 +60,53 @@ class $modify(LevelEditorLayer) {
         }
     }
 
-    void tryAddPortalBack(GameObject* object) {
-        if (!LevelEditorLayer::get()) return;
+    void addPortalBack(GameObject* object) {
+        auto back = CCSprite::createWithSpriteFrameName(getPortalBackFrameName(object->m_objectID));
 
-        std::optional<const char*> backFrameName = getPortalBackFrameName(object->m_objectID);
-        if (!backFrameName.has_value()) return;
-
-        auto back = CCSprite::createWithSpriteFrameName(backFrameName.value());
         LevelEditorLayer::get()->m_game2LayerB0->addChild(back);
         back->setZOrder(object->getZOrder() - 100);
 
         m_fields->portalBacks[object] = back;
     }
 
-    std::optional<const char*> getPortalBackFrameName(int objectID) {
+    void removePortalBack(GameObject* object) {
+        auto it = m_fields->portalBacks.find(object);
+        if (it == m_fields->portalBacks.end()) return;
+
+        it->second->removeFromParent();
+        m_fields->portalBacks.erase(it);
+    }
+
+    bool isPortal(int objectID) {
+        switch (objectID) {
+            case 10: // blue gravity
+            case 11: // yellow gravity
+            case 12: // cube
+            case 13: // ship
+            case 45: // orange mirror
+            case 46: // blue mirror
+            case 47: // ball
+            case 99: // green size
+            case 101: // pink size
+            case 111: // ufo
+            case 286: // dual
+            case 287: // exit dual
+            case 660: // wave
+            case 745: // robot
+            case 747: // linked blue teleport
+            case 2902: // standalone blue teleport
+            case 749: // linked orange teleport
+            case 2064: // standalone orange teleport
+            case 1331: // spider
+            case 1933: // swing
+            case 2926: // green gravity
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    const char* getPortalBackFrameName(int objectID) {
         switch (objectID) {
             case 10: return "portal_01_back_001.png"; // blue gravity
             case 11: return "portal_02_back_001.png"; // yellow gravity
@@ -94,7 +131,7 @@ class $modify(LevelEditorLayer) {
             case 1331: return "portal_17_back_001.png"; // spider
             case 1933: return "portal_18_back_001.png"; // swing
             case 2926: return "portal_19_back_001.png"; // green gravity
-            default: return std::nullopt;
+            default: return "portal_03_back_001.png"; // cube
         }
     }
 };
