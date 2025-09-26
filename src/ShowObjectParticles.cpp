@@ -1,6 +1,7 @@
 #include <Geode/modify/EnhancedGameObject.hpp>
 #include <Geode/modify/GameObject.hpp>
 #include <Geode/modify/LevelEditorLayer.hpp>
+#include "misc/Utils.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
@@ -167,12 +168,24 @@ class $modify(GameObject) {
 
     $override
     void updateObjectEditorColor() {
-        // ⏺️ revert particle color on deselect (GameObject::deselectObject is inlined)
+        // ⏺️ recolor particle on deselect (GameObject::deselectObject is inlined)
 
         GameObject::updateObjectEditorColor();
         if (!shouldSelectParticle()) return;
 
         resetParticleColor();
+    }
+
+    $override
+    void updateParticleOpacity(unsigned char opacity) {
+        // ⏺️ lower particle opacity when on different editor layer
+
+        if (!LevelEditorLayer::get() || !m_particle) {
+            GameObject::updateParticleOpacity(opacity);
+            return;
+        }
+
+        m_particle->setOpacity(ie::isObjectLayerVisible(this, LevelEditorLayer::get()) ? 255 : 50);
     }
 
     bool shouldSelectParticle() {
