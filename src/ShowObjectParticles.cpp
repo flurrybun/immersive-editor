@@ -140,6 +140,146 @@ class $modify(GameObject) {
         GameManager::get()->m_playLayer = nullptr;
         return ret;
     }
+
+    $override
+    void claimParticle() {
+        // ⏺️ recolor particle on creation to match selected state
+
+        GameObject::claimParticle();
+        if (!shouldSelectParticle()) return;
+
+        if (m_isSelected) {
+            setParticleColor(getColor());
+        } else {
+            resetParticleColor();
+        }
+    }
+
+    $override
+    void selectObject(ccColor3B color) {
+        // ⏺️ recolor particle on select
+
+        GameObject::selectObject(color);
+        if (!shouldSelectParticle()) return;
+
+        setParticleColor(color);
+    }
+
+    $override
+    void updateObjectEditorColor() {
+        // ⏺️ revert particle color on deselect (GameObject::deselectObject is inlined)
+
+        GameObject::updateObjectEditorColor();
+        if (!shouldSelectParticle()) return;
+
+        resetParticleColor();
+    }
+
+    bool shouldSelectParticle() {
+        return (
+            m_editorEnabled &&
+            m_particle &&
+            !m_particleUseObjectColor &&
+            m_objectID != 2065 // custom particle
+        );
+    }
+
+    void setParticleColor(const ccColor3B& color) {
+        ccColor4F color4F = to4F(to4B(color));
+        setParticleColor(color4F, color4F, {}, {});
+    }
+
+    void setParticleColor(
+        const ccColor4F& start, const ccColor4F& end, const ccColor4F& startVar, const ccColor4F& endVar
+    ) {
+        m_particle->setStartColor(start);
+        m_particle->setEndColor(end);
+        m_particle->setStartColorVar(startVar);
+        m_particle->setEndColorVar(endVar);
+    }
+
+    void resetParticleColor() {
+        switch (m_objectID) {
+            case 36: // yellow orb
+                return setParticleColor({1, 0.78431374, 0.19607843, 1}, {1, 0.39215687, 0.09803922, 1}, {0, 0, 0, 0.698125}, {});
+            case 141: // pink orb
+                return setParticleColor({1, 0.39215687, 1, 1}, {1, 0, 0.6862745, 1}, {0, 0, 0, 0.698125}, {});
+            case 1333: // red orb
+                return setParticleColor({1, 0.39215687, 0.09803922, 1}, {1, 0, 0, 1}, {0, 0, 0, 0.698125}, {});
+            case 84: // blue orb
+                return setParticleColor({0, 1, 1, 1}, {0, 0.49019608, 1, 1}, {0, 0, 0, 0.698125}, {});
+            case 1022: // green orb
+                return setParticleColor({0.29411766, 1, 0.29411766, 1}, {0, 1, 0, 1}, {0, 0, 0, 0.698125}, {});
+            case 1330: // black orb
+                return setParticleColor({1, 1, 1, 1}, {0, 0, 0, 1}, {0, 0, 0, 0.698125}, {});
+            case 1704: // green dash orb
+                return setParticleColor({0, 1, 0, 1}, {0, 0, 0, 1}, {0, 0, 0, 0.698125}, {});
+            case 1751: // pink dash orb
+                return setParticleColor({1, 0, 0, 1}, {0, 0, 0, 1}, {0, 0, 0, 0.698125}, {});
+            case 3004: // spider orb
+                return setParticleColor({1, 0, 1, 1}, {0.39215687, 0.09803922, 1, 1}, {0, 0, 0, 0.698125}, {});
+            case 35: // yellow pad
+                return setParticleColor({1, 1, 0, 1}, {0, 0, 0, 1}, {}, {});
+            case 140: // pink pad
+                return setParticleColor({1, 0, 1, 1}, {1, 0, 1, 1}, {}, {});
+            case 1332: // red pad
+                return setParticleColor({1, 0.19607843, 0.19607843, 1}, {1, 0, 0, 1}, {}, {});
+            case 67: // blue pad
+                return setParticleColor({0, 1, 1, 1}, {0, 1, 1, 1}, {}, {});
+            case 3005: // spider pad
+                return setParticleColor({1, 0, 1, 1}, {0.39215687, 0.09803922, 1, 1}, {}, {});
+            case 10: // blue portal
+                return setParticleColor({0, 1, 1, 0.5}, {0, 1, 1, 1}, {}, {0, 0.5, 0, 0});
+            case 11: // yellow portal
+                return setParticleColor({1, 1, 0, 0.5}, {1, 1, 0, 1}, {}, {});
+            case 2926: // green portal
+                return setParticleColor({0, 1, 0, 1}, {0, 1, 0, 1}, {}, {});
+            case 12: // cube portal
+                return setParticleColor({0.3, 1, 0, 0.5}, {0.3, 1, 0, 1}, {0.3, 0, 0, 0}, {0.3, 0, 0, 0});
+            case 13: // ship portal
+                return setParticleColor({1, 0, 1, 0.5}, {1, 0, 1, 1}, {0, 0.3, 0, 0}, {0, 0.3, 0, 0});
+            case 47: // ball portal
+                return setParticleColor({1, 0.39215687, 0, 1}, {1, 0.39215687, 0, 1}, {}, {});
+            case 111: // ufo portal
+                return setParticleColor({1, 0.78431374, 0, 1}, {1, 0.39215687, 0, 1}, {}, {});
+            case 660: // wave portal
+                return setParticleColor({0, 0.78431374, 1, 1}, {0, 0.39215687, 1, 1}, {}, {});
+            case 745: // robot portal
+                return setParticleColor({0.5882353, 0.5882353, 0.5882353, 1}, {0.19607843, 0.19607843, 0.29411766, 1}, {}, {});
+            case 45: // orange mirror portal
+                return setParticleColor({1, 0.5882353, 0, 1}, {1, 0.5882353, 0, 1}, {}, {});
+            case 46: // blue mirror portal
+                return setParticleColor({0, 1, 1, 0.5}, {0, 1, 1, 1}, {}, {0, 0.5, 0, 0});
+            case 99: // green size portal
+                return setParticleColor({0, 1, 0, 1}, {0, 1, 0, 1}, {0.25, 0, 0.25, 0.5}, {});
+            case 101: // pink size portal
+                return setParticleColor({1, 0, 1, 1}, {1, 0, 1, 1}, {0, 0.5, 0, 0.5}, {});
+            case 286: // orange dual portal
+                return setParticleColor({1, 0.78431374, 0, 1}, {1, 0.39215687, 0, 1}, {0, 0.5, 0, 0.5}, {});
+            case 287: // blue dual portal
+                return setParticleColor({0, 0.78431374, 1, 1}, {0, 0.39215687, 1, 1}, {0, 0.5, 0, 0.5}, {});
+            case 747: // linked blue teleport
+            case 2902: // blue teleport portal
+                return setParticleColor({0, 1, 1, 1}, {0, 0.39215687, 0.5882353, 1}, {}, {});
+            case 749: // linked orange teleport
+            case 2064: // orange teleport portal
+                return setParticleColor({1, 0.78431374, 0, 1}, {1, 0.39215687, 0, 1}, {}, {});
+            case 1331: // spider portal
+                return setParticleColor({0.78431374, 0, 1, 1}, {0.78431374, 0, 1, 1}, {}, {});
+            case 1933: // swing portal
+                return setParticleColor({1, 1, 0, 1}, {1, 0.78431374, 0, 1}, {}, {});
+            case 200: // slow speed portal
+                return setParticleColor({1, 0.9, 0, 0.8}, {1, 0.9, 0, 0}, {0, 0, 0, 0.2}, {});
+            case 201: // normal speed portal
+                return setParticleColor({0, 0.8, 1, 0.8}, {0, 0.8, 1, 0}, {0, 0, 0, 0.2}, {});
+            case 202: // fast speed portal
+                return setParticleColor({0, 1, 0.2, 0.8}, {0, 1, 0.2, 0}, {0, 0, 0, 0.2}, {});
+            case 203: // faster speed portal
+                return setParticleColor({1, 0.6, 1, 0.8}, {1, 0.3, 1, 0}, {0, 0, 0, 0.2}, {});
+            case 1334: // fastest speed portal
+                return setParticleColor({1, 0, 0, 0.8}, {1, 0, 0, 0}, {0, 0, 0, 0.2}, {});
+        }
+    }
 };
 
 class $modify(LevelEditorLayer) {
