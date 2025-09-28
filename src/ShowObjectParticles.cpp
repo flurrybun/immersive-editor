@@ -6,6 +6,8 @@
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
 
+bool s_dontCreateParticles = false;
+
 class $modify(EnhancedGameObject) {
     $override
     void customSetup() {
@@ -134,11 +136,12 @@ class $modify(GameObject) {
             return GameObject::createAndAddParticle(p0, p1, p2, p3);
         }
 
+        if (s_dontCreateParticles) return nullptr;
+
         GameManager::get()->m_playLayer = reinterpret_cast<PlayLayer*>(GJBaseGameLayer::get());
-
         CCParticleSystemQuad* ret = GameObject::createAndAddParticle(p0, p1, p2, p3);
-
         GameManager::get()->m_playLayer = nullptr;
+
         return ret;
     }
 
@@ -296,6 +299,10 @@ class $modify(GameObject) {
 };
 
 class $modify(LevelEditorLayer) {
+    static void onModify(auto& self) {
+        (void)self.setHookPriority("LevelEditorLayer::createObjectsFromString", Priority::EarlyPre);
+    }
+
     $override
     void updateVisibility(float dt) {
         // ⏺️ update particle visibility based on 'no particles' setting
@@ -307,5 +314,19 @@ class $modify(LevelEditorLayer) {
 
             object->m_particle->setVisible(!object->m_hasNoParticles);
         }
+    }
+
+    $override
+    CCArray* createObjectsFromString(gd::string const& objString, bool dontCreateUndo, bool dontShowMaxWarning) {
+        // ⏺️ prevent particles appearing when creating objects from string (e.g. custom objects preview)
+
+        if (dontCreateUndo || dontShowMaxWarning) {
+            s_dontCreateParticles = true;
+        }
+
+        CCArray* ret = LevelEditorLayer::createObjectsFromString(objString, dontCreateUndo, dontShowMaxWarning);
+        s_dontCreateParticles = false;
+
+        return ret;
     }
 };

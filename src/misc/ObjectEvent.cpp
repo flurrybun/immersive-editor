@@ -7,6 +7,11 @@ using namespace geode::prelude;
 class $modify(LevelEditorLayer) {
     static void onModify(auto& self) {
         (void)self.setHookPriority("LevelEditorLayer::init", Priority::LatePost);
+        (void)self.setHookPriority("LevelEditorLayer::createObjectsFromString", Priority::EarlyPre);
+
+        // why the hook for createObjectsFromString?
+        // well clean startpos sucks and sets p1 and p2 to true for no reason
+        // https://github.com/blueblock6/CleanStartpos/blob/c1a9c07ef765647240959da0c65cd565c8fe1753/src/main.cpp#L588
     }
 
     bool init(GJGameLevel* p0, bool p1) {
@@ -20,8 +25,9 @@ class $modify(LevelEditorLayer) {
     }
 
     $override
-    CCArray* createObjectsFromString(gd::string const& p0, bool p1, bool p2) {
-        CCArray* ret = LevelEditorLayer::createObjectsFromString(p0, p1, p2);
+    CCArray* createObjectsFromString(gd::string const& objString, bool dontCreateUndo, bool dontShowMaxWarning) {
+        CCArray* ret = LevelEditorLayer::createObjectsFromString(objString, dontCreateUndo, dontShowMaxWarning);
+        if (dontCreateUndo || dontShowMaxWarning) return ret;
 
         for (const auto& object : CCArrayExt<GameObject*>(ret)) {
             ObjectEvent(object, true).post();
