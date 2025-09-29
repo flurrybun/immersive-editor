@@ -188,7 +188,11 @@ class $modify(GameObject) {
             return;
         }
 
-        m_particle->setOpacity(ie::isObjectLayerVisible(this, LevelEditorLayer::get()) ? 255 : 50);
+        bool isObjectLayerVisible = ie::isObjectLayerVisible(this, LevelEditorLayer::get());
+        float mod = isObjectLayerVisible ? 1.0f : 5.1f;
+
+        GameObject::updateParticleOpacity(opacity * mod);
+        m_particle->setOpacity(isObjectLayerVisible ? 255 : 50);
     }
 
     bool shouldSelectParticle() {
