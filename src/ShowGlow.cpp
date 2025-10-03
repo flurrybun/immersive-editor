@@ -37,7 +37,7 @@ class $modify(GameObject) {
 
     $override
     void selectObject(ccColor3B color) {
-        // temporarily unset variables which would prevent glow from being colored
+        // ⏺️ fix glow not becoming selected green color
 
         bool prevCGC = m_customGlowColor;
         bool prevCCG = m_cantColorGlow;
@@ -71,7 +71,7 @@ class $modify(LevelEditorLayer) {
         float screenRight = CCDirector::get()->getScreenRight();
         float playerX = screenRight * 0.5 - 75;
 
-        for (const auto& object : CCArrayExt<GameObject*>(m_objects)) {
+        for (const auto& object : m_activeObjects) {
             updateCustomGlowColor(object);
             updateFadingBlock(
                 object, playerX + 110, playerX, screenRight - (playerX + 110) - 90, playerX - 30, lbgColor
