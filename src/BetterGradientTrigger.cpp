@@ -17,23 +17,26 @@ class $modify(BGTIGradientTriggerObject, GradientTriggerObject) {
 
         setDisplayFrame(CCSpriteFrameCache::get()->spriteFrameByName("edit_eGradientBtn_001.png"_spr));
 
-        (void)VMTHookManager::get().addHook<
+        // haaauuuu~!! cute vmthookmanager!! im taking it home with me!!!!
+        auto& vmt = VMTHookManager::get();
+
+        (void)vmt.addHook<
             ResolveC<BGTIGradientTriggerObject>::func(&BGTIGradientTriggerObject::customSetup)
         >(this, "GradientTriggerObject::customSetup");
 
-        (void)VMTHookManager::get().addHook<
+        (void)vmt.addHook<
             ResolveC<BGTIGradientTriggerObject>::func(&BGTIGradientTriggerObject::setObjectColor)
         >(this, "GradientTriggerObject::setObjectColor");
 
-        (void)VMTHookManager::get().addHook<
+        (void)vmt.addHook<
             ResolveC<BGTIGradientTriggerObject>::func(&BGTIGradientTriggerObject::setChildColor)
         >(this, "GradientTriggerObject::setChildColor");
 
-        (void)VMTHookManager::get().addHook<
+        (void)vmt.addHook<
             ResolveC<BGTIGradientTriggerObject>::func(&BGTIGradientTriggerObject::setOpacity)
         >(this, "GradientTriggerObject::setOpacity");
 
-        (void)VMTHookManager::get().addHook<
+        (void)vmt.addHook<
             ResolveC<BGTIGradientTriggerObject>::func(&BGTIGradientTriggerObject::selectObject)
         >(this, "GradientTriggerObject::selectObject");
 
