@@ -2,6 +2,7 @@
 #include <Geode/modify/LevelEditorLayer.hpp>
 #include <Geode/utils/VMTHookManager.hpp>
 #include "misc/ObjectEvent.hpp"
+#include "misc/Utils.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
@@ -64,17 +65,22 @@ class $modify(BGTIGradientTriggerObject, GradientTriggerObject) {
         if (!m_isSelected) setColor({ 255, 255, 255 });
 
         m_fields->gradient->setStartColor(color);
-        m_fields->gradient->setStartOpacity(m_baseColor->m_opacity * 255.f);
-
-        m_colorSprite->setVisible(false);
     }
 
     void setChildColor(const ccColor3B& color) {
         m_fields->gradient->setEndColor(color);
-        m_fields->gradient->setEndOpacity(m_detailColor->m_opacity * 255.f);
     }
 
-    void setOpacity(unsigned char opacity) {}
+    void setOpacity(unsigned char) {
+        bool isObjectLayerVisible = ie::isObjectLayerVisible(this, LevelEditorLayer::get());
+        float opacityMod = isObjectLayerVisible ? 1.f : (50.f / 255.f);
+
+        CCSprite::setOpacity(isObjectLayerVisible ? 255 : 50);
+        m_fields->gradient->setStartOpacity(m_baseColor->m_opacity * 255.f * opacityMod);
+        m_fields->gradient->setEndOpacity(m_detailColor->m_opacity * 255.f * opacityMod);
+
+        m_colorSprite->setVisible(false);
+    }
 
     void selectObject(ccColor3B color) {
         GameObject::selectObject(color);
