@@ -15,6 +15,7 @@ class $modify(BGTIGradientTriggerObject, GradientTriggerObject) {
     $override
     bool init() {
         if (!GradientTriggerObject::init()) return false;
+        if (!m_editorEnabled) return true;
 
         setDisplayFrame(CCSpriteFrameCache::get()->spriteFrameByName("edit_eGradientBtn_001.png"_spr));
 
@@ -46,6 +47,7 @@ class $modify(BGTIGradientTriggerObject, GradientTriggerObject) {
 
     void customSetup() {
         EffectGameObject::customSetup();
+        if (!m_editorEnabled) return;
 
         // adds the trigger to a node container rather than a batch node
         m_hasSpecialChild = true;
