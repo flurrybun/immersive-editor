@@ -31,6 +31,10 @@ class $modify(LevelEditorLayer) {
                     if (auto ego = typeinfo_cast<EffectGameObject*>(object)) {
                         if (ego->m_triggerEffectPlaying) {
                             ego->stopAllActions();
+                            if (auto cs = ego->m_colorSprite) cs->stopAllActions();
+                            if (auto gs = ego->m_glowSprite) gs->stopAllActions();
+
+                            ego->m_triggerEffectPlaying = false;
                         }
                     }
 
