@@ -5,7 +5,23 @@
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
 
-class $modify(GameObject) {
+class $modify(SGGameObject, GameObject) {
+    // when undoing/redoing in the editor, sometimes m_glowSprite can become a dangling pointer
+    // very rare bug i don't really understand the cause of but this seems to fix it
+
+    struct Fields {
+        WeakRef<CCSprite> m_glowSpriteRef;
+    };
+
+    $override
+    void createGlow(gd::string frame) {
+        GameObject::createGlow(frame);
+
+        if (LevelEditorLayer::get() && m_glowSprite) {
+            m_fields->m_glowSpriteRef = m_glowSprite;
+        }
+    }
+
     $override
     void addGlow(gd::string objectFrameName) {
         if (!LevelEditorLayer::get()) {
@@ -72,6 +88,10 @@ class $modify(LevelEditorLayer) {
         float playerX = screenRight * 0.5 - 75;
 
         for (const auto& object : m_activeObjects) {
+            if (!static_cast<SGGameObject*>(object)->m_fields->m_glowSpriteRef) {
+                object->m_glowSprite = nullptr;
+            }
+
             updateCustomGlowColor(object);
             updateFadingBlock(
                 object, playerX + 110, playerX, screenRight - (playerX + 110) - 90, playerX - 30, lbgColor
