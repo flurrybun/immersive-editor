@@ -1,5 +1,6 @@
 #include <Geode/modify/GradientTriggerObject.hpp>
 #include <Geode/modify/LevelEditorLayer.hpp>
+#include <Geode/modify/GJBaseGameLayer.hpp>
 #include <Geode/utils/VMTHookManager.hpp>
 #include "misc/ObjectEvent.hpp"
 #include "misc/Utils.hpp"
@@ -49,8 +50,8 @@ class $modify(BGTIGradientTriggerObject, GradientTriggerObject) {
         EffectGameObject::customSetup();
         if (!m_editorEnabled) return;
 
-        // adds the trigger to a node container rather than a batch node
-        m_hasSpecialChild = true;
+        // the custom trigger icon and cclayergradient dont work with batch nodes
+        m_addToNodeContainer = true;
 
         ccColor4B defaultColor = { 255, 255, 255, 255 };
         auto gradient = CCLayerGradient::create(defaultColor, defaultColor, { 1.f, 0.f });
@@ -92,6 +93,8 @@ class $modify(BGTIGradientTriggerObject, GradientTriggerObject) {
     }
 
     void updateGradientBlendMode() {
+        if (!m_fields->gradient) return;
+
         switch (m_blendingMode) {
             case 0: // normal
                 m_fields->gradient->setBlendFunc({ GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA });
@@ -112,13 +115,58 @@ class $modify(BGTIGradientTriggerObject, GradientTriggerObject) {
 };
 
 class $modify(LevelEditorLayer) {
+    $override
     void updateVisibility(float dt) {
+        // ⏺️ update blend mode of gradient trigger icon
+        // ⏺️ change color of gradient when trigger is selected
+
         LevelEditorLayer::updateVisibility(dt);
 
         for (const auto& obj : m_activeObjects) {
             if (obj->m_objectID != 2903) continue;
 
             static_cast<BGTIGradientTriggerObject*>(obj)->updateGradientBlendMode();
+        }
+    }
+};
+
+class $modify(GJBaseGameLayer) {
+    $override
+    void updateGradientLayers() {
+        GJBaseGameLayer::updateGradientLayers();
+
+        if (!LevelEditorLayer::get()) return;
+
+        if (auto object = EditorUI::get()->m_selectedObject) {
+            if (object->m_objectID != 2903) return;
+
+            auto trigger = static_cast<GradientTriggerObject*>(object);
+            auto gradient = static_cast<GJGradientLayer*>(
+                m_gradientLayers->objectForKey(trigger->m_gradientID)
+            );
+
+            if (!gradient) return;
+
+            auto color = object->getColor();
+            gradient->setStartColor(color);
+            gradient->setEndColor(color);
+
+            return;
+        }
+
+        for (const auto& object : CCArrayExt<GameObject*>(EditorUI::get()->m_selectedObjects)) {
+            if (object->m_objectID != 2903) continue;
+
+            auto trigger = static_cast<GradientTriggerObject*>(object);
+            auto gradient = static_cast<GJGradientLayer*>(
+                m_gradientLayers->objectForKey(trigger->m_gradientID)
+            );
+
+            if (!gradient) continue;
+
+            auto color = object->getColor();
+            gradient->setStartColor(color);
+            gradient->setEndColor(color);
         }
     }
 };
