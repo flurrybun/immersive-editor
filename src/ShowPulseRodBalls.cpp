@@ -1,3 +1,4 @@
+#include <Geode/modify/GameObject.hpp>
 #include <Geode/modify/LevelEditorLayer.hpp>
 #include "misc/ObjectEvent.hpp"
 
@@ -6,6 +7,29 @@ using namespace geode::prelude;
 
 // pulse rod balls are a special object (id 37) with the rod's properties duplicated over, but this method
 // wouldn't work in the editor. instead, each rod gets a ball sprite that follows its pos/rot/scale/color/opacity
+
+bool isPulseRod(GameObject* object) {
+    return (
+        object->m_objectID == 15 ||
+        object->m_objectID == 16 ||
+        object->m_objectID == 17
+    );
+}
+
+class $modify(SPRBGameObject, GameObject) {
+    struct Fields {
+        CCSprite* ballSprite;
+    };
+
+    $override
+    void setObjectColor(const ccColor3B& color) {
+        if (m_fields->ballSprite) {
+            m_fields->ballSprite->setColor(color);
+        } else {
+            GameObject::setObjectColor(color);
+        }
+    }
+};
 
 class $modify(LevelEditorLayer) {
     struct Fields {
@@ -66,19 +90,12 @@ class $modify(LevelEditorLayer) {
         }
     }
 
-    bool isPulseRod(GameObject* object) {
-        return (
-            object->m_objectID == 15 ||
-            object->m_objectID == 16 ||
-            object->m_objectID == 17
-        );
-    }
-
     void addPulseRodBall(GameObject* object) {
         std::string frame = fmt::format("rod_ball_{:02}_001.png", m_fields->pulseRodIndex);
         CCSprite* ball = CCSprite::createWithSpriteFrameName("rod_ball_01_001.png");
 
         m_fields->pulseRods[object] = ball;
+        static_cast<SPRBGameObject*>(object)->m_fields->ballSprite = ball;
     }
 
     void removePulseRodBall(GameObject* object) {
@@ -87,6 +104,8 @@ class $modify(LevelEditorLayer) {
 
         it->second->removeFromParent();
         m_fields->pulseRods.erase(it);
+
+        static_cast<SPRBGameObject*>(object)->m_fields->ballSprite = nullptr;
     }
 
     void updatePulseRods() {
@@ -103,14 +122,7 @@ class $modify(LevelEditorLayer) {
             ++it;
 
             int rodColorID = rod->m_baseColor->m_colorID;
-            bool isBallBlending = false;
-
-            if (rodColorID == 0 || rodColorID == 1004) rodColorID = 1005;
-
-            if (ColorActionSprite* colorAction = m_effectManager->m_colorActionSpriteVector[rodColorID]) {
-                ball->setColor(colorAction->m_color);
-                isBallBlending = m_blendingColors[rodColorID];
-            }
+            bool isBallBlending = m_blendingColors[rodColorID];
 
             ball->setOpacity(rod->getOpacity());
 
