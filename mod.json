@@ -29,6 +29,29 @@
             "type": "string",
             "default": "Balanced",
             "one-of": ["Balanced", "In-Game", "No Fade"]
+        },
+        "transparent-playtest-buttons": {
+            "name": "Low Opacity Playtest UI",
+            "description": "Replaces the playtest button icons with transparent sprites during playtesting.",
+            "type": "bool",
+            "default": {
+                "win": false,
+                "mac": false,
+                "android": true,
+                "ios": true
+            }
+        },
+        "auto-hide-playtest-buttons": {
+            "name": "Auto-Hide Playtest UI",
+            "platforms": ["desktop"],
+            "description": "Hides the mouse cursor and playtest UI when not hovering over it during playtesting.",
+            "type": "bool",
+            "default": {
+                "win": true,
+                "mac": true,
+                "android": false,
+                "ios": false
+            }
         }
     }
 }

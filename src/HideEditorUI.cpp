@@ -54,10 +54,80 @@ class $modify(HEUILevelEditorLayer, LevelEditorLayer) {
                 bpmTriggers.setEnabled(!isPlaying);
             });
 
+            if (!Mod::get()->getSettingValue<bool>("auto-hide-playtest-buttons")) return ListenerResult::Propagate;
+
+            if (isPlaying) {
+                if (!isHoveringUI()) {
+                    auto menu = static_cast<CCMenu*>(m_editorUI->getChildByID("playtest-menu"));
+                    PlatformToolbox::hideCursor();
+
+                    queueInMainThread([menu]() {
+                        menu->setOpacity(0);
+                    });
+
+                    m_fields->uiVisible = false;
+                }
+
+                schedule(schedule_selector(HEUILevelEditorLayer::updateCursorVisibility));
+            } else {
+                unschedule(schedule_selector(HEUILevelEditorLayer::updateCursorVisibility));
+                resetUIVisibility();
+            }
+
             return ListenerResult::Propagate;
         });
 
         return true;
+    }
+
+    bool isHoveringUI() {
+        CCRect rect = m_editorUI->getChildByID("playtest-menu")->boundingBox();
+        rect += CCRect(-20, -20, 20, 40); // some extra margin
+
+        CCPoint point = m_editorUI->convertToNodeSpace(getMousePos());
+
+        return rect.containsPoint(point);
+    }
+
+    void updateCursorVisibility(float dt) {
+        bool visible = isHoveringUI();
+        if (visible == m_fields->uiVisible) return;
+
+        setUIVisibility(visible);
+    }
+
+    void setUIVisibility(bool visible) {
+        m_fields->uiVisible = visible;
+
+        auto menu = m_editorUI->getChildByID("playtest-menu");
+        menu->runAction(
+            CCFadeTo::create(0.2f, visible ? 255 : 0)
+        );
+
+        stopActionByTag(ACTION_TAG);
+
+        if (visible) {
+            PlatformToolbox::showCursor();
+        } else {
+            auto action = runAction(CCSequence::create(
+                CCDelayTime::create(0.3f),
+                CallFuncExt::create([this, visible]() {
+                    if (visible) PlatformToolbox::showCursor();
+                    else PlatformToolbox::hideCursor();
+                }),
+                nullptr
+            ));
+            action->setTag(ACTION_TAG);
+        }
+    }
+
+    void resetUIVisibility() {
+        auto menu = static_cast<CCMenu*>(m_editorUI->getChildByID("playtest-menu"));
+        menu->stopAllActions();
+        menu->setOpacity(255);
+
+        stopActionByTag(ACTION_TAG);
+        PlatformToolbox::showCursor();
     }
 };
 
@@ -67,23 +137,26 @@ class $modify(EditorUI) {
         EditorUI::updatePlaybackBtn();
 
         bool isPlaying = m_editorLayer->m_playbackMode == PlaybackMode::Playing;
-        auto pauseSpr = static_cast<CCSprite*>(m_playtestBtn->getNormalImage());
-        auto stopSpr = static_cast<CCSprite*>(m_playtestStopBtn->getNormalImage());
 
-        pauseSpr->setOpacity(isPlaying ? 75 : 255);
-        stopSpr->setOpacity(isPlaying ? 75 : 255);
+        if (Mod::get()->getSettingValue<bool>("transparent-playtest-buttons")) {
+            auto pauseSpr = static_cast<CCSprite*>(m_playtestBtn->getNormalImage());
+            auto stopSpr = static_cast<CCSprite*>(m_playtestStopBtn->getNormalImage());
 
-        constexpr float scale = 38.f / 24.f;
-        pauseSpr->setScale(isPlaying ? scale : 1.f);
-        stopSpr->setScale(isPlaying ? scale : 1.f);
+            pauseSpr->setOpacity(isPlaying ? 75 : 255);
+            stopSpr->setOpacity(isPlaying ? 75 : 255);
 
-        auto pauseFrame = CCSpriteFrameCache::get()->spriteFrameByName("GJ_pauseBtn_clean_001.png");
-        if (isPlaying) pauseSpr->setDisplayFrame(pauseFrame);
+            constexpr float scale = 38.f / 24.f;
+            pauseSpr->setScale(isPlaying ? scale : 1.f);
+            stopSpr->setScale(isPlaying ? scale : 1.f);
 
-        auto stopFrame = CCSpriteFrameCache::get()->spriteFrameByName(
-            isPlaying ? "GJ_stopBtn_clean_001.png"_spr : "GJ_stopEditorBtn_001.png"
-        );
-        stopSpr->setDisplayFrame(stopFrame);
+            auto pauseFrame = CCSpriteFrameCache::get()->spriteFrameByName("GJ_pauseBtn_clean_001.png");
+            if (isPlaying) pauseSpr->setDisplayFrame(pauseFrame);
+
+            auto stopFrame = CCSpriteFrameCache::get()->spriteFrameByName(
+                isPlaying ? "GJ_stopBtn_clean_001.png"_spr : "GJ_stopEditorBtn_001.png"
+            );
+            stopSpr->setDisplayFrame(stopFrame);
+        }
 
         // maybe this should be done in EditorUI::showUI but betteredit uses that
         // for the hide ui button and i don't want to change that behavior
