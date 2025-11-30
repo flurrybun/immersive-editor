@@ -1,4 +1,5 @@
 #include <Geode/modify/LevelEditorLayer.hpp>
+#include <Geode/modify/EditorUI.hpp>
 #include <alphalaneous.good_grid/include/DrawGridAPI.hpp>
 #include <alphalaneous.good_grid/include/DrawLayers.hpp>
 #include "misc/PlaytestEvent.hpp"
@@ -6,9 +7,12 @@
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
 
-class $modify(LevelEditorLayer) {
+constexpr int ACTION_TAG = 0x8D45C2A4;
+
+class $modify(HEUILevelEditorLayer, LevelEditorLayer) {
     struct Fields {
         PlaytestEventListener playtestListener;
+        bool uiVisible = true;
         bool hidePath = false;
         bool showGround = false;
     };
@@ -54,5 +58,37 @@ class $modify(LevelEditorLayer) {
         });
 
         return true;
+    }
+};
+
+class $modify(EditorUI) {
+    $override
+    void updatePlaybackBtn() {
+        EditorUI::updatePlaybackBtn();
+
+        bool isPlaying = m_editorLayer->m_playbackMode == PlaybackMode::Playing;
+        auto pauseSpr = static_cast<CCSprite*>(m_playtestBtn->getNormalImage());
+        auto stopSpr = static_cast<CCSprite*>(m_playtestStopBtn->getNormalImage());
+
+        pauseSpr->setOpacity(isPlaying ? 75 : 255);
+        stopSpr->setOpacity(isPlaying ? 75 : 255);
+
+        constexpr float scale = 38.f / 24.f;
+        pauseSpr->setScale(isPlaying ? scale : 1.f);
+        stopSpr->setScale(isPlaying ? scale : 1.f);
+
+        auto pauseFrame = CCSpriteFrameCache::get()->spriteFrameByName("GJ_pauseBtn_clean_001.png");
+        if (isPlaying) pauseSpr->setDisplayFrame(pauseFrame);
+
+        auto stopFrame = CCSpriteFrameCache::get()->spriteFrameByName(
+            isPlaying ? "GJ_stopBtn_clean_001.png"_spr : "GJ_stopEditorBtn_001.png"
+        );
+        stopSpr->setDisplayFrame(stopFrame);
+
+        // maybe this should be done in EditorUI::showUI but betteredit uses that
+        // for the hide ui button and i don't want to change that behavior
+
+        auto pauseBtn = getChildByID("settings-menu")->getChildByID("pause-button");
+        pauseBtn->setVisible(!isPlaying);
     }
 };

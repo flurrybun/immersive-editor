@@ -12,7 +12,8 @@
     "developer": "NinKaz",
     "description": "",
     "dependencies": {
-        "alphalaneous.good_grid": ">=v1.1.0"
+        "alphalaneous.good_grid": ">=v1.1.0",
+        "geode.node-ids": ">=1.21.1"
     },
     "resources": {
         "spritesheets": {
