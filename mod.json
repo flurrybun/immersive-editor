@@ -15,6 +15,16 @@
         "alphalaneous.good_grid": ">=v1.1.0",
         "geode.node-ids": ">=1.21.1"
     },
+    "incompatibilities": {
+        "undefined0.object_glow_in_editor": {
+            "importance": "conflicting",
+            "version": "*"
+        },
+        "pawis7.cbeditor": {
+            "importance": "conflicting",
+            "version": "*"
+        }
+    },
     "resources": {
         "spritesheets": {
             "editor-sheet": [
