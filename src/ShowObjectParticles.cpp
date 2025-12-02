@@ -333,4 +333,28 @@ class $modify(LevelEditorLayer) {
 
         return ret;
     }
+
+    // overriding claimCustomParticle/unclaimCustomParticle may cause issues i don't know of yet. i assume there's a
+    // reason rob implemented different behavior in the editor, but from what i can tell this seems to work fine
+
+    $override
+    CCParticleSystemQuad* claimCustomParticle(
+        gd::string const& key, ParticleStruct const& particleStruct,
+        int zLayer, int zOrder, int uiObject, bool dontAdd
+    ) {
+        // ⏺️ fix particles immediately disappearing on toggle off
+
+        m_particleCount = 0;
+
+        return GJBaseGameLayer::claimCustomParticle(
+            key, particleStruct, zLayer, zOrder, uiObject, dontAdd
+        );
+    }
+
+    $override
+    void unclaimCustomParticle(gd::string const& key, CCParticleSystemQuad* particle) {
+        // ⏺️ fix particles immediately disappearing on toggle off
+
+        GJBaseGameLayer::unclaimCustomParticle(key, particle);
+    }
 };
