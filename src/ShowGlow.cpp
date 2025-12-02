@@ -1,11 +1,12 @@
 #include <Geode/modify/GameObject.hpp>
 #include <Geode/modify/LevelEditorLayer.hpp>
+#include "UpdateVisibility.hpp"
 #include "misc/Utils.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
 
-class $modify(SGGameObject, GameObject) {
+class $modify(GameObject) {
     $override
     void addGlow(gd::string objectFrameName) {
         if (!LevelEditorLayer::get()) {
@@ -51,36 +52,7 @@ class $modify(SGGameObject, GameObject) {
     }
 };
 
-class $modify(LevelEditorLayer) {
-    $override
-    void updateVisibility(float dt) {
-        LevelEditorLayer::updateVisibility(dt);
-
-        ccColor3B bgColor = {};
-        ccColor3B lbgColor = {255, 255, 255};
-
-        if (ColorActionSprite* lbgAction = m_effectManager->m_colorActionSpriteVector[1000]) {
-            bgColor = lbgAction->m_color;
-        }
-
-        if (bgColor.r + bgColor.g + bgColor.b < 150) {
-            ColorActionSprite* lbgAction = m_effectManager->m_colorActionSpriteVector[1007];
-            if (lbgAction) lbgColor = lbgAction->m_color;
-        }
-
-        float screenRight = CCDirector::get()->getScreenRight();
-        float playerX = screenRight * 0.5 - 75;
-
-        for (size_t i = 0; i < m_activeObjectsCount; i++) {
-            GameObject* object = m_activeObjects[i];
-
-            updateCustomGlowColor(object);
-            updateFadingBlock(
-                object, playerX + 110, playerX, screenRight - (playerX + 110) - 90, playerX - 30, lbgColor
-            );
-        }
-    }
-
+class $modify(SGLevelEditorLayer, LevelEditorLayer) {
     void updateCustomGlowColor(GameObject* object) {
         // some objects like orbs, ice spikes, and certain saws don't inherit their glow color from the object color
         // instead, they use a custom color updated per frame in PlayLayer::updateVisibility
@@ -263,3 +235,40 @@ class $modify(LevelEditorLayer) {
         }
     }
 };
+
+ie::GlowContext ie::preUpdateGlow(LevelEditorLayer* lel) {
+    ccColor3B bgColor = {};
+    ccColor3B lbgColor = {255, 255, 255};
+
+    if (ColorActionSprite* lbgAction = lel->m_effectManager->m_colorActionSpriteVector[1000]) {
+        bgColor = lbgAction->m_color;
+    }
+
+    if (bgColor.r + bgColor.g + bgColor.b < 150) {
+        ColorActionSprite* lbgAction = lel->m_effectManager->m_colorActionSpriteVector[1007];
+        if (lbgAction) lbgColor = lbgAction->m_color;
+    }
+
+    float screenRight = CCDirector::get()->getScreenRight();
+    float playerX = screenRight * 0.5 - 75;
+
+    return {
+        playerX + 110,
+        playerX,
+        screenRight - (playerX + 110) - 90,
+        playerX - 30,
+        lbgColor
+    };
+}
+
+void ie::updateGlow(LevelEditorLayer* lel, GameObject* object, const GlowContext& context) {
+    static_cast<SGLevelEditorLayer*>(lel)->updateCustomGlowColor(object);
+    static_cast<SGLevelEditorLayer*>(lel)->updateFadingBlock(
+        object,
+        context.rightFadeBound,
+        context.leftFadeBound,
+        context.leftFadeWidth,
+        context.rightFadeWidth,
+        context.lbgColor
+    );
+}

@@ -1,5 +1,6 @@
 #include <Geode/modify/GameObject.hpp>
 #include <Geode/modify/LevelEditorLayer.hpp>
+#include "UpdateVisibility.hpp"
 #include "misc/ObjectEvent.hpp"
 
 #include <Geode/Geode.hpp>
@@ -31,7 +32,7 @@ class $modify(SPRBGameObject, GameObject) {
     }
 };
 
-class $modify(LevelEditorLayer) {
+class $modify(SPRBLevelEditorLayer, LevelEditorLayer) {
     struct Fields {
         ObjectEventListener objectListener;
         std::unordered_map<WeakRef<GameObject>, Ref<CCSprite>> pulseRods;
@@ -68,25 +69,6 @@ class $modify(LevelEditorLayer) {
 
         for (const auto& [rod, ball] : m_fields->pulseRods) {
             ball->setDisplayFrame(CCSpriteFrameCache::get()->spriteFrameByName(frame.c_str()));
-        }
-    }
-
-    $override
-    void updateVisibility(float dt) {
-        LevelEditorLayer::updateVisibility(dt);
-
-        updatePulseRods();
-
-        float audioScale = 1.f;
-
-        if (m_playbackMode == PlaybackMode::Playing || m_editorUI->m_isPlayingMusic) {
-            audioScale = m_audioEffectsLayer
-                ? m_audioEffectsLayer->m_audioScale
-                : FMODAudioEngine::get()->getMeteringValue();
-        }
-
-        for (const auto& [rod, ball] : m_fields->pulseRods) {
-            ball->setScale(audioScale);
         }
     }
 
@@ -153,3 +135,50 @@ class $modify(LevelEditorLayer) {
         m_fields->pulseRodIndex = rand() % 3 + 1;
     }
 };
+
+void ie::updatePulseRodBalls(LevelEditorLayer* lel, float audioScale) {
+    auto& pulseRods = static_cast<SPRBLevelEditorLayer*>(lel)->m_fields->pulseRods;
+
+    if (FMODAudioEngine::get()->m_musicVolume <= 0.f) audioScale = 0.5f;
+    else if (audioScale == -1.f) audioScale = 1.f;
+
+    for (auto it = pulseRods.begin(); it != pulseRods.end(); ) {
+        GameObject* rod = it->first.lock();
+        CCSprite* ball = it->second;
+
+        if (!rod) {
+            ball->removeFromParent();
+            it = pulseRods.erase(it);
+            continue;
+        }
+
+        ++it;
+
+        int rodColorID = rod->m_baseColor->m_colorID;
+        bool isBallBlending = lel->m_blendingColors[rodColorID];
+
+        ball->setOpacity(rod->getOpacity());
+
+        CCNode* rodParent = rod->getParent();
+        CCNode* ballParent = ball->getParent();
+        CCSpriteBatchNode* ballLayer = isBallBlending ? lel->m_gameBlendingLayerB1 : lel->m_gameLayerB1;
+
+        if (rodParent && !ballParent) {
+            ballLayer->addChild(ball);
+        } else if (!rodParent && ballParent) {
+            ball->removeFromParent();
+            continue;
+        } else if (ballParent && ballParent != ballLayer) {
+            ball->removeFromParent();
+            ballLayer->addChild(ball);
+        } else if (!rodParent && !ballParent) {
+            continue;
+        }
+
+        CCPoint relativeBallPos = ccp(rod->getContentWidth() * 0.5f, rod->getContentHeight() + 10.f);
+        CCPoint ballPos = ballLayer->convertToNodeSpace(rod->convertToWorldSpace(relativeBallPos));
+
+        ball->setPosition(ballPos);
+        ball->setScale(audioScale);
+    }
+}

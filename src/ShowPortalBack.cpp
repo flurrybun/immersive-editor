@@ -1,4 +1,5 @@
 #include <Geode/modify/LevelEditorLayer.hpp>
+#include "UpdateVisibility.hpp"
 #include "misc/ObjectEvent.hpp"
 
 #include <Geode/Geode.hpp>
@@ -7,7 +8,7 @@ using namespace geode::prelude;
 // portal backs are a special object (id 38) with the portal's properties duplicated over, but this method
 // wouldn't work in the editor. instead, each portal gets a back sprite that follows its pos/rot/scale/color/opacity
 
-class $modify(LevelEditorLayer) {
+class $modify(SPBLevelEditorLayer, LevelEditorLayer) {
     struct Fields {
         ObjectEventListener objectListener;
         std::unordered_map<WeakRef<GameObject>, Ref<CCSprite>> portalBacks;
@@ -30,34 +31,6 @@ class $modify(LevelEditorLayer) {
         });
 
         return true;
-    }
-
-    $override
-    void updateVisibility(float dt) {
-        LevelEditorLayer::updateVisibility(dt);
-
-        for (auto it = m_fields->portalBacks.begin(); it != m_fields->portalBacks.end(); ) {
-            GameObject* portal = it->first.lock();
-            CCSprite* back = it->second;
-
-            if (!portal) {
-                back->removeFromParent();
-                it = m_fields->portalBacks.erase(it);
-                continue;
-            }
-
-            ++it;
-
-            back->setPosition(portal->getPosition());
-            back->setRotationX(portal->getRotationX());
-            back->setRotationY(portal->getRotationY());
-            back->setScaleX(portal->getScaleX());
-            back->setScaleY(portal->getScaleY());
-
-            back->setVisible(portal->isVisible());
-            back->setOpacity(portal->getOpacity());
-            back->setColor(portal->getColor());
-        }
     }
 
     void addPortalBack(GameObject* object) {
@@ -135,3 +108,30 @@ class $modify(LevelEditorLayer) {
         }
     }
 };
+
+void ie::updatePortalBacks(LevelEditorLayer* lel) {
+    auto& portalBacks = static_cast<SPBLevelEditorLayer*>(lel)->m_fields->portalBacks;
+
+    for (auto it = portalBacks.begin(); it != portalBacks.end(); ) {
+        GameObject* portal = it->first.lock();
+        CCSprite* back = it->second;
+
+        if (!portal) {
+            back->removeFromParent();
+            it = portalBacks.erase(it);
+            continue;
+        }
+
+        ++it;
+
+        back->setPosition(portal->getPosition());
+        back->setRotationX(portal->getRotationX());
+        back->setRotationY(portal->getRotationY());
+        back->setScaleX(portal->getScaleX());
+        back->setScaleY(portal->getScaleY());
+
+        back->setVisible(portal->isVisible());
+        back->setOpacity(portal->getOpacity());
+        back->setColor(portal->getColor());
+    }
+}

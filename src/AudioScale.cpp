@@ -1,5 +1,6 @@
 #include <Geode/modify/LevelEditorLayer.hpp>
 #include <Geode/modify/EditorUI.hpp>
+#include "UpdateVisibility.hpp"
 #include "misc/PlaytestEvent.hpp"
 
 #include <Geode/Geode.hpp>
@@ -55,12 +56,9 @@ class $modify(ASLevelEditorLayer, LevelEditorLayer) {
         }
     }
 
-    $override
-    void updateVisibility(float dt) {
-        LevelEditorLayer::updateVisibility(dt);
-
-        if (m_playbackMode == PlaybackMode::Not && !m_editorUI->m_isPlayingMusic) return;
-        if (FMODAudioEngine::get()->m_musicVolume <= 0.f) return;
+    float preUpdateAudioScale(float dt) {
+        if (m_playbackMode == PlaybackMode::Not && !m_editorUI->m_isPlayingMusic) return -1.f;
+        if (FMODAudioEngine::get()->m_musicVolume <= 0.f) return -1.f;
 
         if (m_audioEffectsLayer) {
             GameManager::get()->m_playLayer = reinterpret_cast<PlayLayer*>(GJBaseGameLayer::get());
@@ -75,10 +73,27 @@ class $modify(ASLevelEditorLayer, LevelEditorLayer) {
         if (m_player1) m_player1->m_audioScale = audioScale;
         if (m_player2) m_player2->m_audioScale = audioScale;
 
-        for (size_t i = 0; i < m_activeObjectsCount; i++) {
-            GameObject* object = m_activeObjects[i];
-            setAudioScale(object, audioScale);
+        return audioScale;
+    }
+
+    void setAudioScale(GameObject* object, float audioScale) {
+        if (!object->m_usesAudioScale || object->m_hasNoAudioScale) return;
+
+        // orbs have their own audio scale logic in RingObject::setRScale, which only runs when
+        // m_editorEnabled is false? otherwise it's the same as GameObject::setRScale. weird
+
+        object->m_editorEnabled = false;
+
+        if (object->m_customAudioScale) {
+            float min = object->m_minAudioScale;
+            float max = object->m_maxAudioScale;
+
+            object->setRScale(min + audioScale * (max - min));
+        } else {
+            object->setRScale(audioScale);
         }
+
+        object->m_editorEnabled = true;
     }
 
     void resetAudioScale(bool isPlaying) {
@@ -106,26 +121,6 @@ class $modify(ASLevelEditorLayer, LevelEditorLayer) {
             }
         }
     }
-
-    void setAudioScale(GameObject* object, float audioScale) {
-        if (!object->m_usesAudioScale || object->m_hasNoAudioScale) return;
-
-        // orbs have their own audio scale logic in RingObject::setRScale, which only runs when
-        // m_editorEnabled is false? otherwise it's the same as GameObject::setRScale. weird
-
-        object->m_editorEnabled = false;
-
-        if (object->m_customAudioScale) {
-            float min = object->m_minAudioScale;
-            float max = object->m_maxAudioScale;
-
-            object->setRScale(min + audioScale * (max - min));
-        } else {
-            object->setRScale(audioScale);
-        }
-
-        object->m_editorEnabled = true;
-    }
 };
 
 class $modify(EditorUI) {
@@ -136,3 +131,12 @@ class $modify(EditorUI) {
         static_cast<ASLevelEditorLayer*>(m_editorLayer)->resetAudioScale(m_isPlayingMusic);
     }
 };
+
+float ie::preUpdateAudioScale(LevelEditorLayer* lel, float dt) {
+    return static_cast<ASLevelEditorLayer*>(lel)->preUpdateAudioScale(dt);
+}
+
+void ie::updateAudioScale(LevelEditorLayer* lel, GameObject* object, float audioScale) {
+    if (audioScale == -1.f) return;
+    static_cast<ASLevelEditorLayer*>(lel)->setAudioScale(object, audioScale);
+}

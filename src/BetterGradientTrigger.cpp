@@ -1,7 +1,7 @@
 #include <Geode/modify/GradientTriggerObject.hpp>
-#include <Geode/modify/LevelEditorLayer.hpp>
 #include <Geode/modify/GJBaseGameLayer.hpp>
 #include <Geode/utils/VMTHookManager.hpp>
+#include "UpdateVisibility.hpp"
 #include "misc/ObjectEvent.hpp"
 #include "misc/Utils.hpp"
 
@@ -114,22 +114,11 @@ class $modify(BGTIGradientTriggerObject, GradientTriggerObject) {
     }
 };
 
-class $modify(LevelEditorLayer) {
-    $override
-    void updateVisibility(float dt) {
-        // ⏺️ update blend mode of gradient trigger icon
-        // ⏺️ change color of gradient when trigger is selected
+void ie::updateGradientTrigger(GameObject* object) {
+    if (object->m_objectID != 2903) return;
 
-        LevelEditorLayer::updateVisibility(dt);
-
-        for (size_t i = 0; i < m_activeObjectsCount; i++) {
-            GameObject* object = m_activeObjects[i];
-            if (object->m_objectID != 2903) continue;
-
-            static_cast<BGTIGradientTriggerObject*>(object)->updateGradientBlendMode();
-        }
-    }
-};
+    static_cast<BGTIGradientTriggerObject*>(object)->updateGradientBlendMode();
+}
 
 class $modify(GJBaseGameLayer) {
     $override

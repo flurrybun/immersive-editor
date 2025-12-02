@@ -1,6 +1,7 @@
 #include <Geode/modify/EnhancedGameObject.hpp>
 #include <Geode/modify/GameObject.hpp>
 #include <Geode/modify/LevelEditorLayer.hpp>
+#include "UpdateVisibility.hpp"
 #include "misc/Utils.hpp"
 
 #include <Geode/Geode.hpp>
@@ -308,20 +309,6 @@ class $modify(LevelEditorLayer) {
     }
 
     $override
-    void updateVisibility(float dt) {
-        // ⏺️ update particle visibility based on 'no particles' setting
-
-        LevelEditorLayer::updateVisibility(dt);
-
-        for (size_t i = 0; i < m_activeObjectsCount; i++) {
-            GameObject* object = m_activeObjects[i];
-            if (!object->m_particle || object->m_objectID == 2065) continue;
-
-            object->m_particle->setVisible(!object->m_hasNoParticles);
-        }
-    }
-
-    $override
     CCArray* createObjectsFromString(gd::string const& objString, bool dontCreateUndo, bool dontShowMaxWarning) {
         // ⏺️ prevent particles appearing when creating objects from string (e.g. custom objects preview)
 
@@ -359,3 +346,9 @@ class $modify(LevelEditorLayer) {
         GJBaseGameLayer::unclaimCustomParticle(key, particle);
     }
 };
+
+void ie::updateObjectParticle(LevelEditorLayer* lel, GameObject* object) {
+    if (!object->m_particle || object->m_objectID == 2065) return;
+
+    object->m_particle->setVisible(!object->m_hasNoParticles);
+}
