@@ -75,7 +75,8 @@ class $modify(ASLevelEditorLayer, LevelEditorLayer) {
         if (m_player1) m_player1->m_audioScale = audioScale;
         if (m_player2) m_player2->m_audioScale = audioScale;
 
-        for (const auto& object : m_activeObjects) {
+        for (size_t i = 0; i < m_activeObjectsCount; i++) {
+            GameObject* object = m_activeObjects[i];
             setAudioScale(object, audioScale);
         }
     }

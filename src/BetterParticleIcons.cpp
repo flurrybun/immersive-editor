@@ -12,7 +12,8 @@ class $modify(LevelEditorLayer) {
 
         LevelEditorLayer::updateVisibility(dt);
 
-        for (const auto& object : m_activeObjects) {
+        for (size_t i = 0; i < m_activeObjectsCount; i++) {
+            GameObject* object = m_activeObjects[i];
             unsigned char opacity = 0;
 
             if (m_playbackMode != PlaybackMode::Playing && !m_hideParticleIcons) {

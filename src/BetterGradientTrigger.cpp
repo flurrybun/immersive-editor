@@ -122,10 +122,11 @@ class $modify(LevelEditorLayer) {
 
         LevelEditorLayer::updateVisibility(dt);
 
-        for (const auto& obj : m_activeObjects) {
-            if (obj->m_objectID != 2903) continue;
+        for (size_t i = 0; i < m_activeObjectsCount; i++) {
+            GameObject* object = m_activeObjects[i];
+            if (object->m_objectID != 2903) continue;
 
-            static_cast<BGTIGradientTriggerObject*>(obj)->updateGradientBlendMode();
+            static_cast<BGTIGradientTriggerObject*>(object)->updateGradientBlendMode();
         }
     }
 };

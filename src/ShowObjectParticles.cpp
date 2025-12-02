@@ -313,7 +313,8 @@ class $modify(LevelEditorLayer) {
 
         LevelEditorLayer::updateVisibility(dt);
 
-        for (const auto& object : m_activeObjects) {
+        for (size_t i = 0; i < m_activeObjectsCount; i++) {
+            GameObject* object = m_activeObjects[i];
             if (!object->m_particle || object->m_objectID == 2065) continue;
 
             object->m_particle->setVisible(!object->m_hasNoParticles);
