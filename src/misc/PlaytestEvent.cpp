@@ -9,21 +9,18 @@ class $modify(LevelEditorLayer) {
     $override
     void onPlaytest() {
         LevelEditorLayer::onPlaytest();
-
         PlaytestEvent(PlaybackMode::Playing).post();
     }
 
     $override
     void onStopPlaytest() {
-        LevelEditorLayer::onStopPlaytest();
-
         PlaytestEvent(PlaybackMode::Not).post();
+        LevelEditorLayer::onStopPlaytest();
     }
 
     $override
     void onResumePlaytest() {
         LevelEditorLayer::onResumePlaytest();
-
         PlaytestEvent(PlaybackMode::Playing).post();
     }
 };

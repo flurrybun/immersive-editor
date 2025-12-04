@@ -10,6 +10,7 @@ class $modify(LevelEditorLayer) {
         LevelEditorLayer::updateVisibility(dt);
 
         float audioScale = ie::preUpdateAudioScale(this, dt);
+        float cameraXCenter = ie::preUpdateFadeAndEnter(this);
         ie::GlowContext glowContext = ie::preUpdateGlow(this);
 
         // using a range-based for loop on m_activeObjects can crash due to a use-after-free
@@ -21,6 +22,7 @@ class $modify(LevelEditorLayer) {
             ie::updateAudioScale(this, object, audioScale);
             ie::updateGradientTrigger(object);
             ie::updateParticleIcon(this, object);
+            ie::updateFadeAndEnter(this, object, cameraXCenter);
             ie::updateGlow(this, object, glowContext);
             ie::updateObjectParticle(this, object);
         }

@@ -13,11 +13,13 @@ namespace ie {
     };
 
     float preUpdateAudioScale(LevelEditorLayer* lel, float dt);
+    float preUpdateFadeAndEnter(LevelEditorLayer* lel);
     GlowContext preUpdateGlow(LevelEditorLayer* lel);
 
     void updateAudioScale(LevelEditorLayer* lel, GameObject* object, float audioScale);
     void updateGradientTrigger(GameObject* object);
     void updateParticleIcon(LevelEditorLayer* lel, GameObject* object);
+    void updateFadeAndEnter(LevelEditorLayer* lel, GameObject* object, float cameraXCenter);
     void updateGlow(LevelEditorLayer* lel, GameObject* object, const GlowContext& context);
     void updateObjectParticle(LevelEditorLayer* lel, GameObject* object);
 
