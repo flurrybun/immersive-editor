@@ -18,7 +18,7 @@ using namespace geode::prelude;
 class $modify(GameObject) {
     $override
     gd::string getSaveString(GJBaseGameLayer* layer) {
-        gd::string oldStr = GameObject::getSaveString(layer);
+        std::string oldStr = GameObject::getSaveString(layer);
 
         std::vector<std::string> tokens;
         std::stringstream ss(oldStr);
@@ -40,14 +40,14 @@ class $modify(GameObject) {
             }
         }
 
-        gd::string newStr;
+        std::string newStr;
 
         for (size_t i = 0; i < tokens.size(); ++i) {
             if (i > 0) newStr += ",";
             newStr += tokens[i];
         }
 
-        return newStr;
+        return gd::string(newStr);
     }
 
     std::string formatRotation(float rotation) {
