@@ -37,6 +37,18 @@ class $modify(GameObject) {
     }
 
     $override
+    void setupCustomSprites(gd::string frameName) {
+        if (m_objectType != GameObjectType::Slope || !m_editorEnabled) {
+            GameObject::setupCustomSprites(frameName);
+            return;
+        }
+
+        m_editorEnabled = false;
+        GameObject::setupCustomSprites(frameName);
+        m_editorEnabled = true;
+    }
+
+    $override
     void selectObject(ccColor3B color) {
         // ⏺️ fix glow not becoming selected green color
 
