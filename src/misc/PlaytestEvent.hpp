@@ -12,6 +12,12 @@ public:
     bool isPlaying() const {
         return mode == PlaybackMode::Playing;
     }
+    bool isPaused() const {
+        return mode == PlaybackMode::Paused;
+    }
+    bool isNot() const {
+        return mode == PlaybackMode::Not;
+    }
 
     PlaytestEvent(PlaybackMode mode) : mode(mode) {}
 };

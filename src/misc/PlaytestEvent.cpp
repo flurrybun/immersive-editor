@@ -8,31 +8,47 @@ using namespace geode::prelude;
 class $modify(LevelEditorLayer) {
     $override
     void onPlaytest() {
+        bool wasPlaying = m_playbackMode == PlaybackMode::Playing;
         LevelEditorLayer::onPlaytest();
-        PlaytestEvent(PlaybackMode::Playing).post();
+
+        if (!wasPlaying) {
+            PlaytestEvent(PlaybackMode::Playing).post();
+        }
     }
 
     $override
     void onStopPlaytest() {
-        PlaytestEvent(PlaybackMode::Not).post();
+        bool wasNot = m_playbackMode == PlaybackMode::Not;
+
         LevelEditorLayer::onStopPlaytest();
+
+        if (!wasNot) {
+            PlaytestEvent(PlaybackMode::Not).post();
+        }
     }
 
     $override
     void onResumePlaytest() {
+        bool wasPlaying = m_playbackMode == PlaybackMode::Playing;
+
         LevelEditorLayer::onResumePlaytest();
-        PlaytestEvent(PlaybackMode::Playing).post();
+
+        if (!wasPlaying) {
+            PlaytestEvent(PlaybackMode::Playing).post();
+        }
     }
 };
 
 class $modify(EditorUI) {
     $override
     void onPlaytest(CCObject* sender) {
+        bool wasPaused = m_editorLayer->m_playbackMode == PlaybackMode::Paused;
+
         EditorUI::onPlaytest(sender);
 
         // LevelEditorLayer::onPausePlaytest is inlined on windows
 
-        if (m_editorLayer->m_playbackMode == PlaybackMode::Paused) {
+        if (!wasPaused && m_editorLayer->m_playbackMode == PlaybackMode::Paused) {
             PlaytestEvent(PlaybackMode::Paused).post();
         }
     }
