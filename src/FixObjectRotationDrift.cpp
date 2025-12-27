@@ -21,11 +21,13 @@ class $modify(GameObject) {
         std::string oldStr = GameObject::getSaveString(layer);
 
         std::vector<std::string> tokens;
-        std::stringstream ss(oldStr);
-        std::string token;
+        size_t start = 0;
 
-        while (std::getline(ss, token, ',')) {
-            tokens.push_back(token);
+        for (size_t i = 0; i <= oldStr.size(); i++) {
+            if (i != oldStr.size() && oldStr[i] != ',') continue;
+
+            tokens.emplace_back(oldStr.substr(start, i - start));
+            start = i + 1;
         }
 
         for (size_t i = 0; i + 1 < tokens.size(); i += 2) {
@@ -40,14 +42,14 @@ class $modify(GameObject) {
             }
         }
 
-        std::string newStr;
+        fmt::memory_buffer buffer;
 
-        for (size_t i = 0; i < tokens.size(); ++i) {
-            if (i > 0) newStr += ",";
-            newStr += tokens[i];
+        for (size_t i = 0; i < tokens.size(); i++) {
+            if (i > 0) fmt::format_to(std::back_inserter(buffer), ",");
+            fmt::format_to(std::back_inserter(buffer), "{}", tokens[i]);
         }
 
-        return gd::string(newStr);
+        return gd::string(buffer.data(), buffer.size());
     }
 
     std::string formatRotation(float rotation) {
