@@ -123,10 +123,22 @@ void ie::updateGradientTrigger(GameObject* object) {
 class $modify(GJBaseGameLayer) {
     $override
     void updateGradientLayers() {
+        // ⏺️ hide gradients with preview mode disabled
+
+        auto lel = LevelEditorLayer::get();
+
+        if (!lel) {
+            GJBaseGameLayer::updateGradientLayers();
+            return;
+        }
+
+        if (!lel->m_previewMode) return;
+
+        colorSelectedGradients();
         GJBaseGameLayer::updateGradientLayers();
+    }
 
-        if (!LevelEditorLayer::get()) return;
-
+    void colorSelectedGradients() {
         if (auto object = EditorUI::get()->m_selectedObject) {
             if (object->m_objectID != 2903) return;
 
