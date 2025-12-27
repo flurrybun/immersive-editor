@@ -111,10 +111,7 @@ class $modify(ASLevelEditorLayer, LevelEditorLayer) {
                     }
                 }
 
-                // this also resets scale/rotation for enter effects
-
                 object->setRScale(1.f);
-                object->setRRotation(0.f);
             }
         } else if (isSilent) {
             for (const auto& object : CCArrayExt<GameObject*>(m_objects)) {

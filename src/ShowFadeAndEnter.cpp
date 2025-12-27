@@ -1,10 +1,35 @@
 #include <Geode/modify/LevelEditorLayer.hpp>
+#include "misc/PlaytestEvent.hpp"
 #include "UpdateVisibility.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
 
 class $modify(SFAELevelEditorLayer, LevelEditorLayer) {
+    // uncomment this whenever i work out the issue with enter effects
+
+    // struct Fields {
+    //     PlaytestEventListener playtestListener;
+    // };
+
+    // $override
+    // bool init(GJGameLevel* level, bool noUI) {
+    //     if (!LevelEditorLayer::init(level, noUI)) return false;
+
+    //     m_fields->playtestListener.bind([this](PlaytestEvent* event) {
+    //         if (event->isPlaying()) return ListenerResult::Propagate;
+
+    //         for (const auto& object : CCArrayExt<GameObject*>(m_objects)) {
+    //             // resetting object scale is handled in AudioScale.cpp
+    //             object->setRRotation(0.f);
+    //         }
+
+    //         return ListenerResult::Propagate;
+    //     });
+
+    //     return true;
+    // }
+
     bool shouldFadeObject(GameObject* object, bool isRight, short customEnterType, int enterType) {
         if (object->m_ignoreFade) return false;
         if (object->m_isInvisibleBlock) return false;
