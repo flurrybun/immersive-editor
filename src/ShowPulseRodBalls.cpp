@@ -9,33 +9,59 @@ using namespace geode::prelude;
 // pulse rod balls are a special object (id 37) with the rod's properties duplicated over, but this method
 // wouldn't work in the editor. instead, each rod gets a ball sprite that follows its pos/rot/scale/color/opacity
 
-bool isPulseRod(GameObject* object) {
+bool isPulseRodID(int key) {
     return (
-        object->m_objectID == 15 ||
-        object->m_objectID == 16 ||
-        object->m_objectID == 17
+        key == 15 ||
+        key == 16 ||
+        key == 17
     );
 }
 
-class $modify(SPRBGameObject, GameObject) {
-    struct Fields {
-        CCSprite* ballSprite;
-    };
+bool isPulseRod(GameObject* object) {
+    return isPulseRodID(object->m_objectID);
+}
 
-    $override
-    void setObjectColor(const ccColor3B& color) {
-        if (m_fields->ballSprite) {
-            m_fields->ballSprite->setColor(color);
+// creating a new class avoids hooking setObjectColor with a fields accessor (very costly)
+
+class PulseRodGameObject : public GameObject {
+public:
+    Ref<CCSprite> m_ball;
+
+    void setObjectColor(const ccColor3B& color) override {
+        if (m_ball) {
+            m_ball->setColor(color);
         } else {
             GameObject::setObjectColor(color);
         }
     }
 };
 
+class $modify(GameObject) {
+    $override
+    static GameObject* createWithKey(int key) {
+        if (!isPulseRodID(key) || !LevelEditorLayer::get()) {
+            return GameObject::createWithKey(key);
+        }
+
+        PulseRodGameObject* obj = new PulseRodGameObject();
+        const char* frame = ObjectToolbox::sharedState()->intKeyToFrame(key);
+
+        if (obj && obj->init(frame)) {
+            obj->autorelease();
+            obj->m_objectID = key;
+
+            return obj;
+        }
+
+        CC_SAFE_DELETE(obj);
+        return nullptr;
+    }
+};
+
 class $modify(SPRBLevelEditorLayer, LevelEditorLayer) {
     struct Fields {
         ObjectEventListener objectListener;
-        std::unordered_map<WeakRef<GameObject>, Ref<CCSprite>> pulseRods;
+        std::vector<PulseRodGameObject*> pulseRods;
         short pulseRodIndex = 0;
     };
 
@@ -49,9 +75,9 @@ class $modify(SPRBLevelEditorLayer, LevelEditorLayer) {
             if (!isPulseRod(event->object)) return ListenerResult::Propagate;
 
             if (event->isAdded) {
-                addPulseRodBall(event->object);
+                addPulseRodBall(static_cast<PulseRodGameObject*>(event->object));
             } else {
-                removePulseRodBall(event->object);
+                removePulseRodBall(static_cast<PulseRodGameObject*>(event->object));
             }
 
             return ListenerResult::Propagate;
@@ -67,68 +93,28 @@ class $modify(SPRBLevelEditorLayer, LevelEditorLayer) {
         generateRodIndex();
         std::string frame = fmt::format("rod_ball_{:02}_001.png", m_fields->pulseRodIndex);
 
-        for (const auto& [rod, ball] : m_fields->pulseRods) {
-            ball->setDisplayFrame(CCSpriteFrameCache::get()->spriteFrameByName(frame.c_str()));
+        for (const auto& rod : m_fields->pulseRods) {
+            rod->m_ball->setDisplayFrame(CCSpriteFrameCache::get()->spriteFrameByName(frame.c_str()));
         }
     }
 
-    void addPulseRodBall(GameObject* object) {
+    void addPulseRodBall(PulseRodGameObject* object) {
         std::string frame = fmt::format("rod_ball_{:02}_001.png", m_fields->pulseRodIndex);
         CCSprite* ball = CCSprite::createWithSpriteFrameName("rod_ball_01_001.png");
 
-        m_fields->pulseRods[object] = ball;
-        static_cast<SPRBGameObject*>(object)->m_fields->ballSprite = ball;
+        m_fields->pulseRods.push_back(object);
+        object->m_ball = ball;
     }
 
-    void removePulseRodBall(GameObject* object) {
-        auto it = m_fields->pulseRods.find(object);
-        if (it == m_fields->pulseRods.end()) return;
+    void removePulseRodBall(PulseRodGameObject* object) {
+        auto& rods = m_fields->pulseRods;
 
-        it->second->removeFromParent();
-        m_fields->pulseRods.erase(it);
+        auto it = std::find(rods.begin(), rods.end(), object);
+        if (it == rods.end()) return;
 
-        static_cast<SPRBGameObject*>(object)->m_fields->ballSprite = nullptr;
-    }
-
-    void updatePulseRods() {
-        for (auto it = m_fields->pulseRods.begin(); it != m_fields->pulseRods.end(); ) {
-            GameObject* rod = it->first.lock();
-            CCSprite* ball = it->second;
-
-            if (!rod) {
-                ball->removeFromParent();
-                it = m_fields->pulseRods.erase(it);
-                continue;
-            }
-
-            ++it;
-
-            int rodColorID = rod->m_baseColor->m_colorID;
-            bool isBallBlending = m_blendingColors[rodColorID];
-
-            ball->setOpacity(rod->getOpacity());
-
-            CCNode* rodParent = rod->getParent();
-            CCNode* ballParent = ball->getParent();
-            CCSpriteBatchNode* ballLayer = isBallBlending ? m_gameBlendingLayerB1 : m_gameLayerB1;
-
-            if (rodParent && !ballParent) {
-                ballLayer->addChild(ball);
-            } else if (!rodParent && ballParent) {
-                ball->removeFromParent();
-                continue;
-            } else if (ballParent && ballParent != ballLayer) {
-                ball->removeFromParent();
-                ballLayer->addChild(ball);
-            } else if (!rodParent && !ballParent) {
-                continue;
-            }
-
-            CCPoint relativeBallPos = ccp(rod->getContentWidth() * 0.5f, rod->getContentHeight() + 10.f);
-            CCPoint ballPos = ballLayer->convertToNodeSpace(rod->convertToWorldSpace(relativeBallPos));
-
-            ball->setPosition(ballPos);
-        }
+        object->m_ball->removeFromParent();
+        object->m_ball = nullptr;
+        rods.erase(it);
     }
 
     void generateRodIndex() {
@@ -142,18 +128,8 @@ void ie::updatePulseRodBalls(LevelEditorLayer* lel, float audioScale) {
     if (FMODAudioEngine::get()->m_musicVolume <= 0.f) audioScale = 0.5f;
     else if (audioScale == -1.f) audioScale = 1.f;
 
-    for (auto it = pulseRods.begin(); it != pulseRods.end(); ) {
-        GameObject* rod = it->first.lock();
-        CCSprite* ball = it->second;
-
-        if (!rod) {
-            ball->removeFromParent();
-            it = pulseRods.erase(it);
-            continue;
-        }
-
-        ++it;
-
+    for (const auto& rod : pulseRods) {
+        auto ball = rod->m_ball;
         int rodColorID = rod->m_baseColor->m_colorID;
         bool isBallBlending = lel->m_blendingColors[rodColorID];
 
