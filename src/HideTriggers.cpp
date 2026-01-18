@@ -81,6 +81,9 @@ class $modify(LevelEditorLayer) {
         bool isKeyframe = id == 3032;
         if (isKeyframe) return false;
 
+        bool isCheckpoint = id == 2063;
+        if (isCheckpoint) return true;
+
         if (type == GameObjectType::Modifier) return false;
         if (type == GameObjectType::EnterEffectObject) return false;
         if (type == GameObjectType::CollisionObject) return false;
