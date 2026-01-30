@@ -52,14 +52,14 @@ class $modify(GameObject) {
     void selectObject(ccColor3B color) {
         // ⏺️ fix glow not becoming selected green color
 
-        bool prevCGC = m_customGlowColor;
+        bool prevGCLBG = m_glowColorIsLBG;
         bool prevCCG = m_cantColorGlow;
-        m_customGlowColor = false;
+        m_glowColorIsLBG = false;
         m_cantColorGlow = false;
 
         GameObject::selectObject(color);
 
-        m_customGlowColor = prevCGC;
+        m_glowColorIsLBG = prevGCLBG;
         m_cantColorGlow = prevCCG;
     }
 };
@@ -78,12 +78,12 @@ class $modify(SGLevelEditorLayer, LevelEditorLayer) {
         std::optional<ccColor3B> specialGlowColor = getSpecialGlowColor(object);
 
         // id 143 is for breakable blocks, which are a special case
-        if (object->m_objectID != 143 && !object->m_customGlowColor && !specialGlowColor.has_value()) return;
+        if (object->m_objectID != 143 && !object->m_glowColorIsLBG && !specialGlowColor) return;
 
-        ccColor3B glowColor = {};
+        ccColor3B glowColor;
 
-        if (specialGlowColor.has_value()) {
-            glowColor = specialGlowColor.value();
+        if (specialGlowColor) {
+            glowColor = *specialGlowColor;
         } else if (object->m_glowColorIsLBG) {
             if (ColorActionSprite* lbgAction = m_effectManager->m_colorActionSpriteVector[1007]) {
                 glowColor = lbgAction->m_color;
