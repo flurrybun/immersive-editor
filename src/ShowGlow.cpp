@@ -52,14 +52,14 @@ class $modify(GameObject) {
     void selectObject(ccColor3B color) {
         // ⏺️ fix glow not becoming selected green color
 
-        bool prevGCLBG = m_glowColorIsLBG;
+        bool prevCGC = m_customGlowColor;
         bool prevCCG = m_cantColorGlow;
-        m_glowColorIsLBG = false;
+        m_customGlowColor = false;
         m_cantColorGlow = false;
 
         GameObject::selectObject(color);
 
-        m_glowColorIsLBG = prevGCLBG;
+        m_customGlowColor = prevCGC;
         m_cantColorGlow = prevCCG;
     }
 };
@@ -78,7 +78,7 @@ class $modify(SGLevelEditorLayer, LevelEditorLayer) {
         std::optional<ccColor3B> specialGlowColor = getSpecialGlowColor(object);
 
         // id 143 is for breakable blocks, which are a special case
-        if (object->m_objectID != 143 && !object->m_glowColorIsLBG && !specialGlowColor) return;
+        if (object->m_objectID != 143 && !object->m_customGlowColor && !specialGlowColor) return;
 
         ccColor3B glowColor;
 
