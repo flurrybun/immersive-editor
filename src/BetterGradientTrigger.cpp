@@ -2,13 +2,15 @@
 #include <Geode/modify/GJBaseGameLayer.hpp>
 #include <Geode/utils/VMTHookManager.hpp>
 #include "UpdateVisibility.hpp"
-#include "misc/ObjectEvent.hpp"
+#include "misc/SettingManager.hpp"
 #include "misc/Utils.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
 
 class $modify(BGTIGradientTriggerObject, GradientTriggerObject) {
+    $toggle_hooks("better-gradient-trigger");
+
     struct Fields {
         CCLayerGradient* gradient;
     };
@@ -121,6 +123,8 @@ void ie::updateGradientTrigger(GameObject* object) {
 }
 
 class $modify(GJBaseGameLayer) {
+    $toggle_hooks("better-gradient-trigger");
+
     $override
     void updateGradientLayers() {
         // ⏺️ hide gradients with preview mode disabled
@@ -134,11 +138,11 @@ class $modify(GJBaseGameLayer) {
 
         if (!lel->m_previewMode) return;
 
-        colorSelectedGradients();
+        recolorSelectedGradients();
         GJBaseGameLayer::updateGradientLayers();
     }
 
-    void colorSelectedGradients() {
+    void recolorSelectedGradients() {
         if (auto object = EditorUI::get()->m_selectedObject) {
             if (object->m_objectID != 2903) return;
 

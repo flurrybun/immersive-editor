@@ -1,5 +1,5 @@
 {
-    "geode": "4.10.0",
+    "geode": "4.10.2",
     "gd": {
         "win": "2.2074",
         "android": "2.2074",
@@ -7,7 +7,7 @@
         "ios": "2.2074"
     },
     "id": "ninkaz.immersive_editor",
-    "name": "Immersive Editor",
+    "name": "NinKaz's Immersive Editor",
     "version": "v1.0.0",
     "developer": "NinKaz",
     "description": "",
@@ -33,12 +33,126 @@
         }
     },
     "settings": {
+        "title-visual-effects": {
+            "type": "title",
+            "name": "Object Effects"
+        },
+        "show-glow": {
+            "name": "Show Object Glow",
+            "description": "Show the glow which surrounds certain objects in the editor.",
+            "type": "bool",
+            "default": true
+        },
         "invisible-block-style": {
             "name": "Invisible Block Style",
             "description": "Determines how invisible blocks are shown when not playtesting.\n- Balanced: Minimum opacity of 30% and more visible at the edges of the screen\n- In-Game: Same as in-game\n- No Fade: Always fully visible",
             "type": "string",
             "default": "Balanced",
             "one-of": ["Balanced", "In-Game", "No Fade"]
+        },
+        "show-object-particles": {
+            "name": "Show Object Particles",
+            "description": "Show particles emitted from certain objects (e.g. orbs, pads, portals) in the editor.",
+            "type": "bool",
+            "default": true
+        },
+        "audio-scale": {
+            "name": "Show Pulsing Objects",
+            "description": "Pulses certain objects to the music.",
+            "type": "bool",
+            "default": true
+        },
+        "show-circle-waves": {
+            "name": "Show Circle Waves",
+            "description": "Show circle wave effects, such as the ones visible upon activating orbs, pads, and portals.",
+            "type": "bool",
+            "default": true
+        },
+        "show-pulse-rod-balls": {
+            "name": "Show Pulsing Rod Orbs",
+            "description": "Show the pulsing orbs that appear above pulsing rods (mostly seen in 1.0 levels) in the editor.",
+            "type": "bool",
+            "default": true
+        },
+        "show-portal-backs": {
+            "name": "Show Portal Backsides",
+            "description": "Show the backsides of portals in the editor.",
+            "type": "bool",
+            "default": true
+        },
+        "show-colorblind-indicators": {
+            "name": "Show Colorblind Indicators",
+            "description": "Show orb/portal colorblind indicators in the editor.",
+            "type": "bool",
+            "default": true
+        },
+        "title-level-effects": {
+            "type": "title",
+            "name": "Level Effects"
+        },
+        "show-fade-and-enter": {
+            "name": "Show Fade & Enter Effects",
+            "description": "Show fade/enter effects in the editor.",
+            "type": "bool",
+            "default": true
+        },
+        "show-glitter": {
+            "name": "Show Glitter",
+            "description": "Show the glitter particles that appear in ship, UFO, wave, and swing gamemodes in the editor.",
+            "type": "bool",
+            "default": true
+        },
+        "show-gravity-effect": {
+            "name": "Show Gravity Effect",
+            "description": "Show the blue/yellow lines that appear upon changing gravity in the editor.",
+            "type": "bool",
+            "default": true
+        },
+        "show-mirror-effect": {
+            "name": "Show Mirror Effect",
+            "description": "Flip the level upon entering a mirror portal in the editor.",
+            "type": "bool",
+            "default": true
+        },
+        "show-player-effects": {
+            "name": "Show Player Effects",
+            "description": "Show various player effects (e.g. particles, dash orb fire, trail, wave trail) in the editor.",
+            "type": "bool",
+            "default": true
+        },
+        "title-playtest": {
+            "type": "title",
+            "name": "Playtest"
+        },
+        "activate-triggers": {
+            "name": "Activate All Triggers",
+            "description": "Activates shake, ghost effect, hide ground/middleground, etc. triggers which normally aren't activated in the editor.",
+            "type": "bool",
+            "default": true
+        },
+        "hide-grid-lines": {
+            "name": "Hide Grid Lines",
+            "description": "Hides grid lines while playtesting.",
+            "type": "bool",
+            "default": true
+        },
+        "hide-editor-trail": {
+            "name": "Hide Editor Trail",
+            "description": "Hides the editor trail while playtesting.",
+            "type": "bool",
+            "default": true
+        },
+        "auto-hide-playtest-buttons": {
+            "name": "Hide Playtest UI",
+            "platforms": ["desktop"],
+            "description": "Hides the mouse cursor and playtest UI when not hovering over it during playtesting.",
+            "type": "bool",
+            "default": {
+                "win": true,
+                "mac": true,
+                "android": false,
+                "ios": false
+            }
         },
         "transparent-playtest-buttons": {
             "name": "Low Opacity Playtest UI",
@@ -51,17 +165,61 @@
                 "ios": true
             }
         },
-        "auto-hide-playtest-buttons": {
-            "name": "Auto-Hide Playtest UI",
-            "platforms": ["desktop"],
-            "description": "Hides the mouse cursor and playtest UI when not hovering over it during playtesting.",
+        "hide-triggers": {
+            "name": "Hide Triggers & Trigger Lines",
+            "description": "Hides triggers, keyframe lines, and camera guide lines while playtesting.",
             "type": "bool",
-            "default": {
-                "win": true,
-                "mac": true,
-                "android": false,
-                "ios": false
-            }
+            "default": true
+        },
+        "title-editor-interface": {
+            "type": "title",
+            "name": "Editor Interface"
+        },
+        "better-duration-lines": {
+            "name": "Better Duration Lines",
+            "description": "Lowers the opacity of duration lines if they're on a different layer.",
+            "type": "bool",
+            "default": true
+        },
+        "better-gradient-trigger": {
+            "name": "Better Gradient Trigger",
+            "description": "Enhances the look of the gradient trigger icon.",
+            "type": "bool",
+            "default": true
+        },
+        "better-particle-icons": {
+            "name": "Better Particle Icons",
+            "description": "Lowers the opacity of 2.1 particle icons to match the look of 2.2 particle icons.",
+            "type": "bool",
+            "default": true
+        },
+        "title-bugfixes": {
+            "type": "title",
+            "name": "Bugfixes"
+        },
+        "fix-object-rotation-drift": {
+            "name": "Fix Object Rotation Drift",
+            "description": "Fixes objects with negative rotation drifting by 0.01 degrees upon saving and exiting.",
+            "type": "bool",
+            "default": true
+        },
+        "fix-startpos-follow": {
+            "name": "Fix Follow Trigger Calculation",
+            "description": "Fixes follow triggers being incorrectly calculated from start positions. This can result in objects being moved millions of blocks away from (0, 0), causing considerable lag on enter/exit as the game tries to allocate memory for what it thinks is a very long level.",
+            "type": "bool",
+            "default": true
+        },
+        "fix-startpos-camera-shader": {
+            "name": "Fix Camera/Shader Trigger Calculation",
+            "description": "Fixes camera/shader triggers being incorrectly calculated from start positions, causing triggers which should've already ended to still play.",
+            "type": "bool",
+            "default": true
+        },
+        "fix-detail-color-opacity": {
+            "name": "Fix Detail Color Opacity",
+            "description": "Fixes the detail sprite of certain objects not decreasing opacity when on a different editor layer and preview mode is disabled.",
+            "type": "bool",
+            "default": true
         }
     }
 }
