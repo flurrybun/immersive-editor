@@ -60,6 +60,31 @@ class $modify(SMELevelEditorLayer, LevelEditorLayer) {
         return true;
     }
 
+    $override
+    void postUpdate(float dt) {
+        // ⏺️ fix the playtest line breaking during mirror effect
+
+        bool isPlacingPoint = m_trailTimer >= 0.033333335f && m_playbackMode == PlaybackMode::Playing;
+
+        LevelEditorLayer::postUpdate(dt);
+        if (!isPlacingPoint) return;
+
+        // the player's getPosition() is affected by the mirror effect, but not m_position
+        // player points normally track getPosition()
+
+        if (!m_playerPoints.empty()) {
+            m_playerPoints.back() = m_player1->m_position;
+        }
+
+        if (
+            m_gameState.m_isDualMode &&
+            !m_player2Points.empty() &&
+            !m_player2Points.back().empty()
+        ) {
+            m_player2Points.back().back() = m_player2->m_position;
+        }
+    }
+
     void screenFlipObject(GameObject* object) {
         // PlayLayer::screenFlipObject is inlined on 2.2074 android64
         // TY JASMINE FOR DECOMPING THIS ILY ❤️
