@@ -49,6 +49,25 @@ void applyEnterEffect(GameObject* object, bool isRight, int enterType) {
 }
 
 float ie::preUpdateFadeAndEnter(LevelEditorLayer* lel) {
+    // global var only ever used in PlayLayer::applyCustomEnterEffect
+    // why this is a global and not a function arg is beyond me
+
+#if GEODE_COMP_GD_VERSION == 22074 && defined(GEODE_IS_WINDOWS)
+    float* cameraRight = reinterpret_cast<float*>(geode::base::get() +
+        GEODE_WINDOWS(0x6a304c)
+        // GEODE_INTEL_MAC(0x000000)
+        // GEODE_ARM_MAC(0x000000)
+        // GEODE_ANDROID64(0x000000)
+        // GEODE_ANDROID32(0x000000)
+        // GEODE_IOS(0x000000)
+    );
+    *cameraRight = lel->m_gameState.m_cameraPosition2.x + lel->m_cameraWidth;
+#elif GEODE_COMP_GD_VERSION == 22074
+    // geode 2.208 is about to release i'm not finding the other addresses for this version
+#else
+    #error "Incorrect GD version: no address for cameraRight global"
+#endif
+
     return lel->m_gameState.m_cameraPosition2.x + lel->m_cameraWidth / 2;
 }
 
@@ -66,20 +85,6 @@ void ie::updateFadeAndEnter(LevelEditorLayer* lel, GameObject* object, float cam
     int enterType = isEnter
         ? lel->m_gameState.m_enterChannelMap[object->m_enterChannel]
         : lel->m_gameState.m_exitChannelMap[object->m_enterChannel];
-
-#if GEODE_COMP_GD_VERSION == 22074
-    float* cameraRight = reinterpret_cast<float*>(geode::base::get() +
-        GEODE_WINDOWS(0x6a304c)
-        GEODE_INTEL_MAC(0x000000)
-        GEODE_ARM_MAC(0x000000)
-        GEODE_ANDROID64(0x000000)
-        GEODE_ANDROID32(0x000000)
-        GEODE_IOS(0x000000)
-    );
-    *cameraRight = lel->m_gameState.m_cameraPosition2.x + lel->m_cameraWidth;
-#else
-    #error "Incorrect GD version: no address for cameraRight global"
-#endif
 
     if (shouldFadeObject(object, isRight, objectEnterType, enterType)) {
         applyFadeEffect(lel, object, isRight);
