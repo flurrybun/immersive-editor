@@ -25,7 +25,9 @@ class $modify(ASLevelEditorLayer, LevelEditorLayer) {
         m_fields.self();
 
         m_fields->playtestListener.bind([this](PlaytestEvent* event) {
-            resetAudioScale(event->isPlaying());
+            if (!event->isPlaying()) {
+                resetAudioScale();
+            }
 
             return ListenerResult::Propagate;
         });
@@ -58,7 +60,13 @@ class $modify(ASLevelEditorLayer, LevelEditorLayer) {
 
     float preUpdateAudioScale(float dt) {
         if (m_playbackMode == PlaybackMode::Not && !m_editorUI->m_isPlayingMusic) return -1.f;
-        if (FMODAudioEngine::get()->m_musicVolume <= 0.f) return -1.f;
+
+        if (FMODAudioEngine::get()->m_musicVolume <= 0.f) {
+            if (m_player1) m_player1->m_audioScale = 0.5f;
+            if (m_player2) m_player2->m_audioScale = 0.5f;
+
+            return 0.5f;
+        }
 
         if (m_audioEffectsLayer) {
             GameManager::get()->m_playLayer = reinterpret_cast<PlayLayer*>(GJBaseGameLayer::get());
@@ -96,27 +104,19 @@ class $modify(ASLevelEditorLayer, LevelEditorLayer) {
         object->m_editorEnabled = true;
     }
 
-    void resetAudioScale(bool isPlaying) {
-        bool isSilent = FMODAudioEngine::get()->m_musicVolume <= 0.f;
+    void resetAudioScale() {
+        for (const auto& object : CCArrayExt<GameObject*>(m_objects)) {
+            if (auto ego = typeinfo_cast<EffectGameObject*>(object)) {
+                if (ego->m_triggerEffectPlaying) {
+                    ego->stopAllActions();
+                    if (auto cs = ego->m_colorSprite) cs->stopAllActions();
+                    if (auto gs = ego->m_glowSprite) gs->stopAllActions();
 
-        if (!isPlaying) {
-            for (const auto& object : CCArrayExt<GameObject*>(m_objects)) {
-                if (auto ego = typeinfo_cast<EffectGameObject*>(object)) {
-                    if (ego->m_triggerEffectPlaying) {
-                        ego->stopAllActions();
-                        if (auto cs = ego->m_colorSprite) cs->stopAllActions();
-                        if (auto gs = ego->m_glowSprite) gs->stopAllActions();
-
-                        ego->m_triggerEffectPlaying = false;
-                    }
+                    ego->m_triggerEffectPlaying = false;
                 }
+            }
 
-                object->setRScale(1.f);
-            }
-        } else if (isSilent) {
-            for (const auto& object : CCArrayExt<GameObject*>(m_objects)) {
-                setAudioScale(object, 0.5f);
-            }
+            object->setRScale(1.f);
         }
     }
 };
@@ -125,8 +125,9 @@ class $modify(EditorUI) {
     $override
     void onPlayback(CCObject* sender) {
         EditorUI::onPlayback(sender);
+        if (m_isPlayingMusic) return;
 
-        static_cast<ASLevelEditorLayer*>(m_editorLayer)->resetAudioScale(m_isPlayingMusic);
+        static_cast<ASLevelEditorLayer*>(m_editorLayer)->resetAudioScale();
     }
 };
 

@@ -125,8 +125,7 @@ class $modify(SPRBLevelEditorLayer, LevelEditorLayer) {
 void ie::updatePulseRodBalls(LevelEditorLayer* lel, float audioScale) {
     auto& pulseRods = static_cast<SPRBLevelEditorLayer*>(lel)->m_fields->pulseRods;
 
-    if (FMODAudioEngine::get()->m_musicVolume <= 0.f) audioScale = 0.5f;
-    else if (audioScale == -1.f) audioScale = 1.f;
+    if (audioScale == -1.f) audioScale = 1.f;
 
     for (const auto& rod : pulseRods) {
         auto ball = rod->m_ball;
