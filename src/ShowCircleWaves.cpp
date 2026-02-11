@@ -463,10 +463,14 @@ class $modify(RingObject) {
         m_poweredOn = true;
         m_state = state;
 
-        if (!m_isRingPoweredOn) return;
+        if (m_isRingPoweredOn) return;
         m_isRingPoweredOn = true;
 
-        if (m_hasNoEffects || GameManager::get()->m_performanceMode) return;
+        if (
+            m_objectID == 3643 || // toggle block
+            m_hasNoEffects ||
+            GameManager::get()->m_performanceMode
+        ) return;
 
         CCCircleWave* circleWave = CCCircleWave::create(5.f, 55.f, 0.25f, false, true);
 
