@@ -24,6 +24,7 @@ namespace ie {
     void updateGlow(LevelEditorLayer* lel, GameObject* object, const GlowContext& context);
     void updateMirrorEffect(LevelEditorLayer* lel, GameObject* object, bool flipping);
     void updateObjectParticle(LevelEditorLayer* lel, GameObject* object);
+    void updateDetailColorOpacity(LevelEditorLayer* lel, GameObject* object);
 
     void updatePortalBacks(LevelEditorLayer* lel);
     void updatePulseRodBalls(LevelEditorLayer* lel, float audioScale);

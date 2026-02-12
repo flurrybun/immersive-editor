@@ -1,6 +1,5 @@
 #include <Geode/modify/LevelEditorLayer.hpp>
 #include "UpdateVisibility.hpp"
-#include "misc/Utils.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
@@ -28,6 +27,7 @@ class $modify(LevelEditorLayer) {
             ie::updateMirrorEffect(this, object, flipping);
             ie::updateGlow(this, object, glowContext);
             ie::updateObjectParticle(this, object);
+            ie::updateDetailColorOpacity(this, object);
         }
 
         ie::updatePortalBacks(this);
