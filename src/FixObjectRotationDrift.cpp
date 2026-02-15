@@ -21,6 +21,7 @@ class $modify(GameObject) {
         std::string oldStr = GameObject::getSaveString(layer);
 
         std::vector<std::string> tokens;
+        std::vector<std::string> newTokens;
         size_t start = 0;
 
         for (size_t i = 0; i <= oldStr.size(); i++) {
@@ -30,30 +31,55 @@ class $modify(GameObject) {
             start = i + 1;
         }
 
+        // if rotation x and y are the same, they're combined into a single rotation property (key 6)
+        // however since this happens after gd's broken rounding, there are cases where gd sees the rotations
+        // as different but we round them to the same value, e.g. rotation x = -36 and y = -35.999996
+        // so gd rounds to (-36, -35.99) but we round to (-36, -36)
+
+        // when this happens, rotation x and y get set to the same value, and so upon loading the object
+        // gd uses the single rotation property, which is zero
+
+        float rotationX = roundToThousandth(getRotationX());
+        float rotationY = roundToThousandth(getRotationY());
+        bool addedNewTokens = false;
+
         for (size_t i = 0; i + 1 < tokens.size(); i += 2) {
             const std::string& key = tokens[i];
 
-            if (key == "6") {
-                tokens[i + 1] = formatRotation(getRotation());
-            } else if (key == "131") {
-                tokens[i + 1] = formatRotation(getRotationX());
-            } else if (key == "132") {
-                tokens[i + 1] = formatRotation(getRotationY());
+            // i don't think it matters where in the save string the properties are, i just think it'd look
+            // ugly if the rotation properties were at the very end for no reason
+
+            if (key == "6" || key == "131" || key == "132") {
+                if (addedNewTokens) continue;
+
+                if (rotationX == rotationY) {
+                    newTokens.push_back("6");
+                    newTokens.push_back(fmt::to_string(rotationX));
+                } else {
+                    newTokens.push_back("131");
+                    newTokens.push_back(fmt::to_string(rotationX));
+                    newTokens.push_back("132");
+                    newTokens.push_back(fmt::to_string(rotationY));
+                }
+
+                addedNewTokens = true;
+                continue;
             }
+
+            newTokens.push_back(tokens[i]);
+            newTokens.push_back(tokens[i + 1]);
         }
 
         fmt::memory_buffer buffer;
-
-        for (size_t i = 0; i < tokens.size(); i++) {
-            if (i > 0) fmt::format_to(std::back_inserter(buffer), ",");
-            fmt::format_to(std::back_inserter(buffer), "{}", tokens[i]);
+        for (size_t i = 0; i < newTokens.size(); i++) {
+            if (i == 0) fmt::format_to(std::back_inserter(buffer), "{}", newTokens[i]);
+            else fmt::format_to(std::back_inserter(buffer), ",{}", newTokens[i]);
         }
 
         return gd::string(buffer.data(), buffer.size());
     }
 
-    std::string formatRotation(float rotation) {
-        // may as well round rotation to 3 decimal places instead of 2 while we're here
-        return fmt::format("{}", std::round(rotation * 1000.f) / 1000.f);
+    float roundToThousandth(float value) {
+        return std::round(value * 1000.f) / 1000.f;
     }
 };
