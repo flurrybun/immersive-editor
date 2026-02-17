@@ -1,6 +1,5 @@
 #include <Geode/modify/GJBaseGameLayer.hpp>
 #include <Geode/modify/LevelEditorLayer.hpp>
-#include <Geode/modify/GameObject.hpp>
 #include <Geode/modify/PlayerObject.hpp>
 #include "UpdateVisibility.hpp"
 #include "misc/PlaytestEvent.hpp"
@@ -123,20 +122,6 @@ class $modify(SMELevelEditorLayer, LevelEditorLayer) {
 
             if (static_cast<int>(angle) % 90 != 0) object->setRotation(-object->m_startRotationX);
         }
-    }
-};
-
-class $modify(GameObject) {
-    $override
-    void updateStartValues() {
-        // ⏺️ fix objects being flipped the wrong direction when stopping playtest during 2nd half of mirror effect
-
-        setFlipX(m_startFlipX);
-        setFlipY(m_startFlipY);
-        setRotationX(m_startRotationX);
-        setRotationY(m_startRotationY);
-
-        GameObject::updateStartValues();
     }
 };
 
