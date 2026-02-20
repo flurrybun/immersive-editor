@@ -11,7 +11,7 @@ constexpr int ACTION_TAG = 0x8D45C2A4;
 
 class $modify(HEUILevelEditorLayer, LevelEditorLayer) {
     struct Fields {
-        PlaytestEventListener playtestListener;
+        ListenerHandle playtestListener;
         bool uiVisible = true;
         bool hidePath = false;
         bool showGround = false;
@@ -29,8 +29,8 @@ class $modify(HEUILevelEditorLayer, LevelEditorLayer) {
             posLines.setEnabled(false);
         });
 
-        m_fields->playtestListener.bind([&](PlaytestEvent* event) {
-            bool isPlaying = event->isPlaying();
+        m_fields->playtestListener = PlaytestEvent().listen([this](PlaytestMode mode) {
+            bool isPlaying = mode.isPlaying();
 
             if (isPlaying) {
                 m_fields->hidePath = GameManager::get()->getGameVariable("0152");

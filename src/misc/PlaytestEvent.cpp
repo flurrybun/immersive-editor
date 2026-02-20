@@ -12,7 +12,7 @@ class $modify(LevelEditorLayer) {
         LevelEditorLayer::onPlaytest();
 
         if (!wasPlaying) {
-            PlaytestEvent(PlaybackMode::Playing).post();
+            PlaytestEvent().send(PlaybackMode::Playing);
         }
     }
 
@@ -23,33 +23,26 @@ class $modify(LevelEditorLayer) {
         LevelEditorLayer::onStopPlaytest();
 
         if (!wasNot) {
-            PlaytestEvent(PlaybackMode::Not).post();
-        }
-    }
-
-    $override
-    void onResumePlaytest() {
-        bool wasPlaying = m_playbackMode == PlaybackMode::Playing;
-
-        LevelEditorLayer::onResumePlaytest();
-
-        if (!wasPlaying) {
-            PlaytestEvent(PlaybackMode::Playing).post();
+            PlaytestEvent().send(PlaybackMode::Not);
         }
     }
 };
+
+// onPausePlaytest and onResumePlaytest are inlined on windows
 
 class $modify(EditorUI) {
     $override
     void onPlaytest(CCObject* sender) {
         bool wasPaused = m_editorLayer->m_playbackMode == PlaybackMode::Paused;
 
+        if (!m_isPaused && wasPaused) {
+            PlaytestEvent().send(PlaybackMode::Playing);
+        }
+
         EditorUI::onPlaytest(sender);
 
-        // LevelEditorLayer::onPausePlaytest is inlined on windows
-
         if (!wasPaused && m_editorLayer->m_playbackMode == PlaybackMode::Paused) {
-            PlaytestEvent(PlaybackMode::Paused).post();
+            PlaytestEvent().send(PlaybackMode::Paused);
         }
     }
 };

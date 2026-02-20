@@ -25,15 +25,15 @@ class $modify(GJBaseGameLayer) {
 
 class $modify(SMELevelEditorLayer, LevelEditorLayer) {
     struct Fields {
-        PlaytestEventListener playtestListener;
+        ListenerHandle playtestListener;
     };
 
     $override
     bool init(GJGameLevel* p0, bool p1) {
         if (!LevelEditorLayer::init(p0, p1)) return false;
 
-        m_fields->playtestListener.bind([this](PlaytestEvent* event) {
-            if (event->isPlaying()) {
+        m_fields->playtestListener = PlaytestEvent().listen([this](PlaytestMode mode) {
+            if (mode.isPlaying()) {
                 if (
                     m_startPosObject &&
                     m_startPosObject->m_startSettings &&
@@ -47,7 +47,7 @@ class $modify(SMELevelEditorLayer, LevelEditorLayer) {
                 m_gameState.m_unkBool12 = false;
             }
 
-            if (event->isNot()) {
+            if (mode.isNot()) {
                 auto& flipTween = m_gameState.m_tweenActions[7];
                 flipTween.m_currentValue = 0.f;
                 flipTween.m_finished = true;

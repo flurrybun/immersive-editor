@@ -30,11 +30,10 @@ $execute {
         }
     }
 
-    listenForAllSettingChanges([](std::shared_ptr<Setting> setting) {
-        std::string key = setting->getKey();
+    listenForAllSettingChanges([](std::string_view key, std::shared_ptr<SettingV3> setting) {
         auto& hooks = getHooks();
 
-        auto it = hooks.find(key);
+        auto it = hooks.find(std::string(key));
         if (it == hooks.end()) return;
 
         bool enable = Mod::get()->getSettingValue<bool>(key);

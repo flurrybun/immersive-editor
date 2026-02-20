@@ -6,17 +6,14 @@ using namespace geode::prelude;
 
 class $modify(LevelEditorLayer) {
     struct Fields {
-        ObjectEventListener objectListener;
+        ListenerHandle objectListener;
     };
 
     bool init(GJGameLevel* p0, bool p1) {
         if (!LevelEditorLayer::init(p0, p1)) return false;
 
-        m_fields->objectListener.bind([&](ObjectEvent* event) {
-            if (event->isAdded) {
-                addGuideArt(event->object);
-            }
-
+        m_fields->objectListener = ObjectEvent().listen([this](GameObject* object, bool created) {
+            if (created) addGuideArt(object);
             return ListenerResult::Propagate;
         });
 

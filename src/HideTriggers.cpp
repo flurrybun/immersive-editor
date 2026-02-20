@@ -38,7 +38,7 @@ class $modify(HTGameObject, GameObject) {
 
 class $modify(LevelEditorLayer) {
     struct Fields {
-        PlaytestEventListener playtestListener;
+        ListenerHandle playtestListener;
     };
 
     $override
@@ -47,13 +47,13 @@ class $modify(LevelEditorLayer) {
 
         if (!LevelEditorLayer::init(p0, p1)) return false;
 
-        m_fields->playtestListener.bind([&](PlaytestEvent* event) {
+        m_fields->playtestListener = PlaytestEvent().listen([this](PlaytestMode mode) {
             for (const auto& object : CCArrayExt<GameObject*>(m_objects)) {
                 if (showInPlaytest(object)) continue;
 
                 auto htObject = static_cast<HTGameObject*>(object);
 
-                if (event->isPlaying()) htObject->lockVisibility();
+                if (mode.isPlaying()) htObject->lockVisibility();
                 else htObject->unlockVisibility();
             }
 

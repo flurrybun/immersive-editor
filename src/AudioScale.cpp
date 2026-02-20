@@ -8,7 +8,7 @@ using namespace geode::prelude;
 
 class $modify(ASLevelEditorLayer, LevelEditorLayer) {
     struct Fields {
-        PlaytestEventListener playtestListener;
+        ListenerHandle playtestListener;
         int prevAudioTrack = -1;
         int prevSongID = -1;
 
@@ -22,10 +22,10 @@ class $modify(ASLevelEditorLayer, LevelEditorLayer) {
         if (!LevelEditorLayer::init(p0, p1)) return false;
 
         FMODAudioEngine::get()->enableMetering();
-        m_fields.self();
+        m_fields.self(); // ensure fields dtor is called
 
-        m_fields->playtestListener.bind([this](PlaytestEvent* event) {
-            if (!event->isPlaying()) {
+        m_fields->playtestListener = PlaytestEvent().listen([this](PlaytestMode mode) {
+            if (!mode.isPlaying()) {
                 resetAudioScale();
             }
 

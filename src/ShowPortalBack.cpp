@@ -10,7 +10,7 @@ using namespace geode::prelude;
 
 class $modify(SPBLevelEditorLayer, LevelEditorLayer) {
     struct Fields {
-        ObjectEventListener objectListener;
+        ListenerHandle objectListener;
         std::unordered_map<WeakRef<GameObject>, Ref<CCSprite>> portalBacks;
     };
 
@@ -18,13 +18,13 @@ class $modify(SPBLevelEditorLayer, LevelEditorLayer) {
     bool init(GJGameLevel* p0, bool p1) {
         if (!LevelEditorLayer::init(p0, p1)) return false;
 
-        m_fields->objectListener.bind([&](ObjectEvent* event) {
-            if (!isPortal(event->object->m_objectID)) return ListenerResult::Propagate;
+        m_fields->objectListener = ObjectEvent().listen([this](GameObject* object, bool created) {
+            if (!isPortal(object->m_objectID)) return ListenerResult::Propagate;
 
-            if (event->isAdded) {
-                addPortalBack(event->object);
+            if (created) {
+                addPortalBack(object);
             } else {
-                removePortalBack(event->object);
+                removePortalBack(object);
             }
 
             return ListenerResult::Propagate;

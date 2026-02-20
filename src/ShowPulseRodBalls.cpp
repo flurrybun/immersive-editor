@@ -60,7 +60,7 @@ class $modify(GameObject) {
 
 class $modify(SPRBLevelEditorLayer, LevelEditorLayer) {
     struct Fields {
-        ObjectEventListener objectListener;
+        ListenerHandle objectListener;
         std::vector<PulseRodGameObject*> pulseRods;
         short pulseRodIndex = 0;
     };
@@ -71,13 +71,13 @@ class $modify(SPRBLevelEditorLayer, LevelEditorLayer) {
 
         generateRodIndex();
 
-        m_fields->objectListener.bind([&](ObjectEvent* event) {
-            if (!isPulseRod(event->object)) return ListenerResult::Propagate;
+        m_fields->objectListener = ObjectEvent().listen([this](GameObject* object, bool created) {
+            if (!isPulseRod(object)) return ListenerResult::Propagate;
 
-            if (event->isAdded) {
-                addPulseRodBall(static_cast<PulseRodGameObject*>(event->object));
+            if (created) {
+                addPulseRodBall(static_cast<PulseRodGameObject*>(object));
             } else {
-                removePulseRodBall(static_cast<PulseRodGameObject*>(event->object));
+                removePulseRodBall(static_cast<PulseRodGameObject*>(object));
             }
 
             return ListenerResult::Propagate;

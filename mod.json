@@ -1,10 +1,10 @@
 {
-    "geode": "4.10.2",
+    "geode": "5.0.0-beta.3",
     "gd": {
-        "win": "2.2074",
-        "android": "2.2074",
-        "mac": "2.2074",
-        "ios": "2.2074"
+        "win": "2.2081",
+        "android": "2.2081",
+        "mac": "2.2081",
+        "ios": "2.2081"
     },
     "id": "ninkaz.immersive_editor",
     "name": "NinKaz's Immersive Editor",
@@ -12,16 +12,16 @@
     "developer": "NinKaz",
     "description": "",
     "dependencies": {
-        "alphalaneous.good_grid": ">=v1.1.0",
-        "geode.node-ids": ">=1.21.1"
+        "alphalaneous.good_grid": "1.1.4",
+        "geode.node-ids": "1.22.0"
     },
     "incompatibilities": {
         "undefined0.object_glow_in_editor": {
-            "importance": "conflicting",
+            "breaking": false,
             "version": "*"
         },
         "pawis7.cbeditor": {
-            "importance": "conflicting",
+            "breaking": false,
             "version": "*"
         }
     },
@@ -212,6 +212,12 @@
         "fix-startpos-camera-shader": {
             "name": "Fix Camera/Shader Trigger Calculation",
             "description": "Fixes camera/shader triggers being incorrectly calculated from start positions, causing triggers which should've already ended to still play.",
+            "type": "bool",
+            "default": true
+        },
+        "fix-shader-trigger-color": {
+            "name": "Fix Shader Trigger Color",
+            "description": "Fixes shader triggers using the object color instead of white.",
             "type": "bool",
             "default": true
         },

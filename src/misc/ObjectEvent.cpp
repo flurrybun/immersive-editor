@@ -18,7 +18,7 @@ class $modify(LevelEditorLayer) {
         if (!LevelEditorLayer::init(p0, p1)) return false;
 
         for (const auto& object : CCArrayExt<GameObject*>(m_objects)) {
-            ObjectEvent(object, true).post();
+            ObjectEvent().send(object, true);
         }
 
         return true;
@@ -30,7 +30,7 @@ class $modify(LevelEditorLayer) {
         if (dontCreateUndo || dontShowMaxWarning) return ret;
 
         for (const auto& object : CCArrayExt<GameObject*>(ret)) {
-            ObjectEvent(object, true).post();
+            ObjectEvent().send(object, true);
         }
 
         return ret;
@@ -40,7 +40,7 @@ class $modify(LevelEditorLayer) {
     GameObject* createObject(int p0, CCPoint p1, bool p2) {
         GameObject* object = LevelEditorLayer::createObject(p0, p1, p2);
 
-        ObjectEvent(object, true).post();
+        ObjectEvent().send(object, true);
 
         return object;
     }
@@ -49,6 +49,6 @@ class $modify(LevelEditorLayer) {
     void removeObject(GameObject* object, bool p1) {
         LevelEditorLayer::removeObject(object, p1);
 
-        ObjectEvent(object, false).post();
+        ObjectEvent().send(object, false);
     }
 };

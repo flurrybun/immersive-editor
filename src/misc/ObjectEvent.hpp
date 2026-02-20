@@ -4,12 +4,7 @@
 
 using namespace geode::prelude;
 
-class ObjectEvent : public Event {
+class ObjectEvent : public Event<ObjectEvent, bool(GameObject* object, bool created)> {
 public:
-    bool isAdded;
-    GameObject* object;
-
-    ObjectEvent(GameObject* object, bool isAdded) : object(object), isAdded(isAdded) {}
+    using Event::Event;
 };
-
-using ObjectEventListener = EventListener<EventFilter<ObjectEvent>>;

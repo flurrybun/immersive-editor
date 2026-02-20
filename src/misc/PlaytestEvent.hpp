@@ -5,21 +5,21 @@
 
 using namespace geode::prelude;
 
-class PlaytestEvent : public Event {
+// i just think `mode.isPlaying()` looks nicer than `mode == PlaybackMode::Playing`
+
+class PlaytestMode {
+    char m_mode;
 public:
-    PlaybackMode mode;
+    PlaytestMode(PlaybackMode mode) : m_mode(static_cast<char>(mode)) {}
 
-    bool isPlaying() const {
-        return mode == PlaybackMode::Playing;
-    }
-    bool isPaused() const {
-        return mode == PlaybackMode::Paused;
-    }
-    bool isNot() const {
-        return mode == PlaybackMode::Not;
-    }
+    bool isNot() const { return m_mode == 0; }
+    bool isPlaying() const { return m_mode == 1; }
+    bool isPaused() const { return m_mode == 2; }
 
-    PlaytestEvent(PlaybackMode mode) : mode(mode) {}
+    operator PlaybackMode() const { return static_cast<PlaybackMode>(m_mode); }
 };
 
-using PlaytestEventListener = EventListener<EventFilter<PlaytestEvent>>;
+class PlaytestEvent : public Event<PlaytestEvent, bool(PlaytestMode mode)> {
+public:
+    using Event::Event;
+};
