@@ -125,6 +125,10 @@ class $modify(SMELevelEditorLayer, LevelEditorLayer) {
     }
 };
 
+// PlayerObject::levelFlipping is inlined on ios 2.2081
+// ik this is a lame fix but it's such a minor issue for such a minor platform
+
+#ifndef GEODE_IS_IOS
 class $modify(PlayerObject) {
     $override
     bool levelFlipping() {
@@ -137,6 +141,7 @@ class $modify(PlayerObject) {
         return LevelEditorLayer::get()->isFlipping();
     }
 };
+#endif
 
 bool ie::preUpdateMirrorEffect(LevelEditorLayer* lel) {
     float flip = lel->m_gameState.m_levelFlipping;
