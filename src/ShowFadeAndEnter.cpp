@@ -1,4 +1,5 @@
 #include "UpdateVisibility.hpp"
+#include "misc/Utils.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
@@ -52,16 +53,20 @@ float ie::preUpdateFadeAndEnter(LevelEditorLayer* lel) {
     // global var only ever used in PlayLayer::applyCustomEnterEffect
     // why this is a global is entirely beyond me
 
+    // todo: detect amazon whenever it's updated (currently it's still on 2.2074)
+
+    if (ie::isAmazon()) return lel->m_gameState.m_cameraPosition2.x + lel->m_cameraWidth / 2;
+
 #if GEODE_COMP_GD_VERSION == 22081
-    // float* cameraRight = reinterpret_cast<float*>(geode::base::get() +
-    //     GEODE_WINDOWS(0x6a304c)
-    //     GEODE_INTEL_MAC(0x000000)
-    //     GEODE_ARM_MAC(0x000000)
-    //     GEODE_ANDROID64(0x000000)
-    //     GEODE_ANDROID32(0x000000)
-    //     GEODE_IOS(0x000000)
-    // );
-    // *cameraRight = lel->m_gameState.m_cameraPosition2.x + lel->m_cameraWidth;
+    float* cameraRight = reinterpret_cast<float*>(geode::base::get() +
+        GEODE_WINDOWS(0x6c10bc)
+        GEODE_INTEL_MAC(0x9a3ebc)
+        GEODE_ARM_MAC(0x8bb30c)
+        GEODE_ANDROID64(0x341ee4)
+        GEODE_ANDROID32(0xac5b48)
+        GEODE_IOS(0x885cf4)
+    );
+    *cameraRight = lel->m_gameState.m_cameraPosition2.x + lel->m_cameraWidth;
 #else
     #error "Incorrect GD version: no address for cameraRight global"
 #endif
@@ -72,6 +77,7 @@ float ie::preUpdateFadeAndEnter(LevelEditorLayer* lel) {
 void ie::updateFadeAndEnter(LevelEditorLayer* lel, GameObject* object, float cameraXCenter) {
     if (lel->m_playbackMode != PlaybackMode::Playing) return;
     if (object->m_isUIObject || object->m_isTrigger) return;
+    if (ie::isAmazon()) return;
 
     bool isRight = object->getPositionX() > cameraXCenter;
     bool isEnter = isRight || object->m_enterType != -1;

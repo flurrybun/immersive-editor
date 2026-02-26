@@ -1,5 +1,15 @@
 #include "Utils.hpp"
 
+bool ie::isAmazon() {
+    // ty dank
+
+#ifdef GEODE_IS_ANDROID
+    return ((GJMoreGamesLayer* volatile)nullptr)->getMoreGamesList()->count() == 0;
+#else
+    return false;
+#endif
+}
+
 bool ie::isObjectLayerVisible(GameObject* object, LevelEditorLayer* editor) {
     if (editor->m_currentLayer == -1 || editor->m_playbackMode == PlaybackMode::Playing) return true;
 
