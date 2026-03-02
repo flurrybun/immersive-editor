@@ -42,7 +42,7 @@ void applyEnterEffect(GameObject* object, bool isRight, int enterType) {
 
     if (enterType == -15) {
         fakePL->applyCustomEnterEffect(object, isRight);
-    } else {
+    } else if (!ie::isAmazon()) {
         fakePL->applyEnterEffect(object, enterType, isRight);
     }
 
@@ -77,7 +77,6 @@ float ie::preUpdateFadeAndEnter(LevelEditorLayer* lel) {
 void ie::updateFadeAndEnter(LevelEditorLayer* lel, GameObject* object, float cameraXCenter) {
     if (lel->m_playbackMode != PlaybackMode::Playing) return;
     if (object->m_isUIObject || object->m_isTrigger) return;
-    if (ie::isAmazon()) return;
 
     bool isRight = object->getPositionX() > cameraXCenter;
     bool isEnter = isRight || object->m_enterType != -1;
