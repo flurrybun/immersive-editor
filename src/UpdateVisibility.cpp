@@ -30,6 +30,7 @@ class $modify(LevelEditorLayer) {
             ie::updateDetailColorOpacity(this, object);
         }
 
+        ie::updateSelectPreview(this);
         ie::updatePortalBacks(this);
         ie::updatePulseRodBalls(this, audioScale);
     }
