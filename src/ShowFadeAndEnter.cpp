@@ -4,7 +4,7 @@
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
 
-bool shouldFadeObject(GameObject* object, bool isRight, short objectEnterType, int enterType) {
+bool shouldFadeObject(GameObject* object, short objectEnterType, int enterType) {
     if (object->m_ignoreFade) return false;
     if (object->m_isInvisibleBlock) return false;
     if (enterType == -14 || enterType == -15) return false;
@@ -89,7 +89,7 @@ void ie::updateFadeAndEnter(LevelEditorLayer* lel, GameObject* object, float cam
         ? lel->m_gameState.m_enterChannelMap[object->m_enterChannel]
         : lel->m_gameState.m_exitChannelMap[object->m_enterChannel];
 
-    if (shouldFadeObject(object, isRight, objectEnterType, enterType)) {
+    if (shouldFadeObject(object, objectEnterType, enterType)) {
         applyFadeEffect(lel, object, isRight);
     }
 

@@ -33,7 +33,7 @@ class $modify(SGELevelEditorLayer, LevelEditorLayer) {
         bool disabledGravityEffects = GameManager::get()->getGameVariable("0072");
         if (GameManager::get()->m_performanceMode || disabledGravityEffects) return;
 
-        size_t totalGravityEffects = m_fields->gravityEffects.size();
+        int totalGravityEffects = m_fields->gravityEffects.size();
         if (m_fields->activeGravityEffects >= totalGravityEffects) return;
 
         auto effect = m_fields->gravityEffects[m_fields->gravityEffectIndex];

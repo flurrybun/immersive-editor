@@ -17,7 +17,7 @@ class $modify(LevelEditorLayer) {
         // using a range-based for loop on m_activeObjects can crash due to a use-after-free
         // place 2 objects, undo 2x, place an object -> crash
 
-        for (size_t i = 0; i < m_activeObjectsCount; i++) {
+        for (int i = 0; i < m_activeObjectsCount; i++) {
             GameObject* object = m_activeObjects[i];
 
             ie::updateAudioScale(this, object, audioScale);

@@ -111,7 +111,7 @@ class $modify(HEUILevelEditorLayer, LevelEditorLayer) {
         } else {
             auto action = runAction(CCSequence::create(
                 CCDelayTime::create(0.3f),
-                CallFuncExt::create([this, visible]() {
+                CallFuncExt::create([visible]() {
                     if (visible) PlatformToolbox::showCursor();
                     else PlatformToolbox::hideCursor();
                 }),
