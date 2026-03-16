@@ -28,9 +28,10 @@ class $modify(LevelEditorLayer) {
             ie::updateGlow(this, object, glowContext);
             ie::updateObjectParticle(this, object);
             ie::updateDetailColorOpacity(this, object);
+            ie::updateSelectPreview(this, object);
         }
 
-        ie::updateSelectPreview(this);
+        ie::postUpdateSelectPreview(this);
         ie::updatePortalBacks(this);
         ie::updatePulseRodBalls(this, audioScale);
     }
