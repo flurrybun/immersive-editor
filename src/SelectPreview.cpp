@@ -2,6 +2,7 @@
 #include <Geode/modify/EditorUI.hpp>
 #include <Geode/modify/GameObject.hpp>
 #include "UpdateVisibility.hpp"
+#include "misc/SelectionBox.hpp"
 #include "misc/Utils.hpp"
 
 #include <Geode/Geode.hpp>
@@ -10,19 +11,32 @@ using namespace geode::prelude;
 class $modify(SPLevelEditorLayer, LevelEditorLayer) {
     struct Fields {
         std::unordered_set<WeakRef<GameObject>> prevHoveredObjects;
-        std::list<WeakRef<GameObject>> cycledObjects;
-
-        bool dontUpdateHistory = false;
-        bool dontIgnoreSelected = false;
+        std::deque<WeakRef<GameObject>> cycledObjects;
     };
 
     $override
     CCArray* objectsAtPosition(CCPoint position) {
-        // toVector may be a bit inefficient but there shouldn't be any more than a dozen objects or so
-        // and it lets us use nice functions instead of manual for loop bs
+        return betterObjectsAtPosition(position, false);
+    }
 
-        std::vector<GameObject*> objects = LevelEditorLayer::objectsAtPosition(position)
-            ->asExt<GameObject*>().toVector();
+    $override
+    CCArray* betterObjectsAtPosition(const CCPoint& position, bool hovering) {
+        // this function normally uses sections and obb2d, which is perhaps more performant and works off-screen
+        // however it should be safe to assume this will only ever be used for on-screen objects
+        // and relying on sections doesn't work for heavily upscaled objects with large bounding boxes
+
+        std::vector<GameObject*> objects;
+
+        for (int i = 0; i < m_activeObjectsCount; i++) {
+            GameObject* object = m_activeObjects[i];
+
+            if (!ie::isObjectLayerVisible(object, this)) continue;
+
+            SelectionBox box(this, object, true);
+            if (!box.containsPoint(position)) continue;
+
+            objects.push_back(object);
+        }
 
         if (objects.empty()) {
             m_fields->cycledObjects.clear();
@@ -46,7 +60,7 @@ class $modify(SPLevelEditorLayer, LevelEditorLayer) {
 
         // remove objects from cycledObjects that are no longer in consideration
 
-        if (!m_fields->dontUpdateHistory) {
+        if (!hovering) {
             std::erase_if(m_fields->cycledObjects, [&](WeakRef<GameObject> objectRef) {
                 auto object = objectRef.lock();
                 if (!object) return true;
@@ -67,18 +81,6 @@ class $modify(SPLevelEditorLayer, LevelEditorLayer) {
             }
         }
 
-        // ignore unselectable objects
-
-        if (m_fields->dontIgnoreSelected) {
-            std::erase_if(objects, [&](GameObject* object) {
-                return !m_editorUI->canSelectObject(object);
-            });
-        } else {
-            std::erase_if(objects, [&](GameObject* object) {
-                return object->m_isSelected || !m_editorUI->canSelectObject(object);
-            });
-        }
-
         // sort objects by distance to center point, then by bounding box size
 
         std::sort(objects.begin(), objects.end(), [&](GameObject* a, GameObject* b) {
@@ -93,27 +95,141 @@ class $modify(SPLevelEditorLayer, LevelEditorLayer) {
             return aSize.width * aSize.height < bSize.width * bSize.height;
         });
 
-        // find the first object that isn't already cycled through
+        // the m_cycleIndex stuff is a bit hacky; gd selects the object with the lowest cycle index,
+        // so we force which object gd will select by setting the index of all other objects to 100,000.
+        // the benefit of this is it still returns all objects at this position, which gd relies on
 
-        auto object = ranges::find(objects, [&](GameObject* obj) {
-            return !ranges::contains(m_fields->cycledObjects, obj);
+        std::optional<GameObject*> objectToSelect = ranges::find(objects, [&](GameObject* object) {
+            bool selectable = !object->m_isSelected && m_editorUI->canSelectObject(object);
+            if (!selectable) return false;
+
+            return !ranges::contains(m_fields->cycledObjects, [&](WeakRef<GameObject> cycledObjectRef) {
+                auto cycledObject = cycledObjectRef.lock();
+                return cycledObject && cycledObject == object;
+            });
         });
 
-        if (!object || !*object) return CCArray::create();
+        if (!objectToSelect || !*objectToSelect) {
+            return CCArray::create();
+        }
 
-        if (!m_fields->dontUpdateHistory) m_fields->cycledObjects.push_front(*object);
-        return CCArray::createWithObject(*object);
-    }
-};
+        for (const auto& object : objects) {
+            object->m_cycleIndex = object == *objectToSelect ? 0 : 100'000;
+        }
 
-class $modify(EditorUI) {
-    $override
-    bool ccTouchBegan(CCTouch* touch, CCEvent* event) {
-        static_cast<SPLevelEditorLayer*>(m_editorLayer)->m_fields->dontIgnoreSelected = true;
-        auto ret = EditorUI::ccTouchBegan(touch, event);
-        static_cast<SPLevelEditorLayer*>(m_editorLayer)->m_fields->dontIgnoreSelected = false;
+        if (!hovering) {
+            m_fields->cycledObjects.push_front(*objectToSelect);
+        }
+
+        // convert to ccarray
+
+        CCArray* ret = CCArray::createWithCapacity(objects.size());
+
+        for (const auto& object : objects) {
+            ret->addObject(object);
+        }
 
         return ret;
+    }
+
+    $override
+    GameObject* objectAtPosition(CCPoint position) {
+        return betterObjectAtPosition(position, false);
+    }
+
+    $override
+    GameObject* betterObjectAtPosition(const CCPoint& position, bool hovering) {
+        CCArray* objects = betterObjectsAtPosition(position, hovering);
+
+        for (const auto& object : CCArrayExt<GameObject>(objects)) {
+            if (object->m_cycleIndex == 0) return object;
+        }
+
+        return static_cast<GameObject*>(objects->firstObject());
+    }
+
+    $override
+    CCArray* objectsInRect(CCRect rect, bool ignoreGroups) {
+        // only false when called from EditorUI::selectObjectsInRect
+        if (ignoreGroups) return LevelEditorLayer::objectsInRect(rect, ignoreGroups);
+
+        // unlike with objectsAtPosition, m_activeObjects can't be solely relied on, since it's possible for
+        // the rect to be partially off-screen. however, relying solely on sections also doesn't work
+        // for objects with a scale larger than around 15x. so, a two-pass check is used:
+
+        // 1. check all active objects
+
+        CCArray* objects = CCArray::create();
+        std::unordered_set<GameObject*> seen;
+
+        auto checkObject = [&](GameObject* object) {
+            if (!seen.insert(object).second) return;
+            if (!ie::isObjectLayerVisible(object, this)) return;
+
+            SelectionBox box(this, object, false);
+            if (!box.intersectsRect(rect)) return;
+
+            objects->addObject(object);
+        };
+
+        for (int i = 0; i < m_activeObjectsCount; i++) {
+            GameObject* object = m_activeObjects[i];
+            checkObject(object);
+        }
+
+        // 2. check objects in sections
+        // mostly decompiled from LevelEditorLayer::objectsInRect, but with a different intersection check
+
+        if (m_sections.empty()) return objects;
+
+        auto sectionX = [&](float x) -> float {
+            if (x <= 0.f) return 0.f;
+            return m_sectionXFactor * (x < 1e7f ? x : 1e7f);
+        };
+
+        auto sectionY = [&](float y) -> float {
+            if (y <= 0.f) return 0.f;
+            return m_sectionYFactor * (y < 1e7f ? y : 1e7f);
+        };
+
+        float startSectionX = sectionX(rect.origin.x);
+        startSectionX = (startSectionX - 1.f >= 0.f) ? (startSectionX - 1.f) : 0.f;
+
+        float endSectionX = sectionX(rect.origin.x + rect.size.width);
+        float maxSectionX = m_sections.size() - 1.f;
+        endSectionX = (endSectionX + 1.f < maxSectionX) ? (endSectionX + 1.f) : maxSectionX;
+
+        float startSectionY = sectionY(rect.origin.y);
+        startSectionY = (startSectionY - 1.f >= 0.f) ? (startSectionY - 1.f) : 0.f;
+
+        float endSectionY = (float)(int)(sectionY(rect.origin.y + rect.size.height) + 1.f);
+
+        int xStart = (int)startSectionX;
+        int xEnd = (int)endSectionX;
+        int yStart = (int)startSectionY;
+        int yEnd = (int)endSectionY;
+
+        for (int xi = xStart; xi <= xEnd; xi++) {
+            auto* xBucket = m_sections[xi];
+            if (!xBucket) continue;
+
+            int bucketYMax = (int)xBucket->size() - 1;
+            if (yEnd > bucketYMax) yEnd = bucketYMax;
+
+            for (int yi = yStart; yi <= yEnd; yi++) {
+                auto* yBucket = (*xBucket)[yi];
+                if (!yBucket) continue;
+
+                int count = (*m_sectionSizes[xi])[yi];
+
+                for (int i = 0; i < count; i++) {
+                    GameObject* object = (*yBucket)[i];
+                    checkObject(object);
+                }
+            }
+        }
+
+        return objects;
     }
 };
 
@@ -187,15 +303,12 @@ void setPreviewColor(GameObject* object, bool hovering) {
 bool isHoveringOverMenu(CCMenu* menu, const CCPoint& pos) {
     // https://github.com/altalk23/cocos2d-x-gd/blob/6bccfe7aecdbc32977395d50abcf385627b8f688/cocos2dx/menu_nodes/CCMenu.cpp#L226
 
-    if (!menu->m_bVisible || !menu->m_bEnabled) return false;
+    if (!menu->isEnabled() || !nodeIsVisible(menu)) return false;
 
-    for (CCNode* c = menu->m_pParent; c != nullptr; c = c->getParent()) {
-        if (!c->isVisible()) return false;
-    }
+    auto children = menu->getChildren();
+    if (!children || children->count() == 0) return false;
 
-    if (!menu->m_pChildren || menu->m_pChildren->count() == 0) return false;
-
-    for (const auto& object : menu->m_pChildren->asExt()) {
+    for (const auto& object : children->asExt()) {
         auto child = typeinfo_cast<CCMenuItem*>(object);
         if (!child || !child->isVisible() || !child->isEnabled()) continue;
 
@@ -207,6 +320,21 @@ bool isHoveringOverMenu(CCMenu* menu, const CCPoint& pos) {
     }
 
     return false;
+}
+
+bool isHoveringOverInput(CCTextInputNode* input, const CCPoint& pos) {
+    if (!nodeIsVisible(input)) return false;
+
+    auto parent = input->getParent();
+    if (!parent) return false;
+
+    CCPoint local = parent->convertToNodeSpace(pos);
+    CCRect rect = CCRect(
+        input->getPosition() - input->getScaledContentSize() / 2,
+        input->getScaledContentSize()
+    );
+
+    return rect.containsPoint(local);
 }
 
 bool hoveringOverEditorUI(LevelEditorLayer* lel, const CCPoint& pos) {
@@ -223,17 +351,23 @@ bool hoveringOverEditorUI(LevelEditorLayer* lel, const CCPoint& pos) {
 
         if (auto menu = typeinfo_cast<CCMenu*>(delegate)) {
             if (isHoveringOverMenu(menu, pos)) return false;
+        } else if (auto input = typeinfo_cast<CCTextInputNode*>(delegate)) {
+            if (isHoveringOverInput(input, pos)) return false;
         }
-        // } else if (auto input = typeinfo_cast<CCTextInputNode*>(delegate)) {
-        //     if (input->isVisible() && input->getBoundingBox().containsPoint(pos)) return false;
-        // }
     }
 
     return true;
 }
 
 void ie::updateSelectPreview(LevelEditorLayer* lel, GameObject* object) {
-    object->m_unk460 = 0;
+    object->m_cycleIndex = 0;
+
+    // lel->m_debugDrawNode->drawRect(
+    //     lel->getObjectRect(object, false, false), {0, 0, 0, 0}, 0.5, {1, 0, 0, 1}, BorderAlignment::Center
+    // );
+
+    // SelectionBox box(lel, object, !eui->m_swipeActive);
+    // box.draw(lel->m_debugDrawNode);
 }
 
 void ie::postUpdateSelectPreview(LevelEditorLayer* lel) {
@@ -242,13 +376,13 @@ void ie::postUpdateSelectPreview(LevelEditorLayer* lel) {
     EditorUI* eui = lel->m_editorUI;
     eui->m_cycledObjectIndex = 0;
 
+    bool selecting = eui->m_swipeActive && ccpDistance(eui->m_swipeStart, eui->m_swipeEnd) > 2.f;
     CCArray* objects;
-    bool hovering = false;
 
-    CCPoint start = lel->m_objectLayer->convertToNodeSpace(eui->m_swipeStart);
-    CCPoint end = lel->m_objectLayer->convertToNodeSpace(eui->m_swipeEnd);
+    if (selecting) {
+        CCPoint start = lel->m_objectLayer->convertToNodeSpace(eui->m_swipeStart);
+        CCPoint end = lel->m_objectLayer->convertToNodeSpace(eui->m_swipeEnd);
 
-    if (eui->m_swipeActive && start != end) {
         float x = std::min(start.x, end.x);
         float y = std::min(start.y, end.y);
         float width = std::abs(start.x - end.x);
@@ -259,19 +393,17 @@ void ie::postUpdateSelectPreview(LevelEditorLayer* lel) {
 #ifdef GEODE_IS_DESKTOP
         CCPoint mousePos = getMousePos();
         if (!hoveringOverEditorUI(lel, mousePos)) return;
+        if (eui->m_snapObjectExists && eui->m_continueSwipe) return; // dragging an object with free move
 
         CCPoint pos = lel->m_objectLayer->convertToNodeSpace(mousePos);
 
         objects = CCArray::create();
-        hovering = true;
 
-        static_cast<SPLevelEditorLayer*>(lel)->m_fields->dontUpdateHistory = true;
-        auto hoveredObjects = static_cast<SPLevelEditorLayer*>(lel)->objectsAtPosition(pos);
-        static_cast<SPLevelEditorLayer*>(lel)->m_fields->dontUpdateHistory = false;
-
-        if (auto object = static_cast<GameObject*>(hoveredObjects->firstObject())) {
+        if (auto object = static_cast<SPLevelEditorLayer*>(lel)->betterObjectAtPosition(pos, true)) {
             objects->addObject(object);
         }
+#else
+        return;
 #endif
     }
 
@@ -281,7 +413,7 @@ void ie::postUpdateSelectPreview(LevelEditorLayer* lel) {
         if (previewed.contains(object)) continue;
         if (!eui->canSelectObject(object)) continue;
 
-        setPreviewColor(object, hovering);
+        setPreviewColor(object, !selecting);
         previewed.insert(object);
 
         if (object->m_linkedGroup == 0 || !ie::isLinkControlsEnabled(lel)) continue;
@@ -290,7 +422,7 @@ void ie::postUpdateSelectPreview(LevelEditorLayer* lel) {
         for (const auto& linked : CCArrayExt<GameObject*>(group)) {
             if (previewed.contains(linked)) continue;
 
-            setPreviewColor(linked, hovering);
+            setPreviewColor(linked, !selecting);
             previewed.insert(linked);
         }
     }
