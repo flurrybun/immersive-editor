@@ -39,8 +39,11 @@ class $modify(GameObject) {
         // when this happens, rotation x and y get set to the same value, and so upon loading the object
         // gd uses the single rotation property, which is zero
 
+        // normalize rotation because warping an object with -90 rotation results in (270, -90) rotation
+
         float rotationX = roundToThousandth(getRotationX());
         float rotationY = roundToThousandth(getRotationY());
+        bool equalRotation = std::fabs(normalizeRotation(rotationX) - normalizeRotation(rotationY)) < 0.001f;
         bool addedNewTokens = false;
 
         for (size_t i = 0; i + 1 < tokens.size(); i += 2) {
@@ -52,7 +55,7 @@ class $modify(GameObject) {
             if (key == "6" || key == "131" || key == "132") {
                 if (addedNewTokens) continue;
 
-                if (rotationX == rotationY) {
+                if (equalRotation) {
                     newTokens.push_back("6");
                     newTokens.push_back(fmt::to_string(rotationX));
                 } else {
@@ -71,6 +74,7 @@ class $modify(GameObject) {
         }
 
         fmt::memory_buffer buffer;
+
         for (size_t i = 0; i < newTokens.size(); i++) {
             if (i == 0) fmt::format_to(std::back_inserter(buffer), "{}", newTokens[i]);
             else fmt::format_to(std::back_inserter(buffer), ",{}", newTokens[i]);
@@ -81,5 +85,11 @@ class $modify(GameObject) {
 
     float roundToThousandth(float value) {
         return std::round(value * 1000.f) / 1000.f;
+    }
+
+    float normalizeRotation(float value) {
+        float normalized = std::fmod(value, 360.f);
+        if (normalized < 0.f) normalized += 360.f;
+        return normalized;
     }
 };
