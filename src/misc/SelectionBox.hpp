@@ -8,7 +8,7 @@ using namespace geode::prelude;
 
 /**
  * Represents the selection hitbox of a GameObject as an OBB.
- * Note: all points are in m_objectLayer space.
+ * @note All points are in m_objectLayer space
  */
 class SelectionBox {
 public:
@@ -16,7 +16,7 @@ public:
 
     bool containsPoint(const CCPoint& point) const;
     bool intersectsRect(const CCRect& rect) const;
-    void draw(CCDrawNode* drawNode) const;
+    void draw(CCDrawNode* drawNode, const ccColor4F& color = {0.f, 1.f, 0.f, 1.f}) const;
 
 private:
     static constexpr float FUZZY_RADIUS = 4.f;

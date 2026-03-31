@@ -1,11 +1,11 @@
 #include "SelectionBox.hpp"
 
 SelectionBox::SelectionBox(LevelEditorLayer* lel, GameObject* object, bool fuzzy) {
-    bool useTextureRect = object->m_useTextureRectAsSelectHitbox ||
+    bool useTextureRect = object->m_useTextureRectForSelection ||
         (!object->m_colorSprite && !object->m_hasCustomChild && !object->m_hasAnimatedChild);
 
-    if (!object->m_hasContentSize) {
-        if (object->m_updateCustomContentSize) {
+    if (!object->m_hasCustomSize) {
+        if (object->m_useObjectRect) {
             CCRect rect = object->getObjectRect();
             CCPoint center = rect.origin + rect.size * 0.5f;
 
@@ -20,7 +20,7 @@ SelectionBox::SelectionBox(LevelEditorLayer* lel, GameObject* object, bool fuzzy
             ? (object->m_obRect.size * 0.5f)
             : (object->getContentSize() * 0.5f);
     } else {
-        m_halfSize = object->m_lastSize * 0.5f;
+        m_halfSize = object->m_customSize * 0.5f;
     }
 
     CCAffineTransform transform = CCAffineTransformConcat(
@@ -78,14 +78,14 @@ bool SelectionBox::intersectsRect(const CCRect& rect) const {
     return true;
 }
 
-void SelectionBox::draw(CCDrawNode* drawNode) const {
+void SelectionBox::draw(CCDrawNode* drawNode, const ccColor4F& color) const {
     std::array<CCPoint, 4> corners = getCorners();
 
     for (size_t i = 0; i < corners.size(); i++) {
         const CCPoint& curr = corners[i];
         const CCPoint& next = corners[(i + 1) % corners.size()];
 
-        drawNode->drawSegment(curr, next, 0.5f, { 0.f, 1.f, 0.f, 1.f });
+        drawNode->drawSegment(curr, next, 0.5f, color);
     }
 }
 
