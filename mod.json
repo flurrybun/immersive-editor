@@ -233,5 +233,10 @@
             "type": "bool",
             "default": true
         }
-    }
+    },
+    "api": {
+		"include": [
+			"include/*.hpp"
+		]
+	}
 }

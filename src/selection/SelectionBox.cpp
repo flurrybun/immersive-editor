@@ -1,6 +1,11 @@
 #include "SelectionBox.hpp"
 
-SelectionBox::SelectionBox(LevelEditorLayer* lel, GameObject* object, bool fuzzy) {
+#include <Geode/Geode.hpp>
+using namespace geode::prelude;
+
+SelectionBox SelectionBox::fromObject(LevelEditorLayer* lel, GameObject* object, bool fuzzy) {
+    SelectionBox box;
+
     bool useTextureRect = object->m_useTextureRectForSelection ||
         (!object->m_colorSprite && !object->m_hasCustomChild && !object->m_hasAnimatedChild);
 
@@ -10,17 +15,17 @@ SelectionBox::SelectionBox(LevelEditorLayer* lel, GameObject* object, bool fuzzy
             CCPoint center = rect.origin + rect.size * 0.5f;
 
             CCAffineTransform transform = CCAffineTransformMakeIdentity();
-            m_transform = CCAffineTransformTranslate(transform, center.x, center.y);
-            m_halfSize = rect.size * 0.5f;
+            box.m_transform = CCAffineTransformTranslate(transform, center.x, center.y);
+            box.m_halfSize = rect.size * 0.5f;
 
-            return;
+            return box;
         }
 
-        m_halfSize = useTextureRect
+        box.m_halfSize = useTextureRect
             ? (object->m_obRect.size * 0.5f)
             : (object->getContentSize() * 0.5f);
     } else {
-        m_halfSize = object->m_customSize * 0.5f;
+        box.m_halfSize = object->m_customSize * 0.5f;
     }
 
     CCAffineTransform transform = CCAffineTransformConcat(
@@ -37,15 +42,69 @@ SelectionBox::SelectionBox(LevelEditorLayer* lel, GameObject* object, bool fuzzy
         offset += object->m_obUnflippedOffsetPositionFromCenter;
     }
 
-    m_transform = CCAffineTransformTranslate(transform, offset.x, offset.y);
+    box.m_transform = CCAffineTransformTranslate(transform, offset.x, offset.y);
 
     if (fuzzy) {
-        float scaleX = std::sqrt(m_transform.a * m_transform.a + m_transform.b * m_transform.b);
-        float scaleY = std::sqrt(m_transform.c * m_transform.c + m_transform.d * m_transform.d);
+        float scaleX = std::sqrt(box.m_transform.a * box.m_transform.a + box.m_transform.b * box.m_transform.b);
+        float scaleY = std::sqrt(box.m_transform.c * box.m_transform.c + box.m_transform.d * box.m_transform.d);
 
-        m_halfSize.width = std::max(m_halfSize.width, FUZZY_RADIUS / scaleX);
-        m_halfSize.height = std::max(m_halfSize.height, FUZZY_RADIUS / scaleY);
+        box.m_halfSize.width = std::max(box.m_halfSize.width, FUZZY_RADIUS / scaleX);
+        box.m_halfSize.height = std::max(box.m_halfSize.height, FUZZY_RADIUS / scaleY);
     }
+
+    return box;
+}
+
+SelectionBox SelectionBox::fromRect(const CCRect& rect, const CCPoint& pivot, float rotation) {
+    CCPoint center = ccp(rect.getMidX(), rect.getMidY());
+
+    float radians = -CC_DEGREES_TO_RADIANS(rotation);
+    CCPoint dist = center - pivot;
+
+    CCPoint rotatedCenter = pivot + ccp(
+        dist.x * std::cos(radians) - dist.y * std::sin(radians),
+        dist.x * std::sin(radians) + dist.y * std::cos(radians)
+    );
+
+    SelectionBox box;
+
+    box.m_transform = CCAffineTransformMakeIdentity();
+    box.m_transform = CCAffineTransformTranslate(box.m_transform, rotatedCenter.x, rotatedCenter.y);
+    box.m_transform = CCAffineTransformRotate(box.m_transform, radians);
+
+    box.m_halfSize = CCSizeMake(rect.size.width * 0.5f, rect.size.height * 0.5f);
+
+    return box;
+}
+
+SelectionBox SelectionBox::fromCorners(const std::array<CCPoint, 4>& corners) {
+    CCPoint center = ranges::reduce<CCPoint>(
+        corners,
+        [](CCPoint& acc, CCPoint corner) {
+            acc += corner;
+        }
+    );
+
+    CCPoint axisX = (corners[1] - corners[0]).normalize();
+    CCPoint axisY = (corners[3] - corners[0]).normalize();
+
+    SelectionBox box;
+
+    box.m_transform = {
+        axisX.x, axisX.y,
+        axisY.x, axisY.y,
+        center.x, center.y
+    };
+    box.m_halfSize = CCSize(0, 0);
+
+    for (const auto& corner : corners) {
+        CCPoint dist = corner - center;
+
+        box.m_halfSize.width = std::max(box.m_halfSize.width, std::abs(ccpDot(dist, axisX)));
+        box.m_halfSize.height = std::max(box.m_halfSize.height, std::abs(ccpDot(dist, axisY)));
+    }
+
+    return box;
 }
 
 bool SelectionBox::containsPoint(const CCPoint& point) const {
@@ -78,6 +137,23 @@ bool SelectionBox::intersectsRect(const CCRect& rect) const {
     return true;
 }
 
+bool SelectionBox::intersectsBox(const SelectionBox& box) const {
+    std::array<CCPoint, 4> cornersA = getCorners();
+    std::array<CCPoint, 4> cornersB = box.getCorners();
+    std::array<CCPoint, 4> axesA = getAxes(cornersA);
+    std::array<CCPoint, 4> axesB = getAxes(cornersB);
+
+    for (const auto& axis : axesA) {
+        if (separatedOnAxis(cornersA, cornersB, axis)) return false;
+    }
+
+    for (const auto& axis : axesB) {
+        if (separatedOnAxis(cornersA, cornersB, axis)) return false;
+    }
+
+    return true;
+}
+
 void SelectionBox::draw(CCDrawNode* drawNode, const ccColor4F& color) const {
     std::array<CCPoint, 4> corners = getCorners();
 
@@ -98,7 +174,7 @@ std::array<CCPoint, 4> SelectionBox::getCorners() const {
     };
 }
 
-std::array<CCPoint, 4> SelectionBox::getAxes(const std::array<CCPoint, 4>& corners) const {
+std::array<CCPoint, 4> SelectionBox::getAxes(const std::array<CCPoint, 4>& corners) {
     std::array<CCPoint, 4> axes;
 
     for (size_t i = 0; i < corners.size(); i++) {

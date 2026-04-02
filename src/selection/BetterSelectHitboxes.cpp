@@ -47,7 +47,7 @@ class $modify(BSHLevelEditorLayer, LevelEditorLayer) {
             if (!seen.insert(object).second) return;
             if (!ie::isObjectLayerVisible(object, this)) return;
 
-            SelectionBox box(this, object, false);
+            SelectionBox box = SelectionBox::fromObject(this, object, false);
             if (!box.intersectsRect(rect)) return;
 
             objects->addObject(object);
@@ -127,7 +127,7 @@ std::vector<GameObject*> ie::objectsAtPosition(LevelEditorLayer* lel, const CCPo
 
         if (!ie::isObjectLayerVisible(object, lel)) continue;
 
-        SelectionBox box(lel, object, true);
+        SelectionBox box = SelectionBox::fromObject(lel, object, true);
         if (!box.containsPoint(position)) continue;
 
         objects.push_back(object);
