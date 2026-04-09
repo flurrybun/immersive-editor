@@ -1,5 +1,5 @@
 {
-    "geode": "5.4.1",
+    "geode": "5.5.3",
     "gd": {
         "win": "2.2081",
         "android": "2.2081",
@@ -202,6 +202,12 @@
         "title-bugfixes": {
             "type": "title",
             "name": "Bugfixes"
+        },
+        "fix-performance": {
+            "name": "Improve Performance",
+            "description": "Optimizes a few functions to generally reduce lag when using the editor. You probably won't notice a difference for most levels; this isn't a performance mod.",
+            "type": "bool",
+            "default": true
         },
         "fix-object-rotation-drift": {
             "name": "Fix Object Rotation Drift",
