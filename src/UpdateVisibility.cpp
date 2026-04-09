@@ -1,38 +1,68 @@
 #include <Geode/modify/LevelEditorLayer.hpp>
+#include <Geode/modify/GJBaseGameLayer.hpp>
 #include "UpdateVisibility.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
+
+namespace ie {
+    void updateVisibility(LevelEditorLayer* lel, float dt);
+    void postUpdateVisibility(LevelEditorLayer* lel);
+
+    static float g_audioScale;
+    static float g_cameraXCenter;
+    static ie::GlowContext g_glowContext;
+    static bool g_flipping;
+}
+
+void ie::updateVisibility(LevelEditorLayer* lel, float dt) {
+    g_audioScale = ie::preUpdateAudioScale(lel, dt);
+    g_cameraXCenter = ie::preUpdateFadeAndEnter(lel);
+    g_glowContext = ie::preUpdateGlow(lel);
+    g_flipping = ie::preUpdateMirrorEffect(lel);
+
+    // using a range-based for loop on m_activeObjects can crash due to a use-after-free
+    // place 2 objects, undo 2x, place an object -> crash
+
+    for (int i = 0; i < lel->m_activeObjectsCount; i++) {
+        GameObject* object = lel->m_activeObjects[i];
+
+        ie::updateAudioScale(lel, object, g_audioScale);
+        ie::updateGradientTrigger(object);
+        ie::updateParticleIcon(lel, object);
+        ie::updateFadeAndEnter(lel, object, g_cameraXCenter);
+        ie::updateMirrorEffect(lel, object, g_flipping);
+        ie::updateGlow(lel, object, g_glowContext);
+        ie::updateObjectParticle(lel, object);
+        ie::updateDetailColorOpacity(lel, object);
+        ie::updateSelectPreview(lel, object);
+    }
+}
+
+void ie::postUpdateVisibility(LevelEditorLayer* lel) {
+    ie::postUpdateSelectPreview(lel);
+    ie::updatePortalBacks(lel);
+    ie::updatePulseRodBalls(lel, g_audioScale);
+}
+
+class $modify(GJBaseGameLayer) {
+    $override
+    void updateEnterEffects(float dt) {
+        // first function called after the m_activeObjects loop
+
+        if (auto lel = LevelEditorLayer::get()) {
+            ie::updateVisibility(lel, dt);
+        }
+
+        GJBaseGameLayer::updateEnterEffects(dt);
+    }
+};
 
 class $modify(LevelEditorLayer) {
     $override
     void updateVisibility(float dt) {
         LevelEditorLayer::updateVisibility(dt);
 
-        float audioScale = ie::preUpdateAudioScale(this, dt);
-        float cameraXCenter = ie::preUpdateFadeAndEnter(this);
-        ie::GlowContext glowContext = ie::preUpdateGlow(this);
-        bool flipping = ie::preUpdateMirrorEffect(this);
-
-        // using a range-based for loop on m_activeObjects can crash due to a use-after-free
-        // place 2 objects, undo 2x, place an object -> crash
-
-        for (int i = 0; i < m_activeObjectsCount; i++) {
-            GameObject* object = m_activeObjects[i];
-
-            ie::updateAudioScale(this, object, audioScale);
-            ie::updateGradientTrigger(object);
-            ie::updateParticleIcon(this, object);
-            ie::updateFadeAndEnter(this, object, cameraXCenter);
-            ie::updateMirrorEffect(this, object, flipping);
-            ie::updateGlow(this, object, glowContext);
-            ie::updateObjectParticle(this, object);
-            ie::updateDetailColorOpacity(this, object);
-            ie::updateSelectPreview(this, object);
-        }
-
-        ie::postUpdateSelectPreview(this);
-        ie::updatePortalBacks(this);
-        ie::updatePulseRodBalls(this, audioScale);
+        ie::postUpdateVisibility(this);
     }
 };
