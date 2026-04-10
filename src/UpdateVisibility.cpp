@@ -10,15 +10,13 @@ namespace ie {
     void postUpdateVisibility(LevelEditorLayer* lel);
 
     static float g_audioScale;
-    static float g_cameraXCenter;
-    static ie::GlowContext g_glowContext;
+    static ie::FadeContext g_fadeContext;
     static bool g_flipping;
 }
 
 void ie::updateVisibility(LevelEditorLayer* lel, float dt) {
     g_audioScale = ie::preUpdateAudioScale(lel, dt);
-    g_cameraXCenter = ie::preUpdateFadeAndEnter(lel);
-    g_glowContext = ie::preUpdateGlow(lel);
+    g_fadeContext = ie::preUpdateFadeAndEnter(lel);
     g_flipping = ie::preUpdateMirrorEffect(lel);
 
     // using a range-based for loop on m_activeObjects can crash due to a use-after-free
@@ -30,9 +28,9 @@ void ie::updateVisibility(LevelEditorLayer* lel, float dt) {
         ie::updateAudioScale(lel, object, g_audioScale);
         ie::updateGradientTrigger(object);
         ie::updateParticleIcon(lel, object);
-        ie::updateFadeAndEnter(lel, object, g_cameraXCenter);
+        ie::updateFadeAndEnter(lel, object, g_fadeContext);
         ie::updateMirrorEffect(lel, object, g_flipping);
-        ie::updateGlow(lel, object, g_glowContext);
+        ie::updateGlow(lel, object);
         ie::updateObjectParticle(lel, object);
         ie::updateDetailColorOpacity(lel, object);
         ie::updateSelectPreview(lel, object);
