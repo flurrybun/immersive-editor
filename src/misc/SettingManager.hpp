@@ -1,16 +1,13 @@
 #pragma once
 
 #include <Geode/loader/Hook.hpp>
-#include <ranges>
 
-using namespace geode::prelude;
-
-void addHookForSetting(const std::string& setting, const std::shared_ptr<Hook>& hook);
+void addHookForSetting(const std::string& setting, const std::shared_ptr<geode::Hook>& hook);
 
 #define $bool_setting(name, setting) \
     static bool name = false; \
     $on_mod(DataLoaded) { \
-        name = Mod::get()->getSettingValue<bool>(setting); \
+        name = geode::Mod::get()->getSettingValue<bool>(setting); \
         listenForSettingChanges(setting, [](bool value) { \
             name = value; \
         }); \
@@ -18,7 +15,7 @@ void addHookForSetting(const std::string& setting, const std::shared_ptr<Hook>& 
 
 #define $toggle_hooks(setting) \
     static void onModify(const auto& self) { \
-        for (const auto& hook : self.m_hooks | std::views::values) { \
+        for (const auto& [key, hook] : self.m_hooks) { \
             addHookForSetting(setting, hook); \
         } \
     }
