@@ -304,17 +304,14 @@ class $modify(GameObject) {
 };
 
 class $modify(LevelEditorLayer) {
-    static void onModify(auto& self) {
-        (void)self.setHookPriority("LevelEditorLayer::createObjectsFromString", Priority::EarlyPre);
-    }
-
     $override
     CCArray* createObjectsFromString(gd::string const& objString, bool dontCreateUndo, bool dontShowMaxWarning) {
         // ⏺️ prevent particles appearing when creating objects from string (e.g. custom objects preview)
 
-        if (dontCreateUndo || dontShowMaxWarning) {
-            s_dontCreateParticles = true;
-        }
+        // note: dontCreateUndo is always true, so on windows 2.2081 it's been optimized out
+        // so garbage data is passed in its place
+
+        if (dontShowMaxWarning) s_dontCreateParticles = true;
 
         CCArray* ret = LevelEditorLayer::createObjectsFromString(objString, dontCreateUndo, dontShowMaxWarning);
         s_dontCreateParticles = false;
