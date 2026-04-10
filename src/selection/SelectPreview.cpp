@@ -2,9 +2,7 @@
 #include <Geode/modify/GameObject.hpp>
 #include "../UpdateVisibility.hpp"
 #include "../misc/Utils.hpp"
-#include "SelectPreview.hpp"
-#include "BetterSelectHitboxes.hpp"
-#include "SelectionBox.hpp"
+#include "Selection.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
@@ -61,11 +59,11 @@ float hueRatio(const ccColor3B& color, float targetHue) {
     return min + effectiveDist * (max - min);
 }
 
-void ie::setPreviewColor(GameObject* object, const ccColor3B& color, bool hovering) {
+void ie::setPreviewColor(GameObject* object, const ccColor3B& color, bool selecting) {
     if (object->m_isSelected) return;
 
     float hue = ie::rgbToHsv(color).h;
-    float ratio = hovering ? 0.5f : 1.f;
+    float ratio = selecting ? 1.f : 0.5f;
 
     float mainRatio = hueRatio(object->getColor(), hue) * ratio;
     object->updateMainColor(tintColorBoosted(object->getColor(), color, mainRatio));
@@ -81,7 +79,7 @@ void ie::setPreviewColor(GameObject* object, const ccColor3B& color, bool hoveri
         object->updateSecondaryColor(tintColorBoosted(spr->getColor(), detailColor, detailRatio));
     }
 
-    if (hovering) return;
+    if (!selecting) return;
 
     object->CCSprite::setOpacity(std::clamp(object->getOpacity() + 100, 0, 255));
     if (auto spr = object->m_colorSprite) {
@@ -191,7 +189,7 @@ void ie::postUpdateSelectPreview(LevelEditorLayer* lel) {
 
         objects = CCArray::create();
 
-        if (auto object = ie::objectAtPosition(lel, pos, true)) {
+        if (auto object = ie::objectAtPosition(lel, pos, false)) {
             objects->addObject(object);
         }
 #else

@@ -15,12 +15,12 @@
 #define $_export(...)
 #endif
 
-namespace ninkaz {
+namespace ie {
     /**
      * Represents the selection hitbox of a GameObject as an OBB.
      * @note All points are in m_objectLayer space
      */
-    class SelectionBox {
+    class SelectionBox final {
     public:
         /**
          * Creates a SelectionBox for a GameObject.
@@ -33,12 +33,12 @@ namespace ninkaz {
 
         /**
          * Creates a SelectionBox from a rectangle, pivot and rotation.
-          * @param rect The rectangle to create the box from
-          * @param pivot The pivot point to rotate around
-          * @param rotation The rotation in degrees
+         * @param rect The rectangle to create the box from
+         * @param pivot The pivot point to rotate around
+         * @param rotation The rotation in degrees
          */
-        static SelectionBox fromRect(const cocos2d::CCRect& rect, const cocos2d::CCPoint& pivot, float rotation)
-            $_export(&SelectionBox::fromRect, (rect, pivot, rotation));
+        static SelectionBox fromRotatedRect(const cocos2d::CCRect& rect, const cocos2d::CCPoint& pivot, float rotation)
+            $_export(&SelectionBox::fromRotatedRect, (rect, pivot, rotation));
 
         /**
          * Creates a SelectionBox that encompasses the four corners.
@@ -50,8 +50,8 @@ namespace ninkaz {
 
         /**
          * Checks if the box contains a point.
-          * @param point The point to check
-          * @return Whether the point is inside the box
+         * @param point The point to check
+         * @return Whether the point is inside the box
          */
         bool containsPoint(const cocos2d::CCPoint& point) const
             $_export(&SelectionBox::containsPoint, (this, point));
@@ -100,14 +100,26 @@ namespace ninkaz {
         );
     };
 
+    /**
+     * Sets the preview color of an object, used for highlighting objects that will be selected.
+     * @param object The object to set the preview color of
+     * @param color The selected color, blended with the object's original color
+     * @param selecting Whether the object is being selected via a rect, instead of just being hovered over
+     * @note This must be called every frame
+     */
+    void setPreviewColor(GameObject* object, const cocos2d::ccColor3B& color, bool selecting)
+        $_export(&setPreviewColor, (object, color, selecting));
+
     #ifdef GEODE_DEFINE_EVENT_EXPORTS
-        GEODE_EVENT_EXPORT_NORES(&SelectionBox::fromObject, (lel, object, fuzzy));
-        GEODE_EVENT_EXPORT_NORES(&SelectionBox::fromRect, (rect, pivot, rotation));
-        GEODE_EVENT_EXPORT_NORES(&SelectionBox::fromCorners, (corners));
-        GEODE_EVENT_EXPORT_NORES(&SelectionBox::containsPoint, (this, point));
-        GEODE_EVENT_EXPORT_NORES(&SelectionBox::intersectsRect, (this, rect));
-        GEODE_EVENT_EXPORT_NORES(&SelectionBox::intersectsBox, (this, box));
-        GEODE_EVENT_EXPORT_NORES(&SelectionBox::draw, (this, drawNode, color));
+        GEODE_EVENT_EXPORT(&SelectionBox::fromObject, (lel, object, fuzzy));
+        GEODE_EVENT_EXPORT(&SelectionBox::fromRotatedRect, (rect, pivot, rotation));
+        GEODE_EVENT_EXPORT(&SelectionBox::fromCorners, (corners));
+        GEODE_EVENT_EXPORT(&SelectionBox::containsPoint, (this, point));
+        GEODE_EVENT_EXPORT(&SelectionBox::intersectsRect, (this, rect));
+        GEODE_EVENT_EXPORT(&SelectionBox::intersectsBox, (this, box));
+        GEODE_EVENT_EXPORT(&SelectionBox::draw, (this, drawNode, color));
+
+        GEODE_EVENT_EXPORT(&setPreviewColor, (object, color, selecting));
     #endif
 }
 

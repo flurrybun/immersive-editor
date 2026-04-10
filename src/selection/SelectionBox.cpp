@@ -1,9 +1,9 @@
-#include "SelectionBox.hpp"
+#include "Selection.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
 
-SelectionBox SelectionBox::fromObject(LevelEditorLayer* lel, GameObject* object, bool fuzzy) {
+ie::SelectionBox ie::SelectionBox::fromObject(LevelEditorLayer* lel, GameObject* object, bool fuzzy) {
     SelectionBox box;
 
     bool useTextureRect = object->m_useTextureRectForSelection ||
@@ -55,7 +55,7 @@ SelectionBox SelectionBox::fromObject(LevelEditorLayer* lel, GameObject* object,
     return box;
 }
 
-SelectionBox SelectionBox::fromRect(const CCRect& rect, const CCPoint& pivot, float rotation) {
+ie::SelectionBox ie::SelectionBox::fromRotatedRect(const CCRect& rect, const CCPoint& pivot, float rotation) {
     CCPoint center = ccp(rect.getMidX(), rect.getMidY());
 
     float radians = -CC_DEGREES_TO_RADIANS(rotation);
@@ -77,7 +77,7 @@ SelectionBox SelectionBox::fromRect(const CCRect& rect, const CCPoint& pivot, fl
     return box;
 }
 
-SelectionBox SelectionBox::fromCorners(const std::array<CCPoint, 4>& corners) {
+ie::SelectionBox ie::SelectionBox::fromCorners(const std::array<CCPoint, 4>& corners) {
     CCPoint center = ranges::reduce<CCPoint>(
         corners,
         [](CCPoint& acc, CCPoint corner) {
@@ -107,7 +107,7 @@ SelectionBox SelectionBox::fromCorners(const std::array<CCPoint, 4>& corners) {
     return box;
 }
 
-bool SelectionBox::containsPoint(const CCPoint& point) const {
+bool ie::SelectionBox::containsPoint(const CCPoint& point) const {
     CCAffineTransform inverse = CCAffineTransformInvert(m_transform);
 
     CCPoint local = CCPointApplyAffineTransform(point, inverse);
@@ -116,7 +116,7 @@ bool SelectionBox::containsPoint(const CCPoint& point) const {
     return local <= m_halfSize;
 }
 
-bool SelectionBox::intersectsRect(const CCRect& rect) const {
+bool ie::SelectionBox::intersectsRect(const CCRect& rect) const {
     std::array<CCPoint, 4> rectCorners = {
         ccp(rect.getMinX(), rect.getMinY()),
         ccp(rect.getMaxX(), rect.getMinY()),
@@ -137,7 +137,7 @@ bool SelectionBox::intersectsRect(const CCRect& rect) const {
     return true;
 }
 
-bool SelectionBox::intersectsBox(const SelectionBox& box) const {
+bool ie::SelectionBox::intersectsBox(const ie::SelectionBox& box) const {
     std::array<CCPoint, 4> cornersA = getCorners();
     std::array<CCPoint, 4> cornersB = box.getCorners();
     std::array<CCPoint, 4> axesA = getAxes(cornersA);
@@ -154,7 +154,7 @@ bool SelectionBox::intersectsBox(const SelectionBox& box) const {
     return true;
 }
 
-void SelectionBox::draw(CCDrawNode* drawNode, const ccColor4F& color) const {
+void ie::SelectionBox::draw(CCDrawNode* drawNode, const ccColor4F& color) const {
     std::array<CCPoint, 4> corners = getCorners();
 
     for (size_t i = 0; i < corners.size(); i++) {
@@ -165,7 +165,7 @@ void SelectionBox::draw(CCDrawNode* drawNode, const ccColor4F& color) const {
     }
 }
 
-std::array<CCPoint, 4> SelectionBox::getCorners() const {
+std::array<CCPoint, 4> ie::SelectionBox::getCorners() const {
     return {
         CCPointApplyAffineTransform(m_halfSize * ccp(-1.f, -1.f), m_transform),
         CCPointApplyAffineTransform(m_halfSize * ccp(1.f, -1.f), m_transform),
@@ -174,7 +174,7 @@ std::array<CCPoint, 4> SelectionBox::getCorners() const {
     };
 }
 
-std::array<CCPoint, 4> SelectionBox::getAxes(const std::array<CCPoint, 4>& corners) {
+std::array<CCPoint, 4> ie::SelectionBox::getAxes(const std::array<CCPoint, 4>& corners) {
     std::array<CCPoint, 4> axes;
 
     for (size_t i = 0; i < corners.size(); i++) {
@@ -188,7 +188,7 @@ std::array<CCPoint, 4> SelectionBox::getAxes(const std::array<CCPoint, 4>& corne
     return axes;
 }
 
-bool SelectionBox::separatedOnAxis(
+bool ie::SelectionBox::separatedOnAxis(
     const std::array<CCPoint, 4>& cornersA,
     const std::array<CCPoint, 4>& cornersB,
     const CCPoint& axis
@@ -199,7 +199,7 @@ bool SelectionBox::separatedOnAxis(
     return intervalA.second < intervalB.first || intervalB.second < intervalA.first;
 }
 
-std::pair<float, float> SelectionBox::projectCorners(
+std::pair<float, float> ie::SelectionBox::projectCorners(
     const std::array<CCPoint, 4>& corners, const CCPoint& axis
 ) {
     float min = std::numeric_limits<float>::max();

@@ -1,6 +1,5 @@
 #include <Geode/modify/LevelEditorLayer.hpp>
-#include "BetterSelectHitboxes.hpp"
-#include "SelectionBox.hpp"
+#include "Selection.hpp"
 #include "../misc/Utils.hpp"
 
 #include <Geode/Geode.hpp>
@@ -47,7 +46,7 @@ class $modify(BSHLevelEditorLayer, LevelEditorLayer) {
             if (!seen.insert(object).second) return;
             if (!ie::isObjectLayerVisible(object, this)) return;
 
-            SelectionBox box = SelectionBox::fromObject(this, object, false);
+            ie::SelectionBox box = ie::SelectionBox::fromObject(this, object, false);
             if (!box.intersectsRect(rect)) return;
 
             objects->addObject(object);
@@ -114,7 +113,7 @@ class $modify(BSHLevelEditorLayer, LevelEditorLayer) {
     }
 };
 
-std::vector<GameObject*> ie::objectsAtPosition(LevelEditorLayer* lel, const CCPoint& position, bool hovering) {
+std::vector<GameObject*> ie::objectsAtPosition(LevelEditorLayer* lel, const CCPoint& position, bool selecting) {
     // this function normally uses sections and obb2d, which is perhaps more performant and works off-screen
     // however it should be safe to assume this will only ever be used for on-screen objects
     // and relying on sections doesn't work for heavily upscaled objects with large bounding boxes
@@ -127,7 +126,7 @@ std::vector<GameObject*> ie::objectsAtPosition(LevelEditorLayer* lel, const CCPo
 
         if (!ie::isObjectLayerVisible(object, lel)) continue;
 
-        SelectionBox box = SelectionBox::fromObject(lel, object, true);
+        ie::SelectionBox box = ie::SelectionBox::fromObject(lel, object, true);
         if (!box.containsPoint(position)) continue;
 
         objects.push_back(object);
@@ -155,7 +154,7 @@ std::vector<GameObject*> ie::objectsAtPosition(LevelEditorLayer* lel, const CCPo
 
     // remove objects from cycledObjects that are no longer in consideration
 
-    if (!hovering) {
+    if (selecting) {
         std::erase_if(cycledObjects, [&](WeakRef<GameObject> objectRef) {
             auto object = objectRef.lock();
             if (!object) return true;
@@ -212,15 +211,15 @@ std::vector<GameObject*> ie::objectsAtPosition(LevelEditorLayer* lel, const CCPo
         object->m_cycleIndex = object == *objectToSelect ? 0 : 100'000;
     }
 
-    if (!hovering) {
+    if (selecting) {
         cycledObjects.push_front(*objectToSelect);
     }
 
     return objects;
 }
 
-GameObject* ie::objectAtPosition(LevelEditorLayer* lel, const CCPoint& position, bool hovering) {
-    std::vector<GameObject*> objects = objectsAtPosition(lel, position, hovering);
+GameObject* ie::objectAtPosition(LevelEditorLayer* lel, const CCPoint& position, bool selecting) {
+    std::vector<GameObject*> objects = ie::objectsAtPosition(lel, position, selecting);
 
     if (objects.empty()) return nullptr;
 
