@@ -11,12 +11,25 @@ class $modify(GJBaseGameLayer) {
         bool calculatingStartPos = false;
     };
 
+    $override
     void loadUpToPosition(float position, int order, int channel) {
         // this may not be necessary but i am deathly afraid of breaking normal mode
 
         m_fields->calculatingStartPos = true;
         GJBaseGameLayer::loadUpToPosition(position, order, channel);
         m_fields->calculatingStartPos = false;
+    }
+
+    $override
+    void processMoveActionsStep(float dt, bool visibleFrame) {
+        GJBaseGameLayer::processMoveActionsStep(dt, visibleFrame);
+
+        // fixes camera and shader triggers not updating during startpos calculation
+
+        if (m_fields->calculatingStartPos) {
+            m_gameState.updateTweenActions(dt);
+            m_shaderLayer->m_state.updateTweenActions(dt);
+        }
     }
 
     $override
