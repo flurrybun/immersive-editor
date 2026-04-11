@@ -74,7 +74,13 @@ const ie::SelectionBox& addToCache(LevelEditorLayer* lel, GameObject* object, ie
         }
     }
 
-    auto [it, _] = cache.try_emplace(object, object, std::move(box));
+    auto [it, inserted] = cache.try_emplace(object, object, std::move(box));
+
+    if (!inserted) {
+        it->second.transform = CachedTransform(object);
+        it->second.box = std::move(box);
+    }
+
     return it->second.box;
 }
 
