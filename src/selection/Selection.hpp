@@ -10,6 +10,7 @@
 #undef GEODE_DEFINE_EVENT_EXPORTS
 
 namespace ie {
+    std::vector<GameObject*> objectsInSections(LevelEditorLayer* lel, const cocos2d::CCRect& rect);
     std::vector<GameObject*> objectsAtPosition(LevelEditorLayer* lel, const cocos2d::CCPoint& position, bool selecting);
     GameObject* objectAtPosition(LevelEditorLayer* lel, const cocos2d::CCPoint& position, bool selecting);
 }

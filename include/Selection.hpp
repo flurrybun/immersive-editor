@@ -26,10 +26,9 @@ namespace ie {
          * Creates a SelectionBox for a GameObject.
          * @param lel The current editor layer
          * @param object The object to create a selection box for
-         * @param fuzzy Whether to apply a minimum size to make it easier to select at position
          */
-        static SelectionBox fromObject(LevelEditorLayer* lel, GameObject* object, bool fuzzy)
-            $_export(&SelectionBox::fromObject, (lel, object, fuzzy));
+        static const SelectionBox& fromObject(LevelEditorLayer* lel, GameObject* object)
+            $_export(&SelectionBox::fromObject, (lel, object));
 
         /**
          * Creates a SelectionBox from a rectangle, pivot and rotation.
@@ -51,10 +50,11 @@ namespace ie {
         /**
          * Checks if the box contains a point.
          * @param point The point to check
+         * @param fuzzy Whether to apply a minimum size to make it easier to select at position (normally true)
          * @return Whether the point is inside the box
          */
-        bool containsPoint(const cocos2d::CCPoint& point) const
-            $_export(&SelectionBox::containsPoint, (this, point));
+        bool containsPoint(const cocos2d::CCPoint& point, bool fuzzy) const
+            $_export(&SelectionBox::containsPoint, (this, point, fuzzy));
 
         /**
          * Checks if the box intersects with a rect.
@@ -81,13 +81,17 @@ namespace ie {
             $_export(&SelectionBox::draw, (this, drawNode, color));
 
     private:
-        SelectionBox() = default;
+        SelectionBox() = delete;
+        SelectionBox(cocos2d::CCAffineTransform transform, cocos2d::CCSize halfSize);
 
         static constexpr float FUZZY_RADIUS = 4.f;
         cocos2d::CCAffineTransform m_transform;
         cocos2d::CCSize m_halfSize;
+        cocos2d::CCSize m_fuzzyHalfSize;
 
+        const cocos2d::CCSize& getHalfSize(bool fuzzy) const;
         std::array<cocos2d::CCPoint, 4> getCorners() const;
+
         static std::array<cocos2d::CCPoint, 4> getAxes(const std::array<cocos2d::CCPoint, 4>& corners);
         static bool separatedOnAxis(
             const std::array<cocos2d::CCPoint, 4>& cornersA,
@@ -111,10 +115,10 @@ namespace ie {
         $_export(&setPreviewColor, (object, color, selecting));
 
     #ifdef GEODE_DEFINE_EVENT_EXPORTS
-        GEODE_EVENT_EXPORT(&SelectionBox::fromObject, (lel, object, fuzzy));
+        GEODE_EVENT_EXPORT(&SelectionBox::fromObject, (lel, object));
         GEODE_EVENT_EXPORT(&SelectionBox::fromRotatedRect, (rect, pivot, rotation));
         GEODE_EVENT_EXPORT(&SelectionBox::fromCorners, (corners));
-        GEODE_EVENT_EXPORT(&SelectionBox::containsPoint, (this, point));
+        GEODE_EVENT_EXPORT(&SelectionBox::containsPoint, (this, point, fuzzy));
         GEODE_EVENT_EXPORT(&SelectionBox::intersectsRect, (this, rect));
         GEODE_EVENT_EXPORT(&SelectionBox::intersectsBox, (this, box));
         GEODE_EVENT_EXPORT(&SelectionBox::draw, (this, drawNode, color));

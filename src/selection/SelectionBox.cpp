@@ -1,13 +1,93 @@
+#include <Geode/modify/LevelEditorLayer.hpp>
 #include "Selection.hpp"
+#include "../misc/ObjectEvent.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
 
-ie::SelectionBox ie::SelectionBox::fromObject(LevelEditorLayer* lel, GameObject* object, bool fuzzy) {
-    SelectionBox box;
+// using a profiler, i found SelectionBox::fromObject to be a big source of lag in levels with
+// many objects. rather than recalculating hundreds of selection boxes per frame, they're cached
+// and only recalculated when its object's position, scale, or rotation changes
+
+struct CachedTransform {
+    float x, y;
+    float scaleX, scaleY;
+    float rotationX, rotationY;
+
+    bool operator==(const CachedTransform& other) const {
+        return x == other.x && y == other.y &&
+            scaleX == other.scaleX && scaleY == other.scaleY &&
+            rotationX == other.rotationX && rotationY == other.rotationY;
+    }
+
+    CachedTransform(GameObject* object) {
+        x = object->getPositionX();
+        y = object->getPositionY();
+        scaleX = object->getScaleX();
+        scaleY = object->getScaleY();
+        rotationX = object->getRotationX();
+        rotationY = object->getRotationY();
+    }
+};
+
+struct CachedSelectionBox {
+    ie::SelectionBox box;
+    CachedTransform transform;
+
+    CachedSelectionBox(GameObject* object, ie::SelectionBox box)
+        : transform(object), box(std::move(box)) {}
+};
+
+class $modify(SBLevelEditorLayer, LevelEditorLayer) {
+    struct Fields {
+        ListenerHandle objectListener;
+        std::unordered_map<GameObject*, CachedSelectionBox> selectionBoxCache;
+    };
+
+    $override
+    bool init(GJGameLevel* p0, bool p1) {
+        if (!LevelEditorLayer::init(p0, p1)) return false;
+
+        m_fields->objectListener = ObjectEvent().listen([this](GameObject* object, bool created) {
+            if (created) return ListenerResult::Propagate;
+
+            m_fields->selectionBoxCache.erase(object);
+
+            return ListenerResult::Propagate;
+        });
+
+        return true;
+    }
+};
+
+std::unordered_map<GameObject*, CachedSelectionBox>& getSelectionBoxCache(LevelEditorLayer* lel) {
+    return static_cast<SBLevelEditorLayer*>(lel)->m_fields->selectionBoxCache;
+}
+
+const ie::SelectionBox& addToCache(LevelEditorLayer* lel, GameObject* object, ie::SelectionBox&& box) {
+    auto& cache = getSelectionBoxCache(lel);
+
+    if (cache.size() > std::max(3000, lel->m_activeObjectsCount + 500)) {
+        for (auto it = cache.begin(); it != cache.end();) {
+            if (it->first->getParent()) it++;
+            else it = cache.erase(it);
+        }
+    }
+
+    auto [it, _] = cache.try_emplace(object, object, std::move(box));
+    return it->second.box;
+}
+
+const ie::SelectionBox& ie::SelectionBox::fromObject(LevelEditorLayer* lel, GameObject* object) {
+    auto& cache = getSelectionBoxCache(lel);
+
+    auto it = cache.find(object);
+    if (it != cache.end() && it->second.transform == CachedTransform(object)) return it->second.box;
 
     bool useTextureRect = object->m_useTextureRectForSelection ||
         (!object->m_colorSprite && !object->m_hasCustomChild && !object->m_hasAnimatedChild);
+
+    CCSize halfSize;
 
     if (!object->m_hasCustomSize) {
         if (object->m_useObjectRect) {
@@ -15,17 +95,16 @@ ie::SelectionBox ie::SelectionBox::fromObject(LevelEditorLayer* lel, GameObject*
             CCPoint center = rect.origin + rect.size * 0.5f;
 
             CCAffineTransform transform = CCAffineTransformMakeIdentity();
-            box.m_transform = CCAffineTransformTranslate(transform, center.x, center.y);
-            box.m_halfSize = rect.size * 0.5f;
+            transform = CCAffineTransformTranslate(transform, center.x, center.y);
 
-            return box;
+            return addToCache(lel, object, { transform, rect.size * 0.5f });
         }
 
-        box.m_halfSize = useTextureRect
+        halfSize = useTextureRect
             ? (object->m_obRect.size * 0.5f)
             : (object->getContentSize() * 0.5f);
     } else {
-        box.m_halfSize = object->m_customSize * 0.5f;
+        halfSize = object->m_customSize * 0.5f;
     }
 
     CCAffineTransform transform = CCAffineTransformConcat(
@@ -42,17 +121,7 @@ ie::SelectionBox ie::SelectionBox::fromObject(LevelEditorLayer* lel, GameObject*
         offset += object->m_obUnflippedOffsetPositionFromCenter;
     }
 
-    box.m_transform = CCAffineTransformTranslate(transform, offset.x, offset.y);
-
-    if (fuzzy) {
-        float scaleX = std::sqrt(box.m_transform.a * box.m_transform.a + box.m_transform.b * box.m_transform.b);
-        float scaleY = std::sqrt(box.m_transform.c * box.m_transform.c + box.m_transform.d * box.m_transform.d);
-
-        box.m_halfSize.width = std::max(box.m_halfSize.width, FUZZY_RADIUS / scaleX);
-        box.m_halfSize.height = std::max(box.m_halfSize.height, FUZZY_RADIUS / scaleY);
-    }
-
-    return box;
+    return addToCache(lel, object, { CCAffineTransformTranslate(transform, offset.x, offset.y), halfSize });
 }
 
 ie::SelectionBox ie::SelectionBox::fromRotatedRect(const CCRect& rect, const CCPoint& pivot, float rotation) {
@@ -66,15 +135,11 @@ ie::SelectionBox ie::SelectionBox::fromRotatedRect(const CCRect& rect, const CCP
         dist.x * std::sin(radians) + dist.y * std::cos(radians)
     );
 
-    SelectionBox box;
+    CCAffineTransform transform = CCAffineTransformMakeIdentity();
+    transform = CCAffineTransformTranslate(transform, rotatedCenter.x, rotatedCenter.y);
+    transform = CCAffineTransformRotate(transform, radians);
 
-    box.m_transform = CCAffineTransformMakeIdentity();
-    box.m_transform = CCAffineTransformTranslate(box.m_transform, rotatedCenter.x, rotatedCenter.y);
-    box.m_transform = CCAffineTransformRotate(box.m_transform, radians);
-
-    box.m_halfSize = CCSizeMake(rect.size.width * 0.5f, rect.size.height * 0.5f);
-
-    return box;
+    return { transform, rect.size * 0.5f };
 }
 
 ie::SelectionBox ie::SelectionBox::fromCorners(const std::array<CCPoint, 4>& corners) {
@@ -85,35 +150,35 @@ ie::SelectionBox ie::SelectionBox::fromCorners(const std::array<CCPoint, 4>& cor
         }
     );
 
+    center /= 4;
+
     CCPoint axisX = (corners[1] - corners[0]).normalize();
     CCPoint axisY = (corners[3] - corners[0]).normalize();
 
-    SelectionBox box;
-
-    box.m_transform = {
+    CCAffineTransform transform = {
         axisX.x, axisX.y,
         axisY.x, axisY.y,
         center.x, center.y
     };
-    box.m_halfSize = CCSize(0, 0);
+    CCSize halfSize = CCSize(0, 0);
 
     for (const auto& corner : corners) {
         CCPoint dist = corner - center;
 
-        box.m_halfSize.width = std::max(box.m_halfSize.width, std::abs(ccpDot(dist, axisX)));
-        box.m_halfSize.height = std::max(box.m_halfSize.height, std::abs(ccpDot(dist, axisY)));
+        halfSize.width = std::max(halfSize.width, std::abs(ccpDot(dist, axisX)));
+        halfSize.height = std::max(halfSize.height, std::abs(ccpDot(dist, axisY)));
     }
 
-    return box;
+    return { transform, halfSize };
 }
 
-bool ie::SelectionBox::containsPoint(const CCPoint& point) const {
+bool ie::SelectionBox::containsPoint(const CCPoint& point, bool fuzzy) const {
     CCAffineTransform inverse = CCAffineTransformInvert(m_transform);
 
     CCPoint local = CCPointApplyAffineTransform(point, inverse);
     local = ccp(std::abs(local.x), std::abs(local.y));
 
-    return local <= m_halfSize;
+    return local <= getHalfSize(fuzzy);
 }
 
 bool ie::SelectionBox::intersectsRect(const CCRect& rect) const {
@@ -165,12 +230,41 @@ void ie::SelectionBox::draw(CCDrawNode* drawNode, const ccColor4F& color) const 
     }
 }
 
+ie::SelectionBox::SelectionBox(CCAffineTransform transform, CCSize halfSize) {
+    m_transform = std::move(transform);
+    m_halfSize = std::move(halfSize);
+
+    float scaleX = std::sqrt(m_transform.a * m_transform.a + m_transform.b * m_transform.b);
+    float scaleY = std::sqrt(m_transform.c * m_transform.c + m_transform.d * m_transform.d);
+
+    m_fuzzyHalfSize = CCSize(
+        scaleX > 0 ? std::max(m_halfSize.width, FUZZY_RADIUS / scaleX) : m_halfSize.width,
+        scaleY > 0 ? std::max(m_halfSize.height, FUZZY_RADIUS / scaleY) : m_halfSize.height
+    );
+}
+
+// void ie::SelectionBox::computeFuzzySize() {
+//     float scaleX = std::sqrt(m_transform.a * m_transform.a + m_transform.b * m_transform.b);
+//     float scaleY = std::sqrt(m_transform.c * m_transform.c + m_transform.d * m_transform.d);
+
+//     m_fuzzyHalfSize = CCSize(
+//         scaleX > 0 ? std::max(m_halfSize.width, FUZZY_RADIUS / scaleX) : m_halfSize.width,
+//         scaleY > 0 ? std::max(m_halfSize.height, FUZZY_RADIUS / scaleY) : m_halfSize.height
+//     );
+// }
+
+const CCSize& ie::SelectionBox::getHalfSize(bool fuzzy) const {
+    return fuzzy ? m_fuzzyHalfSize : m_halfSize;
+}
+
 std::array<CCPoint, 4> ie::SelectionBox::getCorners() const {
+    const CCSize& halfSize = getHalfSize(false);
+
     return {
-        CCPointApplyAffineTransform(m_halfSize * ccp(-1.f, -1.f), m_transform),
-        CCPointApplyAffineTransform(m_halfSize * ccp(1.f, -1.f), m_transform),
-        CCPointApplyAffineTransform(m_halfSize * ccp(1.f, 1.f), m_transform),
-        CCPointApplyAffineTransform(m_halfSize * ccp(-1.f, 1.f), m_transform)
+        CCPointApplyAffineTransform(halfSize * ccp(-1.f, -1.f), m_transform),
+        CCPointApplyAffineTransform(halfSize * ccp(1.f, -1.f), m_transform),
+        CCPointApplyAffineTransform(halfSize * ccp(1.f, 1.f), m_transform),
+        CCPointApplyAffineTransform(halfSize * ccp(-1.f, 1.f), m_transform)
     };
 }
 

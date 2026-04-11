@@ -46,7 +46,7 @@ class $modify(BSHLevelEditorLayer, LevelEditorLayer) {
             if (!seen.insert(object).second) return;
             if (!ie::isObjectLayerVisible(object, this)) return;
 
-            ie::SelectionBox box = ie::SelectionBox::fromObject(this, object, false);
+            ie::SelectionBox box = ie::SelectionBox::fromObject(this, object);
             if (!box.intersectsRect(rect)) return;
 
             objects->addObject(object);
@@ -60,58 +60,56 @@ class $modify(BSHLevelEditorLayer, LevelEditorLayer) {
         // 2. check objects in sections
         // mostly decompiled from LevelEditorLayer::objectsInRect, but with a different intersection check
 
-        if (m_sections.empty()) return objects;
-
-        auto sectionX = [&](float x) -> float {
-            if (x <= 0.f) return 0.f;
-            return m_sectionXFactor * (x < 1e7f ? x : 1e7f);
-        };
-
-        auto sectionY = [&](float y) -> float {
-            if (y <= 0.f) return 0.f;
-            return m_sectionYFactor * (y < 1e7f ? y : 1e7f);
-        };
-
-        float startSectionX = sectionX(rect.origin.x);
-        startSectionX = (startSectionX - 1.f >= 0.f) ? (startSectionX - 1.f) : 0.f;
-
-        float endSectionX = sectionX(rect.origin.x + rect.size.width);
-        float maxSectionX = m_sections.size() - 1.f;
-        endSectionX = (endSectionX + 1.f < maxSectionX) ? (endSectionX + 1.f) : maxSectionX;
-
-        float startSectionY = sectionY(rect.origin.y);
-        startSectionY = (startSectionY - 1.f >= 0.f) ? (startSectionY - 1.f) : 0.f;
-
-        float endSectionY = (float)(int)(sectionY(rect.origin.y + rect.size.height) + 1.f);
-
-        int xStart = (int)startSectionX;
-        int xEnd = (int)endSectionX;
-        int yStart = (int)startSectionY;
-        int yEnd = (int)endSectionY;
-
-        for (int xi = xStart; xi <= xEnd; xi++) {
-            auto* xBucket = m_sections[xi];
-            if (!xBucket) continue;
-
-            int bucketYMax = (int)xBucket->size() - 1;
-            if (yEnd > bucketYMax) yEnd = bucketYMax;
-
-            for (int yi = yStart; yi <= yEnd; yi++) {
-                auto* yBucket = (*xBucket)[yi];
-                if (!yBucket) continue;
-
-                int count = (*m_sectionSizes[xi])[yi];
-
-                for (int i = 0; i < count; i++) {
-                    GameObject* object = (*yBucket)[i];
-                    checkObject(object);
-                }
-            }
+        for (GameObject* object : ie::objectsInSections(this, rect)) {
+            checkObject(object);
         }
 
         return objects;
     }
 };
+
+std::vector<GameObject*> ie::objectsInSections(LevelEditorLayer* lel, const CCRect& rect) {
+    std::vector<GameObject*> objects;
+
+    if (lel->m_sections.empty()) return objects;
+
+    auto sectionX = [&](float x) -> int {
+        if (x <= 0.f) return 0.f;
+        return lel->m_sectionXFactor * std::min(x, 1e7f);
+    };
+
+    auto sectionY = [&](float y) -> int {
+        if (y <= 0.f) return 0.f;
+        return lel->m_sectionYFactor * std::min(y, 1e7f);
+    };
+
+    int xStart = std::max(0, sectionX(rect.origin.x) - 1);
+    int xEnd = std::min(sectionX(rect.origin.x + rect.size.width) + 1, (int)lel->m_sections.size() - 1);
+
+    int yStart = std::max(0, sectionY(rect.origin.y) - 1);
+    int yEnd = sectionY(rect.origin.y + rect.size.height) + 1;
+
+    for (int xi = xStart; xi <= xEnd; xi++) {
+        auto xBucket = lel->m_sections[xi];
+        if (!xBucket) continue;
+
+        int bucketYMax = (int)xBucket->size() - 1;
+        int bucketYEnd = std::min(yEnd, bucketYMax);
+
+        for (int yi = yStart; yi <= bucketYEnd; yi++) {
+            auto yBucket = (*xBucket)[yi];
+            if (!yBucket) continue;
+
+            int count = (*lel->m_sectionSizes[xi])[yi];
+
+            for (int i = 0; i < count; i++) {
+                objects.push_back((*yBucket)[i]);
+            }
+        }
+    }
+
+    return objects;
+}
 
 std::vector<GameObject*> ie::objectsAtPosition(LevelEditorLayer* lel, const CCPoint& position, bool selecting) {
     // this function normally uses sections and obb2d, which is perhaps more performant and works off-screen
@@ -121,13 +119,13 @@ std::vector<GameObject*> ie::objectsAtPosition(LevelEditorLayer* lel, const CCPo
     std::deque<WeakRef<GameObject>>& cycledObjects = static_cast<BSHLevelEditorLayer*>(lel)->m_fields->cycledObjects;
     std::vector<GameObject*> objects;
 
-    for (int i = 0; i < lel->m_activeObjectsCount; i++) {
-        GameObject* object = lel->m_activeObjects[i];
+    CCRect rect = CCRect(position.x, position.y, 0.f, 0.f);
 
+    for (GameObject* object : ie::objectsInSections(lel, rect)) {
         if (!ie::isObjectLayerVisible(object, lel)) continue;
 
-        ie::SelectionBox box = ie::SelectionBox::fromObject(lel, object, true);
-        if (!box.containsPoint(position)) continue;
+        ie::SelectionBox box = ie::SelectionBox::fromObject(lel, object);
+        if (!box.containsPoint(position, true)) continue;
 
         objects.push_back(object);
     }
