@@ -7,6 +7,7 @@ using namespace geode::prelude;
 
 namespace ie {
     bool isAmazon();
+    bool inEditor();
 
     bool isEditorTopLevel(LevelEditorLayer* lel);
     bool isObjectLayerVisible(GameObject* object, LevelEditorLayer* lel);

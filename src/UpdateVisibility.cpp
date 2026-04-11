@@ -1,6 +1,7 @@
 #include <Geode/modify/LevelEditorLayer.hpp>
 #include <Geode/modify/GJBaseGameLayer.hpp>
 #include "UpdateVisibility.hpp"
+#include "misc/Utils.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
@@ -48,7 +49,8 @@ class $modify(GJBaseGameLayer) {
     void updateEnterEffects(float dt) {
         // first function called after the m_activeObjects loop
 
-        if (auto lel = LevelEditorLayer::get()) {
+        if (ie::inEditor()) {
+            auto lel = static_cast<LevelEditorLayer*>(static_cast<GJBaseGameLayer*>(this));
             ie::updateVisibility(lel, dt);
         }
 

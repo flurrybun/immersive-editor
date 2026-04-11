@@ -2,6 +2,7 @@
 #include <Geode/modify/LevelEditorLayer.hpp>
 #include "UpdateVisibility.hpp"
 #include "misc/ObjectEvent.hpp"
+#include "misc/Utils.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
@@ -39,7 +40,7 @@ public:
 class $modify(GameObject) {
     $override
     static GameObject* createWithKey(int key) {
-        if (!isPulseRodID(key) || !LevelEditorLayer::get()) {
+        if (!isPulseRodID(key) || !ie::inEditor()) {
             return GameObject::createWithKey(key);
         }
 

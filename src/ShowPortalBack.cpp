@@ -36,7 +36,7 @@ class $modify(SPBLevelEditorLayer, LevelEditorLayer) {
     void addPortalBack(GameObject* object) {
         auto back = CCSprite::createWithSpriteFrameName(getPortalBackFrameName(object->m_objectID));
 
-        LevelEditorLayer::get()->m_game2LayerB0->addChild(back);
+        m_game2LayerB0->addChild(back);
         back->setZOrder(object->getZOrder() - 100);
 
         m_fields->portalBacks[object] = back;

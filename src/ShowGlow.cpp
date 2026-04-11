@@ -8,7 +8,7 @@ using namespace geode::prelude;
 class $modify(GameObject) {
     $override
     void addGlow(gd::string objectFrameName) {
-        if (!LevelEditorLayer::get()) {
+        if (!ie::inEditor()) {
             GameObject::addGlow(objectFrameName);
             return;
         }

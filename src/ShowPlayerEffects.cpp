@@ -1,5 +1,6 @@
 #include <Geode/modify/PlayerObject.hpp>
 #include <Geode/modify/LevelEditorLayer.hpp>
+#include "misc/Utils.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
@@ -12,7 +13,7 @@ class $modify(PlayerObject) {
 
         if (!PlayerObject::init(player, ship, gameLayer, layer, playLayer)) return false;
 
-        if (LevelEditorLayer::get()) {
+        if (ie::inEditor()) {
             addAllParticles();
         }
 
@@ -23,7 +24,7 @@ class $modify(PlayerObject) {
     void flipGravity(bool p0, bool p1) {
         // ⏺️ show hard streak when entering gravity portal
 
-        if (!LevelEditorLayer::get()) {
+        if (!ie::inEditor()) {
             PlayerObject::flipGravity(p0, p1);
             return;
         }
@@ -39,7 +40,7 @@ class $modify(PlayerObject) {
     void updateTimeMod(float p0, bool p1) {
         // ⏺️ speed particles
 
-        if (!LevelEditorLayer::get()) {
+        if (!ie::inEditor()) {
             PlayerObject::updateTimeMod(p0, p1);
             return;
         }
@@ -57,7 +58,7 @@ class $modify(PlayerObject) {
     void toggleGhostEffect(GhostType type) {
         // ⏺️ ghost trail
 
-        if (!LevelEditorLayer::get()) {
+        if (!ie::inEditor()) {
             PlayerObject::toggleGhostEffect(type);
             return;
         }
@@ -73,7 +74,7 @@ class $modify(PlayerObject) {
     void startDashing(DashRingObject* p0) {
         // ⏺️ fire effect on activating dash orb
 
-        if (!LevelEditorLayer::get()) {
+        if (!ie::inEditor()) {
             PlayerObject::startDashing(p0);
             return;
         }
@@ -106,7 +107,7 @@ class $modify(PlayerObject) {
         // no clue why but deactivateStreak (inlined on win) sets duration to 0.6 when m_playEffects is false
         // making fade out time in the editor longer than in-game
 
-        if (LevelEditorLayer::get() && duration == 0.6f) {
+        if (ie::inEditor() && duration == 0.6f) {
             duration = 0.2f;
         }
 
@@ -119,7 +120,7 @@ class $modify(PlayerObject) {
 
         PlayerObject::update(dt);
 
-        if (LevelEditorLayer::get()) {
+        if (ie::inEditor()) {
             m_waveTrail->setColor(m_switchWaveTrailColor ? m_playerColor2 : m_playerColor1);
         }
     }

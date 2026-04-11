@@ -1,6 +1,7 @@
 #include <Geode/modify/LevelEditorLayer.hpp>
 #include <Geode/modify/PlayerObject.hpp>
 #include <Geode/utils/VMTHookManager.hpp>
+#include "misc/Utils.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
@@ -97,7 +98,7 @@ class $modify(PlayerObject) {
             type == GameObjectType::GreenRing ||
             type == GameObjectType::GravityDashRing;
 
-        if (LevelEditorLayer::get() && isGravityRing) {
+        if (ie::inEditor() && isGravityRing) {
             m_gameLayer->playGravityEffect(m_isUpsideDown);
         }
     }

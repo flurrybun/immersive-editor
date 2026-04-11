@@ -129,12 +129,12 @@ class $modify(GJBaseGameLayer) {
     void updateGradientLayers() {
         // ⏺️ hide gradients with preview mode disabled
 
-        auto lel = LevelEditorLayer::get();
-
-        if (!lel) {
+        if (!ie::inEditor()) {
             GJBaseGameLayer::updateGradientLayers();
             return;
         }
+
+        auto lel = static_cast<LevelEditorLayer*>(static_cast<GJBaseGameLayer*>(this));
 
         if (!lel->m_previewMode) return;
 

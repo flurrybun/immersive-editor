@@ -3,6 +3,7 @@
 #include <Geode/modify/LevelEditorLayer.hpp>
 #include <Geode/modify/GameObject.hpp>
 #include <Geode/modify/RingObject.hpp>
+#include "misc/Utils.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
@@ -18,7 +19,7 @@ class $modify(PlayerObject) {
     void spawnPortalCircle(ccColor3B color, float startRadius) {
         // ⏺️ circle wave on activating portal
 
-        if (!LevelEditorLayer::get()) {
+        if (!ie::inEditor()) {
             PlayerObject::spawnPortalCircle(color, startRadius);
             return;
         }
@@ -38,7 +39,7 @@ class $modify(PlayerObject) {
     void toggleDartMode(bool p0, bool p1) {
         // ⏺️ circle wave on activating wave portal
 
-        if (!LevelEditorLayer::get()) {
+        if (!ie::inEditor()) {
             PlayerObject::toggleDartMode(p0, p1);
             return;
         }
@@ -58,7 +59,7 @@ class $modify(PlayerObject) {
         // ⏺️ background flashes
         // 🔀 call PlayerObject::spawnScaleCircle
 
-        if (!LevelEditorLayer::get()) {
+        if (!ie::inEditor()) {
             PlayerObject::togglePlayerScale(p0, p1);
             return;
         }
@@ -76,7 +77,7 @@ class $modify(PlayerObject) {
     void spawnScaleCircle() {
         // ⏺️ circle wave on activating size portal
 
-        if (!LevelEditorLayer::get()) {
+        if (!ie::inEditor()) {
             PlayerObject::spawnScaleCircle();
             return;
         }
@@ -102,7 +103,7 @@ class $modify(PlayerObject) {
     void ringJump(RingObject* ring, bool p1) {
         // ⏺️ circle wave on activating orb
 
-        if (!LevelEditorLayer::get()) {
+        if (!ie::inEditor()) {
             PlayerObject::ringJump(ring, p1);
             return;
         }
@@ -141,7 +142,7 @@ class $modify(PlayerObject) {
     void playBumpEffect(int objectType, GameObject* player) {
         // ⏺️ circle wave on activating pad
 
-        if (!LevelEditorLayer::get()) {
+        if (!ie::inEditor()) {
             PlayerObject::playBumpEffect(objectType, player);
             return;
         }
@@ -165,7 +166,7 @@ class $modify(PlayerObject) {
     void spawnDualCircle() {
         // ⏺️ circle wave on entering dual mode
 
-        if (!LevelEditorLayer::get()) {
+        if (!ie::inEditor()) {
             PlayerObject::spawnDualCircle();
             return;
         }
@@ -183,7 +184,7 @@ class $modify(PlayerObject) {
     void playSpiderDashEffect(CCPoint from, CCPoint to) {
         // ⏺️ various effects on spider teleport or activating spider orb/pad
 
-        if (!LevelEditorLayer::get()) {
+        if (!ie::inEditor()) {
             PlayerObject::playSpiderDashEffect(from, to);
             return;
         }
@@ -270,7 +271,7 @@ class $modify(PlayerObject) {
     void spawnCircle() {
         // ⏺️ circle wave on respawning
 
-        if (!LevelEditorLayer::get()) {
+        if (!ie::inEditor()) {
             PlayerObject::spawnCircle();
             return;
         }
@@ -336,7 +337,7 @@ class $modify(GJBaseGameLayer) {
 
         m_isEditor = false;
         GJBaseGameLayer::toggleDualMode(p0, p1, p2, p3);
-        m_isEditor = LevelEditorLayer::get();
+        m_isEditor = ie::inEditor();
     }
 
     $override
@@ -345,7 +346,7 @@ class $modify(GJBaseGameLayer) {
 
         m_isEditor = false;
         GJBaseGameLayer::checkRepellPlayer();
-        m_isEditor = LevelEditorLayer::get();
+        m_isEditor = ie::inEditor();
     }
 };
 
@@ -368,7 +369,7 @@ class $modify(GameObject) {
         // ⏺️ white flash on activating portal
         // ⏺️ circle wave on activating speed portal
 
-        if (!LevelEditorLayer::get()) {
+        if (!ie::inEditor()) {
             GameObject::playShineEffect();
             return;
         }
@@ -455,7 +456,7 @@ class $modify(RingObject) {
     void powerOnObject(int state) {
         // ⏺️ circle wave on hovering over orb
 
-        if (!LevelEditorLayer::get()) {
+        if (!ie::inEditor()) {
             RingObject::powerOnObject(state);
             return;
         }

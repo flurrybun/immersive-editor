@@ -2,6 +2,7 @@
 #include <Geode/modify/EffectGameObject.hpp>
 #include <Geode/modify/LevelEditorLayer.hpp>
 #include <Geode/utils/VMTHookManager.hpp>
+#include "misc/Utils.hpp"
 #include "misc/SettingManager.hpp"
 #include "ShowGlitter.hpp"
 
@@ -31,7 +32,7 @@ class $modify(EffectGameObject) {
         // ⏺️ activate ghost effect triggers
         // ⏺️ activate bg effect triggers
 
-        if (!LevelEditorLayer::get()) {
+        if (!ie::inEditor()) {
             EffectGameObject::triggerObject(gameLayer, p1, p2);
             return;
         }

@@ -3,6 +3,7 @@
 #include <Geode/modify/PlayerObject.hpp>
 #include "UpdateVisibility.hpp"
 #include "misc/PlaytestEvent.hpp"
+#include "misc/Utils.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
@@ -12,7 +13,7 @@ class $modify(GJBaseGameLayer) {
     void collisionCheckObjects(PlayerObject* p0, gd::vector<GameObject*>* p1, int p2, float p3) {
         // ⏺️ activate mirror portals in editor
 
-        if (!LevelEditorLayer::get()) {
+        if (!ie::inEditor()) {
             GJBaseGameLayer::collisionCheckObjects(p0, p1, p2, p3);
             return;
         }
@@ -134,11 +135,11 @@ class $modify(PlayerObject) {
     bool levelFlipping() {
         // ⏺️ fix particles not disappearing on mirror effect
 
-        if (!LevelEditorLayer::get()) {
+        if (!ie::inEditor()) {
             return PlayerObject::levelFlipping();
         }
 
-        return LevelEditorLayer::get()->isFlipping();
+        return m_gameLayer->isFlipping();
     }
 };
 #endif

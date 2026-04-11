@@ -14,8 +14,6 @@ class $modify(LevelEditorLayer) {
 
         DrawGridAPI::get().getNode<DurationLines>("duration-lines").inspect([&](DurationLines& lines) {
             lines.setPropertiesForObject([&](LineColor& color, EffectGameObject* object, float& lineWidth) {
-                if (this != LevelEditorLayer::get()) return;
-
                 GLubyte lineOpacity = ie::isObjectLayerVisible(object, this) ? 115 : 23;
                 color = LineColor(255, 255, 255, lineOpacity);
             });

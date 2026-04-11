@@ -14,7 +14,7 @@ class $modify(EnhancedGameObject) {
     void customSetup() {
         // ⏺️ particles for orbs, pads, portals, and the 2.1 fireball
 
-        if (!LevelEditorLayer::get() || !hasParticles()) {
+        if (!ie::inEditor() || !hasParticles()) {
             EnhancedGameObject::customSetup();
             return;
         }
@@ -100,7 +100,7 @@ class $modify(GameObject) {
 
         bool is21Particle = m_objectID == 1586 || m_objectID == 1700;
 
-        if (!LevelEditorLayer::get() || !is21Particle) {
+        if (!ie::inEditor() || !is21Particle) {
             GameObject::customSetup();
             return;
         }
@@ -119,7 +119,7 @@ class $modify(GameObject) {
     void commonInteractiveSetup() {
         // ⏺️ particles for interactive objects like keys
 
-        if (!LevelEditorLayer::get()) {
+        if (!ie::inEditor()) {
             GameObject::commonInteractiveSetup();
             return;
         }
@@ -133,7 +133,7 @@ class $modify(GameObject) {
     CCParticleSystemQuad* createAndAddParticle(int p0, char const* p1, int p2, tCCPositionType p3) {
         // ⏺️ show particles in editor
 
-        if (!LevelEditorLayer::get()) {
+        if (!ie::inEditor()) {
             return GameObject::createAndAddParticle(p0, p1, p2, p3);
         }
 
@@ -184,7 +184,7 @@ class $modify(GameObject) {
     void updateParticleOpacity(unsigned char opacity) {
         // ⏺️ lower particle opacity when on different editor layer
 
-        if (!LevelEditorLayer::get() || !m_particle) {
+        if (!ie::inEditor() || !m_particle) {
             GameObject::updateParticleOpacity(opacity);
             return;
         }

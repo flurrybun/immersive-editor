@@ -1,4 +1,39 @@
+#include <Geode/modify/LevelEditorLayer.hpp>
+#include <Geode/modify/PlayLayer.hpp>
+
 #include "Utils.hpp"
+
+bool s_inEditor = false;
+
+class $modify(LevelEditorLayer) {
+    struct Fields {
+        ~Fields() {
+            s_inEditor = false;
+        }
+    };
+
+    static void onModify(auto& self) {
+        (void)self.setHookPriority("LevelEditorLayer::init", Priority::FirstPre);
+    }
+
+    bool init(GJGameLevel* p0, bool p1) {
+        s_inEditor = true;
+        m_fields.self();
+
+        return LevelEditorLayer::init(p0, p1);
+    }
+};
+
+// class $modify(PlayLayer) {
+//     $override
+//     bool init(GJGameLevel* level, bool useReplay, bool dontCreateObjects) {
+//         if (!PlayLayer::init(level, useReplay, dontCreateObjects)) return false;
+
+//         s_inEditor = false;
+
+//         return true;
+//     }
+// };
 
 bool ie::isAmazon() {
 #ifdef GEODE_IS_ANDROID
@@ -6,6 +41,10 @@ bool ie::isAmazon() {
 #else
     return false;
 #endif
+}
+
+bool ie::inEditor() {
+    return s_inEditor;
 }
 
 bool ie::isEditorTopLevel(LevelEditorLayer* lel) {
