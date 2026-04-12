@@ -1,5 +1,5 @@
 #include "core/SettingManager.hpp"
-#include "modules/level-effects/ShowGlitter.hpp"
+#include "ShowGlitter.hpp"
 
 #include <Geode/modify/LevelEditorLayer.hpp>
 #include <Geode/utils/VMTHookManager.hpp>
