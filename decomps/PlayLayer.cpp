@@ -1,5 +1,3 @@
-#if 0
-
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
 
@@ -223,5 +221,3 @@ void decomp_PlayLayer::decomp_updateVisibility(float dt) {
         updateDebugDraw();
     }
 }
-
-#endif
