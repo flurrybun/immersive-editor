@@ -3,6 +3,7 @@
 #include <Geode/modify/LevelEditorLayer.hpp>
 #include <Geode/modify/GameObject.hpp>
 #include <Geode/modify/RingObject.hpp>
+#include "misc/SettingManager.hpp"
 #include "misc/Utils.hpp"
 
 #include <Geode/Geode.hpp>
@@ -15,6 +16,8 @@ using namespace geode::prelude;
 // rob's internal names can be very arcane so i annotated what each hook does for future reference
 
 class $modify(PlayerObject) {
+    $register_hooks("show-circle-waves");
+
     $override
     void spawnPortalCircle(ccColor3B color, float startRadius) {
         // ⏺️ circle wave on activating portal
@@ -331,6 +334,8 @@ class $modify(PlayerObject) {
 };
 
 class $modify(GJBaseGameLayer) {
+    $register_hooks("show-circle-waves");
+
     $override
     void toggleDualMode(GameObject* p0, bool p1, PlayerObject* p2, bool p3) {
         // 🔀 call PlayerObject::spawnDualCircle
@@ -351,6 +356,8 @@ class $modify(GJBaseGameLayer) {
 };
 
 class $modify(LevelEditorLayer) {
+    $register_hooks("show-circle-waves");
+
     $override
     void onPlaytest() {
         // ⏺️ show respawn effect on playtesting from start position
@@ -364,6 +371,8 @@ class $modify(LevelEditorLayer) {
 };
 
 class $modify(GameObject) {
+    $register_hooks("show-circle-waves");
+
     $override
     void playShineEffect() {
         // ⏺️ white flash on activating portal
@@ -452,6 +461,8 @@ class $modify(GameObject) {
 };
 
 class $modify(RingObject) {
+    $register_hooks("show-circle-waves");
+
     $override
     void powerOnObject(int state) {
         // ⏺️ circle wave on hovering over orb

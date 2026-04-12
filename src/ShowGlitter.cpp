@@ -1,15 +1,20 @@
 #include <Geode/modify/LevelEditorLayer.hpp>
 #include <Geode/utils/VMTHookManager.hpp>
+#include "misc/SettingManager.hpp"
 #include "ShowGlitter.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
+
+$bind_setting(g_showGlitter, "show-glitter");
 
 class $modify(SGLevelEditorLayer, LevelEditorLayer) {
     struct Fields {
         bool glitterVisible = false;
         bool bgEffectEnabled = true;
     };
+
+    $register_hooks("show-glitter");
 
     $override
     bool init(GJGameLevel* p0, bool p1) {
@@ -56,24 +61,11 @@ class $modify(SGLevelEditorLayer, LevelEditorLayer) {
 
         m_glitterParticles->setPosition(cameraCenter + m_gameState.m_cameraPosition);
     }
-
-    $override
-    void onPlaytest() {
-        LevelEditorLayer::onPlaytest();
-
-        m_glitterParticles->setVisible(true);
-    }
-
-    $override
-    void onStopPlaytest() {
-        LevelEditorLayer::onStopPlaytest();
-
-        m_glitterParticles->stopSystem();
-        m_glitterParticles->setVisible(false);
-    }
 };
 
 void toggleBGEffectVisibility(bool visible) {
+    if (!g_showGlitter) return;
+
     auto lel = LevelEditorLayer::get();
     if (!lel) return;
 

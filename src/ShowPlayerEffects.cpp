@@ -1,11 +1,14 @@
 #include <Geode/modify/PlayerObject.hpp>
 #include <Geode/modify/LevelEditorLayer.hpp>
+#include "misc/SettingManager.hpp"
 #include "misc/Utils.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
 
 class $modify(PlayerObject) {
+    $register_hooks("show-player-effects");
+
     $override
     bool init(int player, int ship, GJBaseGameLayer* gameLayer, CCLayer* layer, bool playLayer) {
         // ⏺️ player particles
@@ -127,6 +130,8 @@ class $modify(PlayerObject) {
 };
 
 class $modify(LevelEditorLayer) {
+    $register_hooks("show-player-effects");
+
     $override
     bool init(GJGameLevel* p0, bool p1) {
         // ⏺️ wave trail drag fix mod compatibility

@@ -2,13 +2,18 @@
 #include <Geode/modify/LevelEditorLayer.hpp>
 #include <Geode/modify/PlayerObject.hpp>
 #include "UpdateVisibility.hpp"
+#include "misc/SettingManager.hpp"
 #include "misc/PlaytestEvent.hpp"
 #include "misc/Utils.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
 
+$bind_setting(g_showMirrorEffect, "show-mirror-effect");
+
 class $modify(GJBaseGameLayer) {
+    $register_hooks("show-mirror-effect");
+
     $override
     void collisionCheckObjects(PlayerObject* p0, gd::vector<GameObject*>* p1, int p2, float p3) {
         // ⏺️ activate mirror portals in editor
@@ -28,6 +33,8 @@ class $modify(SMELevelEditorLayer, LevelEditorLayer) {
     struct Fields {
         ListenerHandle playtestListener;
     };
+
+    $register_hooks("show-mirror-effect");
 
     $override
     bool init(GJGameLevel* p0, bool p1) {
@@ -102,13 +109,16 @@ class $modify(SMELevelEditorLayer, LevelEditorLayer) {
         float xDiff = objectPos.x - m_gameState.m_cameraPosition.x;
         object->setPosition(
             objectPos +
-            ccp((winSize.width / m_gameState.m_cameraZoom - (xDiff + xDiff)) * factor, 0.f)
+            ccp((winSize.width / m_gameState.m_cameraZoom - (xDiff * 2)) * factor, 0.f)
         );
+
+        float rotationX = object->getRotationX();
+        float rotationY = object->getRotationY();
 
         float angle = std::abs(object->getRotation());
         bool rotated = angle == 90.f || angle == 270.f;
 
-        if ((flip != 1.f && flipping > .5f) || (flip == 1.f && flipping < .5f)) {
+        if ((flip != 1.f && flipping > 0.5f) || (flip == 1.f && flipping < 0.5f)) {
             if (!m_gameState.m_unkBool11) return;
             int sign = flip == 1.f ? 1 : -1;
 
@@ -123,6 +133,9 @@ class $modify(SMELevelEditorLayer, LevelEditorLayer) {
 
             if (static_cast<int>(angle) % 90 != 0) object->setRotation(-object->m_startRotationX);
         }
+
+        object->m_rotationXOffset = object->getRotationX() - rotationX;
+        object->m_rotationYOffset = object->getRotationY() - rotationY;
     }
 };
 
@@ -131,6 +144,8 @@ class $modify(SMELevelEditorLayer, LevelEditorLayer) {
 
 #ifndef GEODE_IS_IOS
 class $modify(PlayerObject) {
+    $register_hooks("show-mirror-effect");
+
     $override
     bool levelFlipping() {
         // ⏺️ fix particles not disappearing on mirror effect
@@ -145,6 +160,8 @@ class $modify(PlayerObject) {
 #endif
 
 bool ie::preUpdateMirrorEffect(LevelEditorLayer* lel) {
+    if (!g_showMirrorEffect) return false;
+
     float flip = lel->m_gameState.m_levelFlipping;
     bool flipping = flip != 0.f && flip != 1.f;
 
@@ -156,7 +173,11 @@ bool ie::preUpdateMirrorEffect(LevelEditorLayer* lel) {
     for (const auto& object : CCArrayExt<GameObject>(lel->m_objects)) {
         object->setFlipX(object->m_startFlipX);
         object->setFlipY(object->m_startFlipY);
-        object->setRotation(object->m_startRotationX);
+        object->setRotationX(object->m_startRotationX);
+        object->setRotationY(object->m_startRotationY);
+
+        object->m_rotationXOffset = 0.f;
+        object->m_rotationYOffset = 0.f;
     }
 
     return flipping;

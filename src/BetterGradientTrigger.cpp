@@ -8,8 +8,10 @@
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
 
-class $modify(BGTIGradientTriggerObject, GradientTriggerObject) {
-    $toggle_hooks("better-gradient-trigger");
+$bind_setting(g_betterGradientTrigger, "better-gradient-trigger");
+
+class $modify(BGTGradientTriggerObject, GradientTriggerObject) {
+    $register_hooks("better-gradient-trigger");
 
     struct Fields {
         CCLayerGradient* gradient;
@@ -26,23 +28,23 @@ class $modify(BGTIGradientTriggerObject, GradientTriggerObject) {
         auto& vmt = VMTHookManager::get();
 
         (void)vmt.addHook<
-            ResolveC<BGTIGradientTriggerObject>::func(&BGTIGradientTriggerObject::customSetup)
+            ResolveC<BGTGradientTriggerObject>::func(&BGTGradientTriggerObject::customSetup)
         >(this, "GradientTriggerObject::customSetup");
 
         (void)vmt.addHook<
-            ResolveC<BGTIGradientTriggerObject>::func(&BGTIGradientTriggerObject::setObjectColor)
+            ResolveC<BGTGradientTriggerObject>::func(&BGTGradientTriggerObject::setObjectColor)
         >(this, "GradientTriggerObject::setObjectColor");
 
         (void)vmt.addHook<
-            ResolveC<BGTIGradientTriggerObject>::func(&BGTIGradientTriggerObject::setChildColor)
+            ResolveC<BGTGradientTriggerObject>::func(&BGTGradientTriggerObject::setChildColor)
         >(this, "GradientTriggerObject::setChildColor");
 
         (void)vmt.addHook<
-            ResolveC<BGTIGradientTriggerObject>::func(&BGTIGradientTriggerObject::setOpacity)
+            ResolveC<BGTGradientTriggerObject>::func(&BGTGradientTriggerObject::setOpacity)
         >(this, "GradientTriggerObject::setOpacity");
 
         (void)vmt.addHook<
-            ResolveC<BGTIGradientTriggerObject>::func(&BGTIGradientTriggerObject::selectObject)
+            ResolveC<BGTGradientTriggerObject>::func(&BGTGradientTriggerObject::selectObject)
         >(this, "GradientTriggerObject::selectObject");
 
         return true;
@@ -116,14 +118,8 @@ class $modify(BGTIGradientTriggerObject, GradientTriggerObject) {
     }
 };
 
-void ie::updateGradientTrigger(GameObject* object) {
-    if (object->m_objectID != 2903) return;
-
-    static_cast<BGTIGradientTriggerObject*>(object)->updateGradientBlendMode();
-}
-
 class $modify(GJBaseGameLayer) {
-    $toggle_hooks("better-gradient-trigger");
+    $register_hooks("better-gradient-trigger");
 
     $override
     void updateGradientLayers() {
@@ -176,3 +172,9 @@ class $modify(GJBaseGameLayer) {
         }
     }
 };
+
+void ie::updateGradientTrigger(GameObject* object) {
+    if (!g_betterGradientTrigger || object->m_objectID != 2903) return;
+
+    static_cast<BGTGradientTriggerObject*>(object)->updateGradientBlendMode();
+}

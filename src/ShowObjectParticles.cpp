@@ -2,14 +2,18 @@
 #include <Geode/modify/GameObject.hpp>
 #include <Geode/modify/LevelEditorLayer.hpp>
 #include "UpdateVisibility.hpp"
+#include "misc/SettingManager.hpp"
 #include "misc/Utils.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
 
+$bind_setting(g_showObjectParticles, "show-object-particles");
 bool s_dontCreateParticles = false;
 
 class $modify(EnhancedGameObject) {
+    $register_hooks("show-object-particles");
+
     $override
     void customSetup() {
         // ⏺️ particles for orbs, pads, portals, and the 2.1 fireball
@@ -94,6 +98,8 @@ class $modify(EnhancedGameObject) {
 };
 
 class $modify(GameObject) {
+    $register_hooks("show-object-particles");
+
     $override
     void customSetup() {
         // ⏺️ particles for 2.1 particle objects
@@ -304,6 +310,8 @@ class $modify(GameObject) {
 };
 
 class $modify(LevelEditorLayer) {
+    $register_hooks("show-object-particles");
+
     $override
     CCArray* createObjectsFromString(gd::string const& objString, bool dontCreateUndo, bool dontShowMaxWarning) {
         // ⏺️ prevent particles appearing when creating objects from string (e.g. custom objects preview)
@@ -345,7 +353,7 @@ class $modify(LevelEditorLayer) {
 };
 
 void ie::updateObjectParticle(LevelEditorLayer* lel, GameObject* object) {
-    if (!object->m_particle || object->m_objectID == 2065) return;
+    if (!g_showObjectParticles || !object->m_particle || object->m_objectID == 2065) return;
 
     object->m_particle->setVisible(!object->m_hasNoParticles);
 }

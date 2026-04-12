@@ -2,15 +2,15 @@
 #include <Geode/modify/EffectGameObject.hpp>
 #include <Geode/modify/LevelEditorLayer.hpp>
 #include <Geode/utils/VMTHookManager.hpp>
-#include "misc/Utils.hpp"
 #include "misc/SettingManager.hpp"
+#include "misc/Utils.hpp"
 #include "ShowGlitter.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
 
 class $modify(GameObject) {
-    $toggle_hooks("activate-triggers");
+    $register_hooks("activate-triggers");
 
     $override
     void customSetup() {
@@ -25,7 +25,7 @@ class $modify(GameObject) {
 };
 
 class $modify(EffectGameObject) {
-    $toggle_hooks("activate-triggers");
+    $register_hooks("activate-triggers");
 
     $override
     void triggerObject(GJBaseGameLayer* gameLayer, int p1, gd::vector<int> const* p2) {
@@ -60,7 +60,7 @@ class $modify(EffectGameObject) {
 };
 
 class $modify(ATLevelEditorLayer, LevelEditorLayer) {
-    $toggle_hooks("activate-triggers");
+    $register_hooks("activate-triggers");
 
     $override
     bool init(GJGameLevel* p0, bool p1) {

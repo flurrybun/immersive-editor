@@ -1,5 +1,6 @@
 #include <Geode/modify/GameObject.hpp>
 #include <Geode/modify/LevelEditorLayer.hpp>
+#include "misc/SettingManager.hpp"
 #include "misc/PlaytestEvent.hpp"
 
 #include <Geode/Geode.hpp>
@@ -10,6 +11,8 @@ class $modify(HTGameObject, GameObject) {
         bool visibilityLocked = false;
         bool wasVisible = true;
     };
+
+    $register_hooks("hide-triggers");
 
     $override
     void setVisible(bool visible) {
@@ -40,6 +43,8 @@ class $modify(LevelEditorLayer) {
     struct Fields {
         ListenerHandle playtestListener;
     };
+
+    $register_hooks("hide-triggers");
 
     $override
     bool init(GJGameLevel* p0, bool p1) {

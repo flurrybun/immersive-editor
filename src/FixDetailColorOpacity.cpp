@@ -1,11 +1,16 @@
 #include <Geode/modify/ShaderGameObject.hpp>
 #include "UpdateVisibility.hpp"
+#include "misc/SettingManager.hpp"
 #include "misc/Utils.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
 
+$bind_setting(g_fixDetailColorOpacity, "fix-detail-color-opacity");
+
 void ie::updateDetailColorOpacity(LevelEditorLayer* lel, GameObject* object) {
+    if (!g_fixDetailColorOpacity) return;
+
     // ⏺️ fix detail color not lowering opacity when viewing a different editor layer & preview mode is disabled
 
     if (lel->m_previewMode || ie::isObjectLayerVisible(object, lel)) return;

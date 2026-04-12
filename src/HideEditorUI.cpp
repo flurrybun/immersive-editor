@@ -2,12 +2,20 @@
 #include <Geode/modify/EditorUI.hpp>
 #include <alphalaneous.good_grid/include/DrawGridAPI.hpp>
 #include <alphalaneous.good_grid/include/DrawLayers.hpp>
+#include "misc/SettingManager.hpp"
 #include "misc/PlaytestEvent.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
 
-constexpr int ACTION_TAG = 0x8D45C2A4;
+constexpr int ACTION_TAG = hash("ninkaz loves you <3");
+
+$bind_setting(g_hideGridLines, "hide-grid-lines");
+$bind_setting(g_hideEditorTrail, "hide-editor-trail");
+$bind_setting(g_hideTriggers, "hide-triggers");
+$bind_setting(g_showGround, "show-ground");
+$bind_setting(g_autoHidePlaytestButtons, "auto-hide-playtest-buttons");
+$bind_setting(g_transparentPlaytestButtons, "transparent-playtest-buttons");
 
 class $modify(HEUILevelEditorLayer, LevelEditorLayer) {
     struct Fields {
@@ -22,11 +30,11 @@ class $modify(HEUILevelEditorLayer, LevelEditorLayer) {
         if (!LevelEditorLayer::init(p0, p1)) return false;
 
         DrawGridAPI::get().getNode<Ground>("ground").inspect([](Ground& ground) {
-            ground.setEnabled(false);
+            ground.setEnabled(g_hideGridLines);
         });
 
         DrawGridAPI::get().getNode<PositionLines>("position-lines").inspect([](PositionLines& posLines) {
-            posLines.setEnabled(false);
+            posLines.setEnabled(g_hideGridLines);
         });
 
         m_fields->playtestListener = PlaytestEvent().listen([this](PlaytestMode mode) {
@@ -34,7 +42,7 @@ class $modify(HEUILevelEditorLayer, LevelEditorLayer) {
 
             if (isPlaying) {
                 m_fields->hidePath = GameManager::get()->getGameVariable("0152");
-                GameManager::get()->setGameVariable("0152", true);
+                if (g_hideEditorTrail) GameManager::get()->setGameVariable("0152", true);
 
                 m_fields->showGround = m_showGround;
                 m_hideGround = false;
@@ -47,14 +55,14 @@ class $modify(HEUILevelEditorLayer, LevelEditorLayer) {
             }
 
             DrawGridAPI::get().getNode<Bounds>("bounds").inspect([isPlaying](Bounds& bounds) {
-                bounds.setEnabled(!isPlaying);
+                bounds.setEnabled(g_hideGridLines ? !isPlaying : true);
             });
 
             DrawGridAPI::get().getNode<BPMTriggers>("bpm-triggers").inspect([isPlaying](BPMTriggers& bpmTriggers) {
-                bpmTriggers.setEnabled(!isPlaying);
+                bpmTriggers.setEnabled(g_hideTriggers ? !isPlaying : true);
             });
 
-            if (!Mod::get()->getSettingValue<bool>("auto-hide-playtest-buttons")) return ListenerResult::Propagate;
+            if (!g_autoHidePlaytestButtons) return ListenerResult::Propagate;
 
             if (isPlaying) {
                 if (!isHoveringUI()) {
@@ -138,7 +146,7 @@ class $modify(EditorUI) {
 
         bool isPlaying = m_editorLayer->m_playbackMode == PlaybackMode::Playing;
 
-        if (Mod::get()->getSettingValue<bool>("transparent-playtest-buttons")) {
+        if (g_transparentPlaytestButtons) {
             auto pauseSpr = static_cast<CCSprite*>(m_playtestBtn->getNormalImage());
             auto stopSpr = static_cast<CCSprite*>(m_playtestStopBtn->getNormalImage());
 

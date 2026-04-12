@@ -1,12 +1,17 @@
 #include <Geode/modify/LevelEditorLayer.hpp>
 #include <Geode/modify/EditorUI.hpp>
 #include "UpdateVisibility.hpp"
+#include "misc/SettingManager.hpp"
 #include "misc/PlaytestEvent.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
 
+$bind_setting(g_audioScale, "audio-scale");
+
 class $modify(ASLevelEditorLayer, LevelEditorLayer) {
+    $register_hooks("audio-scale");
+
     struct Fields {
         ListenerHandle playtestListener;
         int prevAudioTrack = -1;
@@ -122,6 +127,8 @@ class $modify(ASLevelEditorLayer, LevelEditorLayer) {
 };
 
 class $modify(EditorUI) {
+    $register_hooks("audio-scale");
+
     $override
     void onPlayback(CCObject* sender) {
         EditorUI::onPlayback(sender);
@@ -132,6 +139,7 @@ class $modify(EditorUI) {
 };
 
 float ie::preUpdateAudioScale(LevelEditorLayer* lel, float dt) {
+    if (!g_audioScale) return -1.f;
     return static_cast<ASLevelEditorLayer*>(lel)->preUpdateAudioScale(dt);
 }
 

@@ -1,10 +1,15 @@
 #include "UpdateVisibility.hpp"
+#include "misc/SettingManager.hpp"
 #include "misc/Utils.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
 
+$bind_setting(g_betterParticleIcons, "better-particle-icons");
+
 void ie::updateParticleIcon(LevelEditorLayer* lel, GameObject* object) {
+    if (!g_betterParticleIcons) return;
+
     // ⏺️ make 2.1 particle icons low opacity, like 2.2 particles
     // ⏺️ lower particle icon opacity when on a different layer
 

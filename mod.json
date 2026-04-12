@@ -1,5 +1,5 @@
 {
-    "geode": "5.5.3",
+    "geode": "5.6.1",
     "gd": {
         "win": "2.2081",
         "android": "2.2081",
@@ -130,6 +130,12 @@
             "type": "bool",
             "default": true
         },
+        "show-ground": {
+            "name": "Show Ground",
+            "description": "Shows the ground/middleground layers while playtesting.",
+            "type": "bool",
+            "default": true
+        },
         "hide-grid-lines": {
             "name": "Hide Grid Lines",
             "description": "Hides grid lines while playtesting.",
@@ -209,11 +215,19 @@
             "type": "bool",
             "default": true
         },
-        "fix-object-rotation-drift": {
+        "fix-rotation-drift": {
             "name": "Fix Object Rotation Drift",
             "description": "Fixes objects with negative rotation drifting by 0.01 degrees upon saving and exiting.",
             "type": "bool",
             "default": true
+        },
+        "normalize-rotation": {
+            "name": "Normalize Object Rotation",
+            "description": "Normalizes object rotation to be between 0 and 360 degrees, so if someone without this mod opens your level, existing rotated objects won't drift.\nRequires <cy>Fix Object Rotation Drift</c> to be enabled.",
+            "type": "bool",
+            "default": true,
+            "enable-if": "fix-rotation-drift",
+            "enable-if-description": "Requires 'Fix Object Rotation Drift' to be enabled."
         },
         "fix-startpos-follow": {
             "name": "Fix Follow Trigger Calculation",

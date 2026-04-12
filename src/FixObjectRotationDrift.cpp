@@ -1,4 +1,5 @@
 #include <Geode/modify/GameObject.hpp>
+#include "misc/SettingManager.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
@@ -15,7 +16,11 @@ using namespace geode::prelude;
 // as a result, every time you save and exit a level, all objects with negative rotation will decrement by 0.01
 // i'm sure you can imagine how this is a massive issue
 
+$bind_setting(s_normalizeRotation, "normalize-rotation");
+
 class $modify(GameObject) {
+    $register_hooks("fix-rotation-drift");
+
     $override
     gd::string getSaveString(GJBaseGameLayer* layer) {
         std::string oldStr = GameObject::getSaveString(layer);
@@ -43,7 +48,15 @@ class $modify(GameObject) {
 
         float rotationX = roundToThousandth(getRotationX());
         float rotationY = roundToThousandth(getRotationY());
-        bool equalRotation = std::fabs(normalizeRotation(rotationX) - normalizeRotation(rotationY)) < 0.001f;
+        float normalizedRotationX = normalizeRotation(rotationX);
+        float normalizedRotationY = normalizeRotation(rotationY);
+
+        if (s_normalizeRotation) {
+            rotationX = normalizedRotationX;
+            rotationY = normalizedRotationY;
+        }
+
+        bool equalRotation = std::fabs(normalizedRotationX - normalizedRotationY) < 0.001f;
         bool addedNewTokens = false;
 
         for (size_t i = 0; i + 1 < tokens.size(); i += 2) {

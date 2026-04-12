@@ -1,4 +1,5 @@
 #include <Geode/modify/LevelEditorLayer.hpp>
+#include "misc/SettingManager.hpp"
 #include "misc/ObjectEvent.hpp"
 
 #include <Geode/Geode.hpp>
@@ -8,6 +9,8 @@ class $modify(LevelEditorLayer) {
     struct Fields {
         ListenerHandle objectListener;
     };
+
+    $register_hooks("show-colorblind-indicators");
 
     bool init(GJGameLevel* p0, bool p1) {
         if (!LevelEditorLayer::init(p0, p1)) return false;

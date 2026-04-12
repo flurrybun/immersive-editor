@@ -1,11 +1,14 @@
 #include <Geode/modify/GameObject.hpp>
 #include <Geode/modify/LevelEditorLayer.hpp>
 #include "UpdateVisibility.hpp"
+#include "misc/SettingManager.hpp"
 #include "misc/ObjectEvent.hpp"
 #include "misc/Utils.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
+
+$bind_setting(g_showPulseRodBalls, "show-pulse-rod-balls");
 
 // pulse rod balls are a special object (id 37) with the rod's properties duplicated over, but this method
 // wouldn't work in the editor. instead, each rod gets a ball sprite that follows its pos/rot/scale/color/opacity
@@ -38,6 +41,8 @@ public:
 };
 
 class $modify(GameObject) {
+    $register_hooks("show-pulse-rod-balls");
+
     $override
     static GameObject* createWithKey(int key) {
         if (!isPulseRodID(key) || !ie::inEditor()) {
@@ -65,6 +70,8 @@ class $modify(SPRBLevelEditorLayer, LevelEditorLayer) {
         std::vector<PulseRodGameObject*> pulseRods;
         short pulseRodIndex = 0;
     };
+
+    $register_hooks("show-pulse-rod-balls");
 
     $override
     bool init(GJGameLevel* p0, bool p1) {
@@ -125,6 +132,20 @@ class $modify(SPRBLevelEditorLayer, LevelEditorLayer) {
 
 void ie::updatePulseRodBalls(LevelEditorLayer* lel, float audioScale) {
     auto& pulseRods = static_cast<SPRBLevelEditorLayer*>(lel)->m_fields->pulseRods;
+
+    if (!g_showPulseRodBalls) {
+        if (pulseRods.empty()) return;
+
+        for (const auto& rod : pulseRods) {
+            if (rod->m_ball) {
+                rod->m_ball->removeFromParent();
+                rod->m_ball = nullptr;
+            }
+        }
+
+        pulseRods.clear();
+        return;
+    }
 
     if (audioScale == -1.f) audioScale = 1.f;
 

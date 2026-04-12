@@ -1,6 +1,7 @@
 #include <Geode/modify/LevelEditorLayer.hpp>
 #include <Geode/modify/PlayerObject.hpp>
 #include <Geode/utils/VMTHookManager.hpp>
+#include "misc/SettingManager.hpp"
 #include "misc/Utils.hpp"
 
 #include <Geode/Geode.hpp>
@@ -12,6 +13,8 @@ class $modify(SGELevelEditorLayer, LevelEditorLayer) {
         int activeGravityEffects = 0;
         int gravityEffectIndex = 0;
     };
+
+    $register_hooks("show-gravity-effect");
 
     $override
     bool init(GJGameLevel* p0, bool p1) {
@@ -85,6 +88,8 @@ class $modify(SGELevelEditorLayer, LevelEditorLayer) {
 };
 
 class $modify(PlayerObject) {
+    $register_hooks("show-gravity-effect");
+
     $override
     void ringJump(RingObject* ring, bool p1) {
         // orbs check if m_playEffects is true before calling playGravityEffect

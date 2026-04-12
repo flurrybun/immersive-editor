@@ -5,7 +5,7 @@
 using namespace geode::prelude;
 
 class $modify(LevelTools) {
-    $toggle_hooks("fix-performance");
+    $register_hooks("fix-performance");
 
     $override
     static void moveTriggerObjectsToArray(CCArray* objects, CCDictionary* objectsDict, int index) {
