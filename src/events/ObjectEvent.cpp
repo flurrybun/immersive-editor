@@ -1,4 +1,4 @@
-#include "events/ObjectEvent.hpp"
+#include "ObjectEvent.hpp"
 
 #include <Geode/modify/LevelEditorLayer.hpp>
 

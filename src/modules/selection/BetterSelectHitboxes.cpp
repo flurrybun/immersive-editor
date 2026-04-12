@@ -1,4 +1,4 @@
-#include "modules/selection/Selection.hpp"
+#include "Selection.hpp"
 #include "util/Utils.hpp"
 
 #include <Geode/modify/LevelEditorLayer.hpp>

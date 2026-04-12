@@ -1,4 +1,4 @@
-#include "core/UpdateVisibility.hpp"
+#include "UpdateVisibility.hpp"
 #include "util/Utils.hpp"
 
 #include <Geode/modify/GJBaseGameLayer.hpp>
