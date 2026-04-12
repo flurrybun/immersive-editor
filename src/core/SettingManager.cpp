@@ -1,4 +1,4 @@
-#include "SettingManager.hpp"
+#include "core/SettingManager.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;

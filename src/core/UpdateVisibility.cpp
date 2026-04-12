@@ -1,7 +1,8 @@
-#include <Geode/modify/LevelEditorLayer.hpp>
+#include "core/UpdateVisibility.hpp"
+#include "util/Utils.hpp"
+
 #include <Geode/modify/GJBaseGameLayer.hpp>
-#include "UpdateVisibility.hpp"
-#include "misc/Utils.hpp"
+#include <Geode/modify/LevelEditorLayer.hpp>
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;

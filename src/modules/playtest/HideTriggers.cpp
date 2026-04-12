@@ -1,7 +1,8 @@
+#include "core/SettingManager.hpp"
+#include "events/PlaytestEvent.hpp"
+
 #include <Geode/modify/GameObject.hpp>
 #include <Geode/modify/LevelEditorLayer.hpp>
-#include "misc/SettingManager.hpp"
-#include "misc/PlaytestEvent.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;

@@ -1,9 +1,10 @@
+#include "core/SettingManager.hpp"
+#include "core/UpdateVisibility.hpp"
+#include "util/Utils.hpp"
+
 #include <Geode/modify/GradientTriggerObject.hpp>
 #include <Geode/modify/GJBaseGameLayer.hpp>
 #include <Geode/utils/VMTHookManager.hpp>
-#include "UpdateVisibility.hpp"
-#include "misc/SettingManager.hpp"
-#include "misc/Utils.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;

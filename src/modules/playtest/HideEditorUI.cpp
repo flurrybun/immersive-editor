@@ -1,9 +1,10 @@
-#include <Geode/modify/LevelEditorLayer.hpp>
-#include <Geode/modify/EditorUI.hpp>
+#include "core/SettingManager.hpp"
+#include "events/PlaytestEvent.hpp"
+
 #include <alphalaneous.good_grid/include/DrawGridAPI.hpp>
 #include <alphalaneous.good_grid/include/DrawLayers.hpp>
-#include "misc/SettingManager.hpp"
-#include "misc/PlaytestEvent.hpp"
+#include <Geode/modify/LevelEditorLayer.hpp>
+#include <Geode/modify/EditorUI.hpp>
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;

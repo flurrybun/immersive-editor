@@ -1,8 +1,9 @@
+#include "core/SettingManager.hpp"
+#include "util/Utils.hpp"
+
 #include <Geode/modify/LevelEditorLayer.hpp>
 #include <Geode/modify/PlayerObject.hpp>
 #include <Geode/utils/VMTHookManager.hpp>
-#include "misc/SettingManager.hpp"
-#include "misc/Utils.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;

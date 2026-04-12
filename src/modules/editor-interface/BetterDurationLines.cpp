@@ -1,8 +1,9 @@
-#include <Geode/modify/LevelEditorLayer.hpp>
+#include "core/SettingManager.hpp"
+#include "util/Utils.hpp"
+
 #include <alphalaneous.good_grid/include/DrawGridAPI.hpp>
 #include <alphalaneous.good_grid/include/DrawLayers.hpp>
-#include "misc/SettingManager.hpp"
-#include "misc/Utils.hpp"
+#include <Geode/modify/LevelEditorLayer.hpp>
 
 using namespace geode::prelude;
 

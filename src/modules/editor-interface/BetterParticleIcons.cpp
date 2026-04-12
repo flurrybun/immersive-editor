@@ -1,6 +1,6 @@
-#include "UpdateVisibility.hpp"
-#include "misc/SettingManager.hpp"
-#include "misc/Utils.hpp"
+#include "core/SettingManager.hpp"
+#include "core/UpdateVisibility.hpp"
+#include "util/Utils.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;

@@ -1,8 +1,9 @@
+#include "core/UpdateVisibility.hpp"
+#include "modules/selection/Selection.hpp"
+#include "util/Utils.hpp"
+
 #include <Geode/modify/LevelEditorLayer.hpp>
 #include <Geode/modify/GameObject.hpp>
-#include "../UpdateVisibility.hpp"
-#include "../misc/Utils.hpp"
-#include "Selection.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;

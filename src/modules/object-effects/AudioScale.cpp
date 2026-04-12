@@ -1,8 +1,9 @@
+#include "core/SettingManager.hpp"
+#include "core/UpdateVisibility.hpp"
+#include "events/PlaytestEvent.hpp"
+
 #include <Geode/modify/LevelEditorLayer.hpp>
 #include <Geode/modify/EditorUI.hpp>
-#include "UpdateVisibility.hpp"
-#include "misc/SettingManager.hpp"
-#include "misc/PlaytestEvent.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;

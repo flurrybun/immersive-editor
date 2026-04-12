@@ -1,7 +1,8 @@
+#include "core/SettingManager.hpp"
+#include "core/UpdateVisibility.hpp"
+#include "events/ObjectEvent.hpp"
+
 #include <Geode/modify/LevelEditorLayer.hpp>
-#include "UpdateVisibility.hpp"
-#include "misc/SettingManager.hpp"
-#include "misc/ObjectEvent.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;

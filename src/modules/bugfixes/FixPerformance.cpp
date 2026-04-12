@@ -1,5 +1,6 @@
+#include "core/SettingManager.hpp"
+
 #include <Geode/modify/LevelTools.hpp>
-#include "misc/SettingManager.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;

@@ -1,6 +1,7 @@
+#include "events/ObjectEvent.hpp"
+#include "modules/selection/Selection.hpp"
+
 #include <Geode/modify/LevelEditorLayer.hpp>
-#include "Selection.hpp"
-#include "../misc/ObjectEvent.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;

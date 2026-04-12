@@ -1,7 +1,8 @@
+#include "core/SettingManager.hpp"
+#include "modules/level-effects/ShowGlitter.hpp"
+
 #include <Geode/modify/LevelEditorLayer.hpp>
 #include <Geode/utils/VMTHookManager.hpp>
-#include "misc/SettingManager.hpp"
-#include "ShowGlitter.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;

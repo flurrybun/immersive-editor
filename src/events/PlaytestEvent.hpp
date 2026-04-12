@@ -1,7 +1,7 @@
 #pragma once
 
-#include <Geode/loader/Event.hpp>
 #include <Geode/Enums.hpp>
+#include <Geode/loader/Event.hpp>
 
 using namespace geode::prelude;
 

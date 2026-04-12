@@ -1,7 +1,7 @@
+#include "util/Utils.hpp"
+
 #include <Geode/modify/LevelEditorLayer.hpp>
 #include <Geode/modify/PlayLayer.hpp>
-
-#include "Utils.hpp"
 
 bool s_inEditor = false;
 

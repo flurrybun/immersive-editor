@@ -1,5 +1,6 @@
+#include "events/ObjectEvent.hpp"
+
 #include <Geode/modify/LevelEditorLayer.hpp>
-#include "ObjectEvent.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
