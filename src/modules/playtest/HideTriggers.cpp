@@ -1,5 +1,6 @@
 #include "core/SettingManager.hpp"
 #include "events/PlaytestEvent.hpp"
+#include "util/Temporary.hpp"
 
 #include <Geode/modify/GameObject.hpp>
 #include <Geode/modify/LevelEditorLayer.hpp>
@@ -109,19 +110,12 @@ class $modify(LevelEditorLayer) {
             return;
         }
 
-        CCArray* prevCGT = m_cameraGuideTriggers;
-        m_cameraGuideTriggers = CCArray::create();
-
-        CCDictionary* prevKG = m_keyframeGroups;
-        m_keyframeGroups = CCDictionary::create();
-
-        bool prevDTB = m_drawTriggerBoxes;
-        m_drawTriggerBoxes = false;
-
-        LevelEditorLayer::updateDebugDraw();
-
-        m_cameraGuideTriggers = prevCGT;
-        m_keyframeGroups = prevKG;
-        m_drawTriggerBoxes = prevDTB;
+        ie::withTemporary({
+            { &m_cameraGuideTriggers, CCArray::create() },
+            { &m_keyframeGroups, CCDictionary::create() },
+            { &m_drawTriggerBoxes, false },
+        }, [&] {
+            LevelEditorLayer::updateDebugDraw();
+        });
     }
 };

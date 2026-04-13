@@ -1,6 +1,7 @@
 #include "core/SettingManager.hpp"
 #include "core/UpdateVisibility.hpp"
 #include "events/PlaytestEvent.hpp"
+#include "util/Temporary.hpp"
 
 #include <Geode/modify/LevelEditorLayer.hpp>
 #include <Geode/modify/EditorUI.hpp>
@@ -75,9 +76,9 @@ class $modify(ASLevelEditorLayer, LevelEditorLayer) {
         }
 
         if (m_audioEffectsLayer) {
-            GameManager::get()->m_playLayer = reinterpret_cast<PlayLayer*>(GJBaseGameLayer::get());
-            m_audioEffectsLayer->audioStep(dt);
-            GameManager::get()->m_playLayer = nullptr;
+            ie::withFakePlayLayer([&] {
+                m_audioEffectsLayer->audioStep(dt);
+            });
         }
 
         float audioScale = m_audioEffectsLayer

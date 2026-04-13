@@ -1,6 +1,7 @@
 #include "core/SettingManager.hpp"
 #include "core/UpdateVisibility.hpp"
 #include "util/Editor.hpp"
+#include "util/Temporary.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
@@ -20,18 +21,17 @@ void applyFadeEffect(LevelEditorLayer* lel, GameObject* object, float posX, bool
 }
 
 void applyEnterEffect(GameObject* object, bool isRight, int enterType) {
-    auto fakePL = reinterpret_cast<PlayLayer*>(GJBaseGameLayer::get());
-
-    CCPoint prevEEP = fakePL->m_enterEffectPosition;
-    fakePL->m_enterEffectPosition = object->getRealPosition();
-
-    if (enterType == -15) {
-        fakePL->applyCustomEnterEffect(object, isRight);
-    } else if (!object->m_isDontEnter && !ie::isAmazon()) {
-        fakePL->applyEnterEffect(object, enterType, isRight);
-    }
-
-    fakePL->m_enterEffectPosition = prevEEP;
+    ie::withFakePlayLayer([&](PlayLayer* pl) {
+        ie::withTemporary({
+            { &pl->m_enterEffectPosition, object->getRealPosition() }
+        }, [&] {
+            if (enterType == -15) {
+                PlayLayer::get()->applyCustomEnterEffect(object, isRight);
+            } else if (!object->m_isDontEnter && !ie::isAmazon()) {
+                PlayLayer::get()->applyEnterEffect(object, enterType, isRight);
+            }
+        });
+    });
 }
 
 float ie::preUpdateFadeAndEnter(LevelEditorLayer* lel) {

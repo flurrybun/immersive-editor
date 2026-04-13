@@ -1,6 +1,7 @@
 #include "core/SettingManager.hpp"
 #include "core/UpdateVisibility.hpp"
 #include "util/Editor.hpp"
+#include "util/Temporary.hpp"
 
 #include <Geode/modify/EnhancedGameObject.hpp>
 #include <Geode/modify/GameObject.hpp>
@@ -24,14 +25,12 @@ class $modify(EnhancedGameObject) {
             return;
         }
 
-        bool prevHNP = m_hasNoParticles;
-        m_hasNoParticles = false;
-        m_editorEnabled = false;
-
-        EnhancedGameObject::customSetup();
-
-        m_hasNoParticles = prevHNP;
-        m_editorEnabled = true;
+        ie::withTemporary({
+            { &m_hasNoParticles, false },
+            { &m_editorEnabled, false },
+        }, [&] {
+            EnhancedGameObject::customSetup();
+        });
     }
 
     bool hasParticles() {
@@ -112,14 +111,12 @@ class $modify(GameObject) {
             return;
         }
 
-        bool prevHNP = m_hasNoParticles;
-        m_hasNoParticles = false;
-        m_editorEnabled = false;
-
-        GameObject::customSetup();
-
-        m_hasNoParticles = prevHNP;
-        m_editorEnabled = true;
+        ie::withTemporary({
+            { &m_hasNoParticles, false },
+            { &m_editorEnabled, false },
+        }, [&] {
+            GameObject::customSetup();
+        });
     }
 
     $override
@@ -146,9 +143,11 @@ class $modify(GameObject) {
 
         if (s_dontCreateParticles) return nullptr;
 
-        GameManager::get()->m_playLayer = reinterpret_cast<PlayLayer*>(GJBaseGameLayer::get());
-        CCParticleSystemQuad* ret = GameObject::createAndAddParticle(p0, p1, p2, p3);
-        GameManager::get()->m_playLayer = nullptr;
+        CCParticleSystemQuad* ret = nullptr;
+
+        ie::withFakePlayLayer([&] {
+            ret = GameObject::createAndAddParticle(p0, p1, p2, p3);
+        });
 
         return ret;
     }

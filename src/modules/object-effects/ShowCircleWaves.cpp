@@ -1,5 +1,6 @@
 #include "core/SettingManager.hpp"
 #include "util/Editor.hpp"
+#include "util/Temporary.hpp"
 
 #include <Geode/modify/PlayerObject.hpp>
 #include <Geode/modify/GJBaseGameLayer.hpp>
@@ -48,13 +49,13 @@ class $modify(PlayerObject) {
             return;
         }
 
-        GameManager::get()->m_playLayer = reinterpret_cast<PlayLayer*>(GJBaseGameLayer::get());
-        m_playEffects = true;
-
-        PlayerObject::toggleDartMode(p0, p1);
-
-        GameManager::get()->m_playLayer = nullptr;
-        m_playEffects = false;
+        ie::withFakePlayLayer([&] {
+            ie::withTemporary({
+                { &m_playEffects, true },
+            }, [&] {
+                PlayerObject::toggleDartMode(p0, p1);
+            });
+        });
     }
 
     $override
@@ -68,13 +69,13 @@ class $modify(PlayerObject) {
             return;
         }
 
-        GameManager::get()->m_playLayer = reinterpret_cast<PlayLayer*>(GJBaseGameLayer::get());
-        m_playEffects = true;
-
-        PlayerObject::togglePlayerScale(p0, p1);
-
-        GameManager::get()->m_playLayer = nullptr;
-        m_playEffects = false;
+        ie::withFakePlayLayer([&] {
+            ie::withTemporary({
+                { &m_playEffects, true },
+            }, [&] {
+                PlayerObject::togglePlayerScale(p0, p1);
+            });
+        });
     }
 
     $override
@@ -341,18 +342,22 @@ class $modify(GJBaseGameLayer) {
     void toggleDualMode(GameObject* p0, bool p1, PlayerObject* p2, bool p3) {
         // 🔀 call PlayerObject::spawnDualCircle
 
-        m_isEditor = false;
-        GJBaseGameLayer::toggleDualMode(p0, p1, p2, p3);
-        m_isEditor = ie::inEditor();
+        ie::withTemporary({
+            { &m_isEditor, false },
+        }, [&] {
+            GJBaseGameLayer::toggleDualMode(p0, p1, p2, p3);
+        });
     }
 
     $override
     void checkRepellPlayer() {
         // ⏺️ circle wave on dual balls repelling
 
-        m_isEditor = false;
-        GJBaseGameLayer::checkRepellPlayer();
-        m_isEditor = ie::inEditor();
+        ie::withTemporary({
+            { &m_isEditor, false },
+        }, [&] {
+            GJBaseGameLayer::checkRepellPlayer();
+        });
     }
 };
 
@@ -387,13 +392,13 @@ class $modify(GameObject) {
         bool isSpeedPortal = (m_objectID >= 200 && m_objectID <= 203) || m_objectID == 1334;
 
         if (!isSpeedPortal) {
-            GameManager::get()->m_playLayer = reinterpret_cast<PlayLayer*>(GJBaseGameLayer::get());
-            m_editorEnabled = false;
-
-            GameObject::playShineEffect();
-
-            GameManager::get()->m_playLayer = nullptr;
-            m_editorEnabled = true;
+            ie::withFakePlayLayer([&] {
+                ie::withTemporary({
+                    { &m_editorEnabled, false },
+                }, [&] {
+                    GameObject::playShineEffect();
+                });
+            });
 
             return;
         }

@@ -1,5 +1,6 @@
 #include "core/SettingManager.hpp"
 #include "util/Editor.hpp"
+#include "util/Temporary.hpp"
 
 #include <Geode/modify/PlayerObject.hpp>
 #include <Geode/modify/LevelEditorLayer.hpp>
@@ -33,11 +34,9 @@ class $modify(PlayerObject) {
             return;
         }
 
-        GameManager::get()->m_playLayer = reinterpret_cast<PlayLayer*>(GJBaseGameLayer::get());
-
-        PlayerObject::flipGravity(p0, p1);
-
-        GameManager::get()->m_playLayer = nullptr;
+        ie::withFakePlayLayer([&] {
+            PlayerObject::flipGravity(p0, p1);
+        });
     }
 
     $override
@@ -49,13 +48,13 @@ class $modify(PlayerObject) {
             return;
         }
 
-        GameManager::get()->m_playLayer = reinterpret_cast<PlayLayer*>(GJBaseGameLayer::get());
-        m_playEffects = true;
-
-        PlayerObject::updateTimeMod(p0, p1);
-
-        GameManager::get()->m_playLayer = nullptr;
-        m_playEffects = false;
+        ie::withFakePlayLayer([&] {
+            ie::withTemporary({
+                { &m_playEffects, true },
+            }, [&] {
+                PlayerObject::updateTimeMod(p0, p1);
+            });
+        });
     }
 
     $override
@@ -67,11 +66,9 @@ class $modify(PlayerObject) {
             return;
         }
 
-        GameManager::get()->m_playLayer = reinterpret_cast<PlayLayer*>(GJBaseGameLayer::get());
-
-        PlayerObject::toggleGhostEffect(type);
-
-        GameManager::get()->m_playLayer = nullptr;
+        ie::withFakePlayLayer([&] {
+            PlayerObject::toggleGhostEffect(type);
+        });
     }
 
     $override
@@ -83,25 +80,24 @@ class $modify(PlayerObject) {
             return;
         }
 
-        GameManager::get()->m_playLayer = reinterpret_cast<PlayLayer*>(GJBaseGameLayer::get());
-        m_playEffects = true;
-
-        PlayerObject::startDashing(p0);
-
-        GameManager::get()->m_playLayer = nullptr;
-        m_playEffects = false;
+        ie::withFakePlayLayer([&] {
+            ie::withTemporary({
+                { &m_playEffects, true },
+            }, [&] {
+                PlayerObject::startDashing(p0);
+            });
+        });
     }
 
     $override
     void activateStreak() {
         // ⏺️ wave trail
 
-        bool prevEE = GameManager::get()->m_editorEnabled;
-        GameManager::get()->m_editorEnabled = false;
-
-        PlayerObject::activateStreak();
-
-        GameManager::get()->m_editorEnabled = prevEE;
+        ie::withTemporary({
+            { &GameManager::get()->m_editorEnabled, false }
+        }, [&] {
+            PlayerObject::activateStreak();
+        });
     }
 
     $override

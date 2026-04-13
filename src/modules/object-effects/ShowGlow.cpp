@@ -1,6 +1,7 @@
 #include "core/SettingManager.hpp"
 #include "core/UpdateVisibility.hpp"
 #include "util/Editor.hpp"
+#include "util/Temporary.hpp"
 
 #include <Geode/modify/GameObject.hpp>
 
@@ -21,12 +22,11 @@ class $modify(GameObject) {
 
         if (GameManager::get()->m_performanceMode) return;
 
-        bool prevEE = m_editorEnabled;
-        m_editorEnabled = false;
-
-        GameObject::addGlow(objectFrameName);
-
-        m_editorEnabled = prevEE;
+        ie::withTemporary({
+            { &m_editorEnabled, false }
+        }, [&] {
+            GameObject::addGlow(objectFrameName);
+        });
     }
 
     $override
@@ -48,24 +48,23 @@ class $modify(GameObject) {
             return;
         }
 
-        m_editorEnabled = false;
-        GameObject::setupCustomSprites(frameName);
-        m_editorEnabled = true;
+        ie::withTemporary({
+            { &m_editorEnabled, false }
+        }, [&] {
+            GameObject::setupCustomSprites(frameName);
+        });
     }
 
     $override
     void selectObject(ccColor3B color) {
         // ⏺️ fix glow not becoming selected green color
 
-        bool prevCGC = m_customGlowColor;
-        bool prevCCG = m_cantColorGlow;
-        m_customGlowColor = false;
-        m_cantColorGlow = false;
-
-        GameObject::selectObject(color);
-
-        m_customGlowColor = prevCGC;
-        m_cantColorGlow = prevCCG;
+        ie::withTemporary({
+            { &m_customGlowColor, false },
+            { &m_cantColorGlow, false },
+        }, [&] {
+            GameObject::selectObject(color);
+        });
     }
 };
 
@@ -257,10 +256,9 @@ void ie::updateGlow(LevelEditorLayer* lel, GameObject* object, const ie::GlowCon
         glowColor = lel->m_lightBGColor;
     }
 
-    bool prevCCG = object->m_cantColorGlow;
-    object->m_cantColorGlow = false;
-
-    object->setGlowColor(glowColor);
-
-    object->m_cantColorGlow = prevCCG;
+    ie::withTemporary({
+        { &object->m_cantColorGlow, false }
+    }, [&] {
+        object->setGlowColor(glowColor);
+    });
 }
