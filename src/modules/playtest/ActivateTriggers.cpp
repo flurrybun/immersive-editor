@@ -1,6 +1,7 @@
 #include "core/SettingManager.hpp"
 #include "modules/level-effects/ShowGlitter.hpp"
 #include "util/Editor.hpp"
+#include "util/ObjectIDs.hpp"
 
 #include <Geode/modify/GameObject.hpp>
 #include <Geode/modify/EffectGameObject.hpp>
@@ -39,19 +40,23 @@ class $modify(EffectGameObject) {
         }
 
         switch (m_objectID) {
-            case 32:
-            case 33: {
-                GhostType type = m_objectID == 32 ? GhostType::Enabled : GhostType::Disabled;
-
-                gameLayer->m_player1->toggleGhostEffect(type);
+            case ie::object::EnableGhostTrailTrigger:
+                gameLayer->m_player1->toggleGhostEffect(GhostType::Enabled);
                 if (gameLayer->m_gameState.m_isDualMode) {
-                    gameLayer->m_player2->toggleGhostEffect(type);
+                    gameLayer->m_player2->toggleGhostEffect(GhostType::Enabled);
                 }
                 break;
-            }
-            case 1818:
-            case 1819:
-                toggleBGEffectVisibility(m_objectID == 1818);
+            case ie::object::DisableGhostTrailTrigger:
+                gameLayer->m_player1->toggleGhostEffect(GhostType::Disabled);
+                if (gameLayer->m_gameState.m_isDualMode) {
+                    gameLayer->m_player2->toggleGhostEffect(GhostType::Disabled);
+                }
+                break;
+            case ie::object::EnableBGEffectTrigger:
+                toggleBGEffectVisibility(true);
+                break;
+            case ie::object::DisableBGEffectTrigger:
+                toggleBGEffectVisibility(false);
                 break;
             default:
                 EffectGameObject::triggerObject(gameLayer, p1, p2);

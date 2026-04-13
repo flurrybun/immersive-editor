@@ -1,8 +1,4 @@
 #include "Temporary.hpp"
-#include "Editor.hpp"
-
-#include <Geode/Geode.hpp>
-using namespace geode::prelude;
 
 void ie::withTemporary(std::initializer_list<Override> overrides, geode::Function<void()> function) {
     for (const auto& override : overrides) {

@@ -1,4 +1,5 @@
 #include "core/SettingManager.hpp"
+#include "util/ObjectIDs.hpp"
 
 #include <Geode/modify/LevelTools.hpp>
 
@@ -24,7 +25,7 @@ class $modify(LevelTools) {
 
                 objects->addObject(object);
 
-                if (object->m_objectID == 2900 && object->m_changeChannel == true) {
+                if (ie::object::isGameplayRotationTrigger(object) && object->m_changeChannel) {
                     i++;
                     break;
                 }

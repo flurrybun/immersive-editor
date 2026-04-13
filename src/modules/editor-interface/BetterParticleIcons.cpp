@@ -2,6 +2,7 @@
 #include "core/UpdateVisibility.hpp"
 #include "util/Editor.hpp"
 #include "util/Temporary.hpp"
+#include "util/ObjectIDs.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
@@ -20,14 +21,14 @@ void ie::updateParticleIcon(LevelEditorLayer* lel, GameObject* object) {
         opacity = ie::isObjectLayerVisible(object, lel) ? 50 : 8;
     }
 
-    if (object->m_objectID == 1586 || object->m_objectID == 1700) {
+    if (ie::object::is21Particle(object)) {
         ie::withTemporary({
             { &object->m_particle, nullptr }
         }, [&] {
             object->CCSprite::setOpacity(opacity);
             if (object->m_colorSprite) object->m_colorSprite->setOpacity(opacity);
         });
-    } else if (object->m_objectID == 2065) {
+    } else if (ie::object::isCustomParticle(object)) {
         if (auto sprite = object->getChildByType<CCSprite>(0)) {
             if (auto subSprite = sprite->getChildByType<CCSprite>(0)) {
                 subSprite->setOpacity(opacity);

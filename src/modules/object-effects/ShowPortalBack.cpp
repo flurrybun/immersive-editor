@@ -1,6 +1,7 @@
 #include "core/SettingManager.hpp"
 #include "core/UpdateVisibility.hpp"
 #include "events/ObjectEvent.hpp"
+#include "util/ObjectIDs.hpp"
 
 #include <Geode/modify/LevelEditorLayer.hpp>
 
@@ -25,7 +26,7 @@ class $modify(SPBLevelEditorLayer, LevelEditorLayer) {
         if (!LevelEditorLayer::init(p0, p1)) return false;
 
         m_fields->objectListener = ObjectEvent().listen([this](GameObject* object, bool created) {
-            if (!isPortal(object->m_objectID)) return ListenerResult::Propagate;
+            if (!ie::object::isPortal(object)) return ListenerResult::Propagate;
 
             if (created) {
                 addPortalBack(object);
@@ -56,61 +57,49 @@ class $modify(SPBLevelEditorLayer, LevelEditorLayer) {
         m_fields->portalBacks.erase(it);
     }
 
-    bool isPortal(int objectID) {
-        switch (objectID) {
-            case 10: // blue gravity
-            case 11: // yellow gravity
-            case 12: // cube
-            case 13: // ship
-            case 45: // orange mirror
-            case 46: // blue mirror
-            case 47: // ball
-            case 99: // green size
-            case 101: // pink size
-            case 111: // ufo
-            case 286: // dual
-            case 287: // exit dual
-            case 660: // wave
-            case 745: // robot
-            case 747: // linked blue teleport
-            case 2902: // standalone blue teleport
-            case 749: // linked orange teleport
-            case 2064: // standalone orange teleport
-            case 1331: // spider
-            case 1933: // swing
-            case 2926: // green gravity
-                return true;
-            default:
-                return false;
-        }
-    }
-
     const char* getPortalBackFrameName(int objectID) {
         switch (objectID) {
-            case 10: return "portal_01_back_001.png"; // blue gravity
-            case 11: return "portal_02_back_001.png"; // yellow gravity
-            case 12: return "portal_03_back_001.png"; // cube
-            case 13: return "portal_04_back_001.png"; // ship
-            case 45: return "portal_05_back_001.png"; // orange mirror
-            case 46: return "portal_06_back_001.png"; // blue mirror
-            case 47: return "portal_07_back_001.png"; // ball
-            case 99: return "portal_08_back_001.png"; // green size
-            case 101: return "portal_09_back_001.png"; // pink size
-            case 111: return "portal_10_back_001.png"; // ufo
-            case 286: return "portal_11_back_001.png"; // dual
-            case 287: return "portal_12_back_001.png"; // exit dual
-            case 660: return "portal_13_back_001.png"; // wave
-            case 745: return "portal_14_back_001.png"; // robot
-            case 747: // linked blue teleport
-            case 2902: // standalone blue teleport
+            case ie::object::BlueGravityPortal:
+                return "portal_01_back_001.png";
+            case ie::object::YellowGravityPortal:
+                return "portal_02_back_001.png";
+            case ie::object::CubePortal:
+                return "portal_03_back_001.png";
+            case ie::object::ShipPortal:
+                return "portal_04_back_001.png";
+            case ie::object::OrangeMirrorPortal:
+                return "portal_05_back_001.png";
+            case ie::object::BlueMirrorPortal:
+                return "portal_06_back_001.png";
+            case ie::object::BallPortal:
+                return "portal_07_back_001.png";
+            case ie::object::GreenSizePortal:
+                return "portal_08_back_001.png";
+            case ie::object::PinkSizePortal:
+                return "portal_09_back_001.png";
+            case ie::object::UfoPortal:
+                return "portal_10_back_001.png";
+            case ie::object::OrangeDualPortal:
+                return "portal_11_back_001.png";
+            case ie::object::BlueDualPortal:
+                return "portal_12_back_001.png";
+            case ie::object::WavePortal:
+                return "portal_13_back_001.png";
+            case ie::object::RobotPortal:
+                return "portal_14_back_001.png";
+            case ie::object::LinkedBlueTeleport:
+            case ie::object::BlueTeleportPortal:
                 return "portal_15_back_001.png";
-            case 749: // linked orange teleport
-            case 2064: // standalone orange teleport
+            case ie::object::LinkedOrangeTeleport:
+            case ie::object::OrangeTeleportPortal:
                 return "portal_16_back_001.png";
-            case 1331: return "portal_17_back_001.png"; // spider
-            case 1933: return "portal_18_back_001.png"; // swing
-            case 2926: return "portal_19_back_001.png"; // green gravity
-            default: return "portal_03_back_001.png"; // cube
+            case ie::object::SpiderPortal:
+                return "portal_17_back_001.png";
+            case ie::object::SwingPortal:
+                return "portal_18_back_001.png";
+            case ie::object::GreenGravityPortal:
+                return "portal_19_back_001.png";
+            default: return "portal_03_back_001.png";
         }
     }
 };

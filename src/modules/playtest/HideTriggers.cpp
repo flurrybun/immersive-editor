@@ -1,6 +1,7 @@
 #include "core/SettingManager.hpp"
 #include "events/PlaytestEvent.hpp"
 #include "util/Temporary.hpp"
+#include "util/ObjectIDs.hpp"
 
 #include <Geode/modify/GameObject.hpp>
 #include <Geode/modify/LevelEditorLayer.hpp>
@@ -71,30 +72,27 @@ class $modify(LevelEditorLayer) {
     }
 
     bool showInPlaytest(GameObject* object) {
-        int id = object->m_objectID;
         GameObjectType type = object->m_objectType;
-
-        bool isSpeedPortal = (id >= 200 && id <= 203) || id == 1334;
-        if (isSpeedPortal) return true;
 
         // particle icons handled in BetterParticleIcons.cpp
 
-        bool isParticle = id == 1586 || id == 1700 || id == 2065;
-        if (isParticle) return true;
+        if (
+            ie::object::isSpeedPortal(object) ||
+            ie::object::isParticle(object) ||
+            ie::object::isCheckpoint(object)
+        ) return true;
 
-        bool isToggleBlock = id == 3643;
-        if (isToggleBlock) return false;
+        if (
+            ie::object::isTouchToggleBlock(object) ||
+            ie::object::isKeyframePoint(object)
+        ) return false;
 
-        bool isKeyframe = id == 3032;
-        if (isKeyframe) return false;
-
-        bool isCheckpoint = id == 2063;
-        if (isCheckpoint) return true;
-
-        if (type == GameObjectType::Modifier) return false;
-        if (type == GameObjectType::EnterEffectObject) return false;
-        if (type == GameObjectType::CollisionObject) return false;
-        if (type == GameObjectType::Special) return false;
+        if (
+            type == GameObjectType::Modifier ||
+            type == GameObjectType::EnterEffectObject ||
+            type == GameObjectType::CollisionObject ||
+            type == GameObjectType::Special
+        ) return false;
 
         return true;
     }

@@ -2,6 +2,7 @@
 #include "core/UpdateVisibility.hpp"
 #include "util/Editor.hpp"
 #include "util/Temporary.hpp"
+#include "util/ObjectIDs.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
@@ -76,7 +77,7 @@ void ie::updateFadeAndEnter(LevelEditorLayer* lel, GameObject* object, float cam
     // whereas the latter is used in PlayLayer::updateVisibility to determine if objects should fade/enter
     // the only difference is the latter is set to true in ParticleGameObject::customSetup
 
-    if (object->m_objectID == 2065) return;
+    if (ie::object::isCustomParticle(object)) return;
 
     CCPoint objectPos = object->getRealPosition();
 

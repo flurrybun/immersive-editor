@@ -1,6 +1,7 @@
 #include "core/SettingManager.hpp"
 #include "util/Editor.hpp"
 #include "util/Temporary.hpp"
+#include "util/ObjectIDs.hpp"
 
 #include <Geode/modify/PlayerObject.hpp>
 #include <Geode/modify/GJBaseGameLayer.hpp>
@@ -293,41 +294,37 @@ class $modify(PlayerObject) {
 
     ccColor3B getCircleWaveColor(GameObject* object) {
         switch (object->m_objectID) {
-            case 36: // yellow orb
-            case 35: // yellow pad
+            case ie::object::YellowOrb:
+            case ie::object::YellowPad:
 
             // guess rob forgot to change the color of these :P
 
-            case 1332: // red pad
-            case 3027: // teleport orb
+            case ie::object::RedPad:
+            case ie::object::TeleportOrb:
                 return ccc3(255, 200, 0);
-            case 84: // blue orb
-            case 67: // blue pad
+            case ie::object::BlueOrb:
+            case ie::object::BluePad:
                 return ccc3(0, 255, 255);
-            case 141: // pink orb
-            case 140: // pink pad
+            case ie::object::PinkOrb:
+            case ie::object::PinkPad:
                 return ccc3(255, 0, 255);
-            case 1333: // red orb
+            case ie::object::RedOrb:
                 return ccc3(255, 100, 0);
-            case 1330: // black orb
-                if (auto lbgAction = GJBaseGameLayer::get()->m_effectManager->m_colorActionSpriteVector[1007]) {
-                    return lbgAction->m_color;
-                } else {
-                    return ccc3(0, 0, 0);
-                }
-            case 1594: // toggle orb
+            case ie::object::BlackOrb:
+                return m_gameLayer->m_effectManager->activeColorForIndex(1007);
+            case ie::object::ToggleOrb:
                 if (object->m_colorSprite) {
                     return object->m_colorSprite->getColor();
                 } else {
                     return ccc3(0, 0, 0);
                 }
-            case 1022: // green orb
-            case 1704: // green dash orb
+            case ie::object::GreenOrb:
+            case ie::object::GreenDashOrb:
                 return ccc3(0, 255, 0);
-            case 1751: // pink dash orb
+            case ie::object::PinkDashOrb:
                 return ccc3(255, 0, 255);
-            case 3004: // spider orb
-            case 3005: // spider pad
+            case ie::object::SpiderOrb:
+            case ie::object::SpiderPad:
                 return ccc3(125, 0, 255);
             default:
                 return ccc3(0, 0, 0);
@@ -389,9 +386,7 @@ class $modify(GameObject) {
             return;
         }
 
-        bool isSpeedPortal = (m_objectID >= 200 && m_objectID <= 203) || m_objectID == 1334;
-
-        if (!isSpeedPortal) {
+        if (!ie::object::isSpeedPortal(this)) {
             ie::withFakePlayLayer([&] {
                 ie::withTemporary({
                     { &m_editorEnabled, false },
@@ -428,10 +423,13 @@ class $modify(GameObject) {
         ));
 
         float endRadius = 60.f;
-        if (m_objectID == 201) endRadius = 65.f;
-        else if (m_objectID == 202) endRadius = 70.f;
-        else if (m_objectID == 203) endRadius = 80.f;
-        else if (m_objectID == 1334) endRadius = 90.f;
+
+        switch (m_objectID) {
+            case ie::object::NormalSpeedPortal: endRadius = 65.f; break;
+            case ie::object::FastSpeedPortal: endRadius = 70.f; break;
+            case ie::object::FasterSpeedPortal: endRadius = 80.f; break;
+            case ie::object::FastestSpeedPortal: endRadius = 90.f; break;
+        }
 
         CCCircleWave* circleWave = CCCircleWave::create(
             5.f, endRadius, 0.3f, false, true
@@ -445,23 +443,35 @@ class $modify(GameObject) {
 
     const char* getSpeedShineFrameName() {
         switch (m_objectID) {
-            case 200: return "boost_01_shine_001.png";
-            case 201: return "boost_02_shine_001.png";
-            case 202: return "boost_03_shine_001.png";
-            case 203: return "boost_04_shine_001.png";
-            case 1334: return "boost_05_shine_001.png";
-            default: return "diffIcon_02_btn_001.png";
+            case ie::object::SlowSpeedPortal:
+                return "boost_01_shine_001.png";
+            case ie::object::NormalSpeedPortal:
+                return "boost_02_shine_001.png";
+            case ie::object::FastSpeedPortal:
+                return "boost_03_shine_001.png";
+            case ie::object::FasterSpeedPortal:
+                return "boost_04_shine_001.png";
+            case ie::object::FastestSpeedPortal:
+                return "boost_05_shine_001.png";
+            default:
+                return "diffIcon_02_btn_001.png";
         }
     }
 
     ccColor3B getSpeedCircleWaveColor() {
         switch (m_objectID) {
-            case 200: return ccc3(255, 255, 0);
-            case 201: return ccc3(0, 150, 255);
-            case 202: return ccc3(0, 255, 150);
-            case 203: return ccc3(255, 0, 255);
-            case 1334: return ccc3(255, 50, 50);
-            default: return ccc3(0, 0, 0);
+            case ie::object::SlowSpeedPortal:
+                return ccc3(255, 255, 0);
+            case ie::object::NormalSpeedPortal:
+                return ccc3(0, 150, 255);
+            case ie::object::FastSpeedPortal:
+                return ccc3(0, 255, 150);
+            case ie::object::FasterSpeedPortal:
+                return ccc3(255, 0, 255);
+            case ie::object::FastestSpeedPortal:
+                return ccc3(255, 50, 50);
+            default:
+                return ccc3(0, 0, 0);
         }
     }
 };
@@ -485,7 +495,7 @@ class $modify(RingObject) {
         m_isRingPoweredOn = true;
 
         if (
-            m_objectID == 3643 || // toggle block
+            ie::object::isTouchToggleBlock(this) ||
             m_hasNoEffects ||
             GameManager::get()->m_performanceMode
         ) return;

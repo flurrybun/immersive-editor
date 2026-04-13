@@ -2,6 +2,7 @@
 #include "core/UpdateVisibility.hpp"
 #include "util/Editor.hpp"
 #include "util/Temporary.hpp"
+#include "util/ObjectIDs.hpp"
 
 #include <Geode/modify/EnhancedGameObject.hpp>
 #include <Geode/modify/GameObject.hpp>
@@ -34,66 +35,14 @@ class $modify(EnhancedGameObject) {
     }
 
     bool hasParticles() {
-        switch (m_objectID) {
-            // orbs & pads
-
-            case 36:
-            case 35:
-            case 84:
-            case 67:
-            case 141:
-            case 140:
-            case 1333:
-            case 1332:
-            case 1330:
-            case 1594:
-            case 1022:
-            case 1704:
-            case 1751:
-            case 3004:
-            case 3005:
-            case 3027:
-
-            // gamemode portals
-
-            case 10:
-            case 11:
-            case 12:
-            case 13:
-            case 45:
-            case 46:
-            case 47:
-            case 99:
-            case 101:
-            case 111:
-            case 286:
-            case 287:
-            case 660:
-            case 745:
-            case 747:
-            case 2902:
-            case 749:
-            case 2064:
-            case 1331:
-            case 1933:
-            case 2926:
-
-            // speed portals
-
-            case 200:
-            case 201:
-            case 202:
-            case 203:
-            case 1334:
-
-            // fireball
-
-            case 1583:
-
-                return true;
-            default:
-                return false;
-        }
+        return (
+            ie::object::isOrb(this) ||
+            ie::object::isPad(this) ||
+            ie::object::isPortal(this) ||
+            ie::object::isSpeedPortal(this) ||
+            // ie::object::is21Particle(this) ||
+            ie::object::isMovingFireball(this)
+        );
     }
 };
 
@@ -104,9 +53,7 @@ class $modify(GameObject) {
     void customSetup() {
         // ⏺️ particles for 2.1 particle objects
 
-        bool is21Particle = m_objectID == 1586 || m_objectID == 1700;
-
-        if (!ie::inEditor() || !is21Particle) {
+        if (!ie::inEditor() || !ie::object::is21Particle(this)) {
             GameObject::customSetup();
             return;
         }
@@ -207,7 +154,7 @@ class $modify(GameObject) {
             m_editorEnabled &&
             m_particle &&
             !m_particleUseObjectColor &&
-            m_objectID != 2065 // custom particle
+            !ie::object::isCustomParticle(this)
         );
     }
 
@@ -227,83 +174,83 @@ class $modify(GameObject) {
 
     void resetParticleColor() {
         switch (m_objectID) {
-            case 36: // yellow orb
+            case ie::object::YellowOrb:
                 return setParticleColor({1, 0.78431374, 0.19607843, 1}, {1, 0.39215687, 0.09803922, 1}, {0, 0, 0, 0.698125}, {});
-            case 141: // pink orb
+            case ie::object::PinkOrb:
                 return setParticleColor({1, 0.39215687, 1, 1}, {1, 0, 0.6862745, 1}, {0, 0, 0, 0.698125}, {});
-            case 1333: // red orb
+            case ie::object::RedOrb:
                 return setParticleColor({1, 0.39215687, 0.09803922, 1}, {1, 0, 0, 1}, {0, 0, 0, 0.698125}, {});
-            case 84: // blue orb
+            case ie::object::BlueOrb:
                 return setParticleColor({0, 1, 1, 1}, {0, 0.49019608, 1, 1}, {0, 0, 0, 0.698125}, {});
-            case 1022: // green orb
+            case ie::object::GreenOrb:
                 return setParticleColor({0.29411766, 1, 0.29411766, 1}, {0, 1, 0, 1}, {0, 0, 0, 0.698125}, {});
-            case 1330: // black orb
+            case ie::object::BlackOrb:
                 return setParticleColor({1, 1, 1, 1}, {0, 0, 0, 1}, {0, 0, 0, 0.698125}, {});
-            case 1704: // green dash orb
+            case ie::object::GreenDashOrb:
                 return setParticleColor({0, 1, 0, 1}, {0, 0, 0, 1}, {0, 0, 0, 0.698125}, {});
-            case 1751: // pink dash orb
+            case ie::object::PinkDashOrb:
                 return setParticleColor({1, 0, 0, 1}, {0, 0, 0, 1}, {0, 0, 0, 0.698125}, {});
-            case 3004: // spider orb
+            case ie::object::SpiderOrb:
                 return setParticleColor({1, 0, 1, 1}, {0.39215687, 0.09803922, 1, 1}, {0, 0, 0, 0.698125}, {});
-            case 35: // yellow pad
+            case ie::object::YellowPad:
                 return setParticleColor({1, 1, 0, 1}, {0, 0, 0, 1}, {}, {});
-            case 140: // pink pad
+            case ie::object::PinkPad:
                 return setParticleColor({1, 0, 1, 1}, {1, 0, 1, 1}, {}, {});
-            case 1332: // red pad
+            case ie::object::RedPad:
                 return setParticleColor({1, 0.19607843, 0.19607843, 1}, {1, 0, 0, 1}, {}, {});
-            case 67: // blue pad
+            case ie::object::BluePad:
                 return setParticleColor({0, 1, 1, 1}, {0, 1, 1, 1}, {}, {});
-            case 3005: // spider pad
+            case ie::object::SpiderPad:
                 return setParticleColor({1, 0, 1, 1}, {0.39215687, 0.09803922, 1, 1}, {}, {});
-            case 10: // blue portal
+            case ie::object::BlueGravityPortal:
                 return setParticleColor({0, 1, 1, 0.5}, {0, 1, 1, 1}, {}, {0, 0.5, 0, 0});
-            case 11: // yellow portal
+            case ie::object::YellowGravityPortal:
                 return setParticleColor({1, 1, 0, 0.5}, {1, 1, 0, 1}, {}, {});
-            case 2926: // green portal
+            case ie::object::GreenGravityPortal:
                 return setParticleColor({0, 1, 0, 1}, {0, 1, 0, 1}, {}, {});
-            case 12: // cube portal
+            case ie::object::CubePortal:
                 return setParticleColor({0.3, 1, 0, 0.5}, {0.3, 1, 0, 1}, {0.3, 0, 0, 0}, {0.3, 0, 0, 0});
-            case 13: // ship portal
+            case ie::object::ShipPortal:
                 return setParticleColor({1, 0, 1, 0.5}, {1, 0, 1, 1}, {0, 0.3, 0, 0}, {0, 0.3, 0, 0});
-            case 47: // ball portal
+            case ie::object::BallPortal:
                 return setParticleColor({1, 0.39215687, 0, 1}, {1, 0.39215687, 0, 1}, {}, {});
-            case 111: // ufo portal
+            case ie::object::UfoPortal:
                 return setParticleColor({1, 0.78431374, 0, 1}, {1, 0.39215687, 0, 1}, {}, {});
-            case 660: // wave portal
+            case ie::object::WavePortal:
                 return setParticleColor({0, 0.78431374, 1, 1}, {0, 0.39215687, 1, 1}, {}, {});
-            case 745: // robot portal
+            case ie::object::RobotPortal:
                 return setParticleColor({0.5882353, 0.5882353, 0.5882353, 1}, {0.19607843, 0.19607843, 0.29411766, 1}, {}, {});
-            case 45: // orange mirror portal
+            case ie::object::OrangeMirrorPortal:
                 return setParticleColor({1, 0.5882353, 0, 1}, {1, 0.5882353, 0, 1}, {}, {});
-            case 46: // blue mirror portal
+            case ie::object::BlueMirrorPortal:
                 return setParticleColor({0, 1, 1, 0.5}, {0, 1, 1, 1}, {}, {0, 0.5, 0, 0});
-            case 99: // green size portal
+            case ie::object::GreenSizePortal:
                 return setParticleColor({0, 1, 0, 1}, {0, 1, 0, 1}, {0.25, 0, 0.25, 0.5}, {});
-            case 101: // pink size portal
+            case ie::object::PinkSizePortal:
                 return setParticleColor({1, 0, 1, 1}, {1, 0, 1, 1}, {0, 0.5, 0, 0.5}, {});
-            case 286: // orange dual portal
+            case ie::object::OrangeDualPortal:
                 return setParticleColor({1, 0.78431374, 0, 1}, {1, 0.39215687, 0, 1}, {0, 0.5, 0, 0.5}, {});
-            case 287: // blue dual portal
+            case ie::object::BlueDualPortal:
                 return setParticleColor({0, 0.78431374, 1, 1}, {0, 0.39215687, 1, 1}, {0, 0.5, 0, 0.5}, {});
-            case 747: // linked blue teleport
-            case 2902: // blue teleport portal
+            case ie::object::LinkedBlueTeleport:
+            case ie::object::BlueTeleportPortal:
                 return setParticleColor({0, 1, 1, 1}, {0, 0.39215687, 0.5882353, 1}, {}, {});
-            case 749: // linked orange teleport
-            case 2064: // orange teleport portal
+            case ie::object::LinkedOrangeTeleport:
+            case ie::object::OrangeTeleportPortal:
                 return setParticleColor({1, 0.78431374, 0, 1}, {1, 0.39215687, 0, 1}, {}, {});
-            case 1331: // spider portal
+            case ie::object::SpiderPortal:
                 return setParticleColor({0.78431374, 0, 1, 1}, {0.78431374, 0, 1, 1}, {}, {});
-            case 1933: // swing portal
+            case ie::object::SwingPortal:
                 return setParticleColor({1, 1, 0, 1}, {1, 0.78431374, 0, 1}, {}, {});
-            case 200: // slow speed portal
+            case ie::object::SlowSpeedPortal:
                 return setParticleColor({1, 0.9, 0, 0.8}, {1, 0.9, 0, 0}, {0, 0, 0, 0.2}, {});
-            case 201: // normal speed portal
+            case ie::object::NormalSpeedPortal:
                 return setParticleColor({0, 0.8, 1, 0.8}, {0, 0.8, 1, 0}, {0, 0, 0, 0.2}, {});
-            case 202: // fast speed portal
+            case ie::object::FastSpeedPortal:
                 return setParticleColor({0, 1, 0.2, 0.8}, {0, 1, 0.2, 0}, {0, 0, 0, 0.2}, {});
-            case 203: // faster speed portal
+            case ie::object::FasterSpeedPortal:
                 return setParticleColor({1, 0.6, 1, 0.8}, {1, 0.3, 1, 0}, {0, 0, 0, 0.2}, {});
-            case 1334: // fastest speed portal
+            case ie::object::FastestSpeedPortal:
                 return setParticleColor({1, 0, 0, 0.8}, {1, 0, 0, 0}, {0, 0, 0, 0.2}, {});
         }
     }
@@ -353,7 +300,7 @@ class $modify(LevelEditorLayer) {
 };
 
 void ie::updateObjectParticle(LevelEditorLayer* lel, GameObject* object) {
-    if (!g_showObjectParticles || !object->m_particle || object->m_objectID == 2065) return;
+    if (!g_showObjectParticles || !object->m_particle || ie::object::isCustomParticle(object)) return;
 
     object->m_particle->setVisible(!object->m_hasNoParticles);
 }

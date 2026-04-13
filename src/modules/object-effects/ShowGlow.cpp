@@ -2,6 +2,7 @@
 #include "core/UpdateVisibility.hpp"
 #include "util/Editor.hpp"
 #include "util/Temporary.hpp"
+#include "util/ObjectIDs.hpp"
 
 #include <Geode/modify/GameObject.hpp>
 
@@ -70,28 +71,28 @@ class $modify(GameObject) {
 
 std::optional<ccColor3B> getSpecialGlowColor(LevelEditorLayer* lel, GameObject* object) {
     switch (object->m_objectID) {
-        case 36: // yellow orb
-        case 35: // yellow pad
+        case ie::object::YellowOrb:
+        case ie::object::YellowPad:
             return ccc3(255, 165, 0);
-        case 84: // blue orb
-        case 67: // blue pad
+        case ie::object::BlueOrb:
+        case ie::object::BluePad:
             return ccc3(0, 255, 255);
-        case 141: // pink orb
-        case 140: // pink pad
+        case ie::object::PinkOrb:
+        case ie::object::PinkPad:
             return ccc3(255, 0, 255);
-        case 1333: // red orb
-        case 1332: // red pad
+        case ie::object::RedOrb:
+        case ie::object::RedPad:
             return ccc3(255, 100, 100);
-        case 1330: // black orb
-        case 1594: // toggle orb
+        case ie::object::BlackOrb:
+        case ie::object::ToggleOrb:
             return lel->m_lightBGColor;
-        case 1022: // green orb
-        case 1704: // green dash orb
+        case ie::object::GreenOrb:
+        case ie::object::GreenDashOrb:
             return ccc3(25, 255, 25);
-        case 1751: // pink dash orb
+        case ie::object::PinkDashOrb:
             return ccc3(200, 0, 255);
-        case 3004: // spider orb
-        case 3005: // spider pad
+        case ie::object::SpiderOrb:
+        case ie::object::SpiderPad:
             return ccc3(100, 0, 255);
         default:
             return std::nullopt;
@@ -243,8 +244,7 @@ void ie::updateGlow(LevelEditorLayer* lel, GameObject* object, const ie::GlowCon
 
     std::optional<ccColor3B> specialGlowColor = getSpecialGlowColor(lel, object);
 
-    // id 143 is for breakable blocks, which are a special case
-    if (object->m_objectID != 143 && !object->m_customGlowColor && !specialGlowColor) return;
+    if (!ie::object::isBreakableBlock(object) && !object->m_customGlowColor && !specialGlowColor) return;
 
     ccColor3B glowColor;
 

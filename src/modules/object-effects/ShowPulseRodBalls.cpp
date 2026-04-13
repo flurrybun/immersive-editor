@@ -2,6 +2,7 @@
 #include "core/UpdateVisibility.hpp"
 #include "events/ObjectEvent.hpp"
 #include "util/Editor.hpp"
+#include "util/ObjectIDs.hpp"
 
 #include <Geode/modify/GameObject.hpp>
 #include <Geode/modify/LevelEditorLayer.hpp>
@@ -13,18 +14,6 @@ $bind_setting(g_showPulseRodBalls, "show-pulse-rod-balls");
 
 // pulse rod balls are a special object (id 37) with the rod's properties duplicated over, but this method
 // wouldn't work in the editor. instead, each rod gets a ball sprite that follows its pos/rot/scale/color/opacity
-
-bool isPulseRodID(int key) {
-    return (
-        key == 15 ||
-        key == 16 ||
-        key == 17
-    );
-}
-
-bool isPulseRod(GameObject* object) {
-    return isPulseRodID(object->m_objectID);
-}
 
 // creating a new class avoids hooking setObjectColor with a fields accessor (very costly)
 
@@ -46,7 +35,7 @@ class $modify(GameObject) {
 
     $override
     static GameObject* createWithKey(int key) {
-        if (!isPulseRodID(key) || !ie::inEditor()) {
+        if (!ie::object::isPulseRod(key) || !ie::inEditor()) {
             return GameObject::createWithKey(key);
         }
 
@@ -81,7 +70,7 @@ class $modify(SPRBLevelEditorLayer, LevelEditorLayer) {
         generateRodIndex();
 
         m_fields->objectListener = ObjectEvent().listen([this](GameObject* object, bool created) {
-            if (!isPulseRod(object)) return ListenerResult::Propagate;
+            if (!ie::object::isPulseRod(object)) return ListenerResult::Propagate;
 
             if (created) {
                 addPulseRodBall(static_cast<PulseRodGameObject*>(object));

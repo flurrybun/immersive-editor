@@ -1,6 +1,7 @@
 #include "core/SettingManager.hpp"
 #include "core/UpdateVisibility.hpp"
 #include "util/Editor.hpp"
+#include "util/ObjectIDs.hpp"
 
 #include <Geode/modify/GradientTriggerObject.hpp>
 #include <Geode/modify/GJBaseGameLayer.hpp>
@@ -141,7 +142,7 @@ class $modify(GJBaseGameLayer) {
 
     void recolorSelectedGradients() {
         if (auto object = EditorUI::get()->m_selectedObject) {
-            if (object->m_objectID != 2903) return;
+            if (!ie::object::isGradientTrigger(object)) return;
 
             auto trigger = static_cast<GradientTriggerObject*>(object);
             auto gradient = static_cast<GJGradientLayer*>(
@@ -158,7 +159,7 @@ class $modify(GJBaseGameLayer) {
         }
 
         for (const auto& object : CCArrayExt<GameObject*>(EditorUI::get()->m_selectedObjects)) {
-            if (object->m_objectID != 2903) continue;
+            if (!ie::object::isGradientTrigger(object)) return;
 
             auto trigger = static_cast<GradientTriggerObject*>(object);
             auto gradient = static_cast<GJGradientLayer*>(
@@ -175,7 +176,7 @@ class $modify(GJBaseGameLayer) {
 };
 
 void ie::updateGradientTrigger(GameObject* object) {
-    if (!g_betterGradientTrigger || object->m_objectID != 2903) return;
+    if (!g_betterGradientTrigger || !ie::object::isGradientTrigger(object)) return;
 
     static_cast<BGTGradientTriggerObject*>(object)->updateGradientBlendMode();
 }
