@@ -61,8 +61,6 @@ class $modify(SMELevelEditorLayer, LevelEditorLayer) {
                 flipTween.m_currentValue = 0.f;
                 flipTween.m_finished = true;
             }
-
-            return ListenerResult::Propagate;
         });
 
         return true;

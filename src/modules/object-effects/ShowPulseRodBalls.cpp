@@ -70,15 +70,13 @@ class $modify(SPRBLevelEditorLayer, LevelEditorLayer) {
         generateRodIndex();
 
         m_fields->objectListener = ObjectEvent().listen([this](GameObject* object, bool created) {
-            if (!ie::object::isPulseRod(object)) return ListenerResult::Propagate;
+            if (!ie::object::isPulseRod(object)) return;
 
             if (created) {
                 addPulseRodBall(static_cast<PulseRodGameObject*>(object));
             } else {
                 removePulseRodBall(static_cast<PulseRodGameObject*>(object));
             }
-
-            return ListenerResult::Propagate;
         });
 
         return true;

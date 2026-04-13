@@ -63,7 +63,7 @@ class $modify(HEUILevelEditorLayer, LevelEditorLayer) {
                 bpmTriggers.setEnabled(g_hideTriggers ? !isPlaying : true);
             });
 
-            if (!g_autoHidePlaytestButtons) return ListenerResult::Propagate;
+            if (!g_autoHidePlaytestButtons) return;
 
             if (isPlaying) {
                 if (!isHoveringUI()) {
@@ -82,8 +82,6 @@ class $modify(HEUILevelEditorLayer, LevelEditorLayer) {
                 unschedule(schedule_selector(HEUILevelEditorLayer::updateCursorVisibility));
                 resetUIVisibility();
             }
-
-            return ListenerResult::Propagate;
         });
 
         return true;

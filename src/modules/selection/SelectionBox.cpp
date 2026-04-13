@@ -50,11 +50,9 @@ class $modify(SBLevelEditorLayer, LevelEditorLayer) {
         if (!LevelEditorLayer::init(p0, p1)) return false;
 
         m_fields->objectListener = ObjectEvent().listen([this](GameObject* object, bool created) {
-            if (created) return ListenerResult::Propagate;
-
-            m_fields->selectionBoxCache.erase(object);
-
-            return ListenerResult::Propagate;
+            if (!created) {
+                m_fields->selectionBoxCache.erase(object);
+            }
         });
 
         return true;

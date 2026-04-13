@@ -35,8 +35,6 @@ class $modify(ASLevelEditorLayer, LevelEditorLayer) {
             if (!mode.isPlaying()) {
                 resetAudioScale();
             }
-
-            return ListenerResult::Propagate;
         });
 
         return true;

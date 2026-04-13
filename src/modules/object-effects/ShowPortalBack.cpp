@@ -26,15 +26,13 @@ class $modify(SPBLevelEditorLayer, LevelEditorLayer) {
         if (!LevelEditorLayer::init(p0, p1)) return false;
 
         m_fields->objectListener = ObjectEvent().listen([this](GameObject* object, bool created) {
-            if (!ie::object::isPortal(object)) return ListenerResult::Propagate;
+            if (!ie::object::isPortal(object)) return;
 
             if (created) {
                 addPortalBack(object);
             } else {
                 removePortalBack(object);
             }
-
-            return ListenerResult::Propagate;
         });
 
         return true;

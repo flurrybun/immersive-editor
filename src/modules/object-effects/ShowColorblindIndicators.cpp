@@ -18,7 +18,6 @@ class $modify(LevelEditorLayer) {
 
         m_fields->objectListener = ObjectEvent().listen([this](GameObject* object, bool created) {
             if (created) addGuideArt(object);
-            return ListenerResult::Propagate;
         });
 
         return true;

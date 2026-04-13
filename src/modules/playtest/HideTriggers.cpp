@@ -64,8 +64,6 @@ class $modify(LevelEditorLayer) {
                 if (mode.isPlaying()) htObject->lockVisibility();
                 else htObject->unlockVisibility();
             }
-
-            return ListenerResult::Propagate;
         });
 
         return true;
