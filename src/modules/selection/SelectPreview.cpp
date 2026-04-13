@@ -1,6 +1,7 @@
 #include "Selection.hpp"
 #include "core/UpdateVisibility.hpp"
-#include "util/Utils.hpp"
+#include "util/Editor.hpp"
+#include "util/Color.hpp"
 
 #include <Geode/modify/LevelEditorLayer.hpp>
 #include <Geode/modify/GameObject.hpp>
@@ -48,7 +49,7 @@ ccColor3B tintColorBoosted(const ccColor3B& original, const ccColor3B& tint, flo
 float hueRatio(const ccColor3B& color, float targetHue) {
     constexpr float min = 0.28f;
     constexpr float max = 0.62f;
-    auto hsv = ie::rgbToHsv(color);
+    ie::HSV hsv = ie::HSV::fromRGB(color);
 
     float hueDist = std::min(
         std::fabs(hsv.h - targetHue),
@@ -63,7 +64,7 @@ float hueRatio(const ccColor3B& color, float targetHue) {
 void ie::setPreviewColor(GameObject* object, const ccColor3B& color, bool selecting) {
     if (object->m_isSelected) return;
 
-    float hue = ie::rgbToHsv(color).h;
+    float hue = ie::HSV::fromRGB(color).h;
     float ratio = selecting ? 1.f : 0.5f;
 
     float mainRatio = hueRatio(object->getColor(), hue) * ratio;

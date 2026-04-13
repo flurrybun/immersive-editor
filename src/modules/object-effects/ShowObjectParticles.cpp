@@ -1,6 +1,6 @@
 #include "core/SettingManager.hpp"
 #include "core/UpdateVisibility.hpp"
-#include "util/Utils.hpp"
+#include "util/Editor.hpp"
 
 #include <Geode/modify/EnhancedGameObject.hpp>
 #include <Geode/modify/GameObject.hpp>

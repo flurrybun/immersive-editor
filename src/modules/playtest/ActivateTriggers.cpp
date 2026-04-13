@@ -1,6 +1,6 @@
 #include "core/SettingManager.hpp"
 #include "modules/level-effects/ShowGlitter.hpp"
-#include "util/Utils.hpp"
+#include "util/Editor.hpp"
 
 #include <Geode/modify/GameObject.hpp>
 #include <Geode/modify/EffectGameObject.hpp>

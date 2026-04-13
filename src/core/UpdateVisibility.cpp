@@ -1,5 +1,5 @@
 #include "UpdateVisibility.hpp"
-#include "util/Utils.hpp"
+#include "util/Editor.hpp"
 
 #include <Geode/modify/GJBaseGameLayer.hpp>
 #include <Geode/modify/LevelEditorLayer.hpp>

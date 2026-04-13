@@ -1,7 +1,7 @@
 #include "core/SettingManager.hpp"
 #include "core/UpdateVisibility.hpp"
 #include "events/PlaytestEvent.hpp"
-#include "util/Utils.hpp"
+#include "util/Editor.hpp"
 
 #include <Geode/modify/GJBaseGameLayer.hpp>
 #include <Geode/modify/LevelEditorLayer.hpp>
