@@ -15,7 +15,7 @@ void addHookForSetting(
     getHooks()[setting].push_back(hook);
 }
 
-$execute {
+$on_game(Loaded) {
     for (const auto& [key, hooks] : getHooks()) {
         if (Mod::get()->getSettingValue<bool>(key)) continue;
 
