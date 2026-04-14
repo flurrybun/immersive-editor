@@ -1,5 +1,6 @@
-#include "core/SettingManager.hpp"
 #include "ShowGlitter.hpp"
+#include "core/SettingManager.hpp"
+#include "events/PlaytestEvent.hpp"
 
 #include <Geode/modify/LevelEditorLayer.hpp>
 #include <Geode/utils/VMTHookManager.hpp>
@@ -11,6 +12,7 @@ $bind_setting(g_showGlitter, "show-glitter");
 
 class $modify(SGLevelEditorLayer, LevelEditorLayer) {
     struct Fields {
+        ListenerHandle playtestListener;
         bool glitterVisible = false;
         bool bgEffectEnabled = true;
     };
@@ -24,6 +26,10 @@ class $modify(SGLevelEditorLayer, LevelEditorLayer) {
         auto hook = VMTHookManager::get().addHook<
             ResolveC<SGLevelEditorLayer>::func(&SGLevelEditorLayer::toggleGlitter)
         >(this, "LevelEditorLayer::toggleGlitter");
+
+        m_fields->playtestListener = PlaytestEvent().listen([this](PlaytestMode mode) {
+            m_glitterParticles->setVisible(!mode.isNot());
+        });
 
         m_glitterParticles = CCParticleSystemQuad::create("glitterEffect.plist", false);
 
