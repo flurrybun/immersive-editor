@@ -13,9 +13,9 @@ $on_enable("better-duration-lines") {
     // ⏺️ lower duration line opacity when on a different layer
     LevelEditorLayer* lel = ctx.m_lel;
 
-    DrawGridAPI::get().getNode<DurationLines>("duration-lines").inspect([&](DurationLines& lines) {
-        lines.setPropertiesForObject([&](LineColor& color, EffectGameObject* object, float& lineWidth) {
-            if (!g_betterDurationLines || !object || !lel) return;
+    DrawGridAPI::get().getNode<DurationLines>("duration-lines").inspect([lel](DurationLines& lines) {
+        lines.setPropertiesForObject([lel](LineColor& color, EffectGameObject* object, float& lineWidth) {
+            if (!g_betterDurationLines || !object) return;
 
             GLubyte lineOpacity = ie::isObjectLayerVisible(object, lel) ? 115 : 23;
             color = LineColor(255, 255, 255, lineOpacity);
