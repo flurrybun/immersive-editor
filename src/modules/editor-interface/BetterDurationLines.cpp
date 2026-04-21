@@ -7,24 +7,18 @@
 
 using namespace geode::prelude;
 
-class $modify(LevelEditorLayer) {
-    $register_hooks("better-duration-lines");
+$bind_setting(g_betterDurationLines, "better-duration-lines");
 
-    $override
-    bool init(GJGameLevel* p0, bool p1) {
-        // ⏺️ lower duration line opacity when on a different layer
+$on_enable("better-duration-lines") {
+    // ⏺️ lower duration line opacity when on a different layer
+    LevelEditorLayer* lel = ctx.m_lel;
 
-        if (!LevelEditorLayer::init(p0, p1)) return false;
+    DrawGridAPI::get().getNode<DurationLines>("duration-lines").inspect([&](DurationLines& lines) {
+        lines.setPropertiesForObject([&](LineColor& color, EffectGameObject* object, float& lineWidth) {
+            if (!g_betterDurationLines || !object || !lel) return;
 
-        DrawGridAPI::get().getNode<DurationLines>("duration-lines").inspect([&](DurationLines& lines) {
-            lines.setPropertiesForObject([&](LineColor& color, EffectGameObject* object, float& lineWidth) {
-                if (this != LevelEditorLayer::get()) return;
-
-                GLubyte lineOpacity = ie::isObjectLayerVisible(object, this) ? 115 : 23;
-                color = LineColor(255, 255, 255, lineOpacity);
-            });
+            GLubyte lineOpacity = ie::isObjectLayerVisible(object, lel) ? 115 : 23;
+            color = LineColor(255, 255, 255, lineOpacity);
         });
-
-        return true;
-    }
-};
+    });
+}

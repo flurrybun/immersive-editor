@@ -31,40 +31,7 @@ class $modify(GJBaseGameLayer) {
 };
 
 class $modify(SMELevelEditorLayer, LevelEditorLayer) {
-    struct Fields {
-        ListenerHandle playtestListener;
-    };
-
     $register_hooks("show-mirror-effect");
-
-    $override
-    bool init(GJGameLevel* p0, bool p1) {
-        if (!LevelEditorLayer::init(p0, p1)) return false;
-
-        m_fields->playtestListener = PlaytestEvent().listen([this](PlaytestMode mode) {
-            if (mode.isPlaying()) {
-                if (
-                    m_startPosObject &&
-                    m_startPosObject->m_startSettings &&
-                    m_startPosObject->m_startSettings->m_mirrorMode
-                ) {
-                    m_gameState.m_levelFlipping = 1.f;
-                }
-            } else {
-                m_gameState.m_levelFlipping = 0.f;
-                m_gameState.m_unkBool11 = false;
-                m_gameState.m_unkBool12 = false;
-            }
-
-            if (mode.isNot()) {
-                auto& flipTween = m_gameState.m_tweenActions[7];
-                flipTween.m_currentValue = 0.f;
-                flipTween.m_finished = true;
-            }
-        });
-
-        return true;
-    }
 
     $override
     void postUpdate(float dt) {
@@ -157,6 +124,30 @@ class $modify(PlayerObject) {
     }
 };
 #endif
+
+$on_enable("show-mirror-effect") {
+    ctx.addEventListener(PlaytestEvent(), [lel = ctx.m_lel](PlaytestMode mode) {
+        if (mode.isPlaying()) {
+            if (
+                lel->m_startPosObject &&
+                lel->m_startPosObject->m_startSettings &&
+                lel->m_startPosObject->m_startSettings->m_mirrorMode
+            ) {
+                lel->m_gameState.m_levelFlipping = 1.f;
+            }
+        } else {
+            lel->m_gameState.m_levelFlipping = 0.f;
+            lel->m_gameState.m_unkBool11 = false;
+            lel->m_gameState.m_unkBool12 = false;
+        }
+
+        if (mode.isNot()) {
+            auto& flipTween = lel->m_gameState.m_tweenActions[7];
+            flipTween.m_currentValue = 0.f;
+            flipTween.m_finished = true;
+        }
+    });
+}
 
 bool ie::preUpdateMirrorEffect(LevelEditorLayer* lel) {
     if (!g_showMirrorEffect) return false;

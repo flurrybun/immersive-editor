@@ -68,23 +68,6 @@ class $modify(EffectGameObject) {
 class $modify(ATLevelEditorLayer, LevelEditorLayer) {
     $register_hooks("activate-triggers");
 
-    $override
-    bool init(GJGameLevel* p0, bool p1) {
-        // ⏺️ show hide ground/mg options in option triggers
-
-        if (!LevelEditorLayer::init(p0, p1)) return false;
-
-        (void)VMTHookManager::get().addHook<
-            ResolveC<ATLevelEditorLayer>::func(&ATLevelEditorLayer::toggleGroundVisibility)
-        >(this, "LevelEditorLayer::toggleGroundVisibility");
-
-        (void)VMTHookManager::get().addHook<
-            ResolveC<ATLevelEditorLayer>::func(&ATLevelEditorLayer::toggleMGVisibility)
-        >(this, "LevelEditorLayer::toggleMGVisibility");
-
-        return true;
-    }
-
     void toggleGroundVisibility(bool visible) {
         m_groundLayer->toggleVisible02(visible);
         m_groundLayer2->toggleVisible02(visible);
@@ -95,3 +78,15 @@ class $modify(ATLevelEditorLayer, LevelEditorLayer) {
         m_middleground->toggleVisible02(visible);
     }
 };
+
+$on_enable("activate-triggers") {
+    LevelEditorLayer* lel = ctx.m_lel;
+
+    ctx.addVirtualHook<
+        ResolveC<ATLevelEditorLayer>::func(&ATLevelEditorLayer::toggleGroundVisibility)
+    >(lel, "LevelEditorLayer::toggleGroundVisibility");
+
+    ctx.addVirtualHook<
+        ResolveC<ATLevelEditorLayer>::func(&ATLevelEditorLayer::toggleMGVisibility)
+    >(lel, "LevelEditorLayer::toggleMGVisibility");
+}

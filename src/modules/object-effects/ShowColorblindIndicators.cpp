@@ -1,25 +1,27 @@
 #include "core/SettingManager.hpp"
 #include "events/ObjectEvent.hpp"
-
-#include <Geode/modify/LevelEditorLayer.hpp>
+#include "util/ObjectIDs.hpp"
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
 
-class $modify(LevelEditorLayer) {
-    struct Fields {
-        ListenerHandle objectListener;
-    };
+$on_enable("show-colorblind-indicators") {
+    ctx.addEventListener(ObjectEvent(), [lel = ctx.m_lel](GameObject* object, bool created) {
+        if (created) lel->addGuideArt(object);
+    });
+}
 
-    $register_hooks("show-colorblind-indicators");
+$on_disable("show-colorblind-indicators") {
+    for (const auto& object : CCArrayExt<GameObject*>(ctx.m_lel->m_objects)) {
+        if (!ie::object::isPortal(object) && !ie::object::isOrb(object)) continue;
+        if (!object->m_hasCustomChild) continue;
 
-    bool init(GJGameLevel* p0, bool p1) {
-        if (!LevelEditorLayer::init(p0, p1)) return false;
+        CCNode* child = object->getChildByTag(100);
+        if (!child) child = object->getChildByTag(101);
 
-        m_fields->objectListener = ObjectEvent().listen([this](GameObject* object, bool created) {
-            if (created) addGuideArt(object);
-        });
+        if (!child) continue;
 
-        return true;
+        child->removeFromParent();
+        object->m_hasCustomChild = false;
     }
-};
+}

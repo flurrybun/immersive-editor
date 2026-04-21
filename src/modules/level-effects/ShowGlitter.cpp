@@ -20,33 +20,6 @@ class $modify(SGLevelEditorLayer, LevelEditorLayer) {
     $register_hooks("show-glitter");
 
     $override
-    bool init(GJGameLevel* p0, bool p1) {
-        if (!LevelEditorLayer::init(p0, p1)) return false;
-
-        auto hook = VMTHookManager::get().addHook<
-            ResolveC<SGLevelEditorLayer>::func(&SGLevelEditorLayer::toggleGlitter)
-        >(this, "LevelEditorLayer::toggleGlitter");
-
-        m_fields->playtestListener = PlaytestEvent().listen([this](PlaytestMode mode) {
-            m_glitterParticles->setVisible(!mode.isNot());
-        });
-
-        m_glitterParticles = CCParticleSystemQuad::create("glitterEffect.plist", false);
-
-        m_objectLayer->addChild(m_glitterParticles);
-        m_glitterParticles->setVisible(false);
-        m_glitterParticles->stopSystem();
-
-        ccColor4F color = to4F(to4B(m_player1->m_playerColor1));
-        m_glitterParticles->setStartColor(color);
-        m_glitterParticles->setEndColor(color);
-
-        m_glitterParticles->setPositionType(kCCPositionTypeRelative);
-
-        return true;
-    }
-
-    $override
     void toggleGlitter(bool visible) {
         if (GameManager::get()->m_performanceMode) return;
 
@@ -69,6 +42,39 @@ class $modify(SGLevelEditorLayer, LevelEditorLayer) {
         m_glitterParticles->setPosition(cameraCenter + m_gameState.m_cameraPosition);
     }
 };
+
+$on_enable("show-glitter") {
+    LevelEditorLayer* lel = ctx.m_lel;
+
+    ctx.addVirtualHook<
+        ResolveC<SGLevelEditorLayer>::func(&SGLevelEditorLayer::toggleGlitter)
+    >(lel, "LevelEditorLayer::toggleGlitter");
+
+    ctx.addEventListener(PlaytestEvent(), [lel](PlaytestMode mode) {
+        lel->m_glitterParticles->setVisible(!mode.isNot());
+    });
+
+    lel->m_glitterParticles = CCParticleSystemQuad::create("glitterEffect.plist", false);
+
+    lel->m_objectLayer->addChild(lel->m_glitterParticles);
+    lel->m_glitterParticles->setVisible(false);
+    lel->m_glitterParticles->stopSystem();
+
+    ccColor4F color = to4F(to4B(lel->m_player1->m_playerColor1));
+    lel->m_glitterParticles->setStartColor(color);
+    lel->m_glitterParticles->setEndColor(color);
+
+    lel->m_glitterParticles->setPositionType(kCCPositionTypeRelative);
+}
+
+$on_disable("show-glitter") {
+    LevelEditorLayer* lel = ctx.m_lel;
+
+    if (lel->m_glitterParticles) {
+        lel->m_glitterParticles->removeFromParent();
+        lel->m_glitterParticles = nullptr;
+    }
+}
 
 void toggleBGEffectVisibility(bool visible) {
     if (!g_showGlitter) return;

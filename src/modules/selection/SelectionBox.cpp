@@ -1,5 +1,6 @@
 #include "Selection.hpp"
 #include "events/ObjectEvent.hpp"
+#include "core/SettingManager.hpp"
 
 #include <Geode/modify/LevelEditorLayer.hpp>
 
@@ -41,23 +42,19 @@ struct CachedSelectionBox {
 
 class $modify(SBLevelEditorLayer, LevelEditorLayer) {
     struct Fields {
-        ListenerHandle objectListener;
         std::unordered_map<GameObject*, CachedSelectionBox> selectionBoxCache;
     };
-
-    $override
-    bool init(GJGameLevel* p0, bool p1) {
-        if (!LevelEditorLayer::init(p0, p1)) return false;
-
-        m_fields->objectListener = ObjectEvent().listen([this](GameObject* object, bool created) {
-            if (!created) {
-                m_fields->selectionBoxCache.erase(object);
-            }
-        });
-
-        return true;
-    }
 };
+
+$on_enable("select-preview") {
+    auto lel = static_cast<SBLevelEditorLayer*>(ctx.m_lel);
+
+    ctx.addEventListener(ObjectEvent(), [lel](GameObject* object, bool created) {
+        if (!created) {
+            lel->m_fields->selectionBoxCache.erase(object);
+        }
+    });
+}
 
 std::unordered_map<GameObject*, CachedSelectionBox>& getSelectionBoxCache(LevelEditorLayer* lel) {
     return static_cast<SBLevelEditorLayer*>(lel)->m_fields->selectionBoxCache;

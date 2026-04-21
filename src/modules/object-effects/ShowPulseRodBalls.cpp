@@ -10,8 +10,6 @@
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
 
-$bind_setting(g_showPulseRodBalls, "show-pulse-rod-balls");
-
 // pulse rod balls are a special object (id 37) with the rod's properties duplicated over, but this method
 // wouldn't work in the editor. instead, each rod gets a ball sprite that follows its pos/rot/scale/color/opacity
 
@@ -64,25 +62,6 @@ class $modify(SPRBLevelEditorLayer, LevelEditorLayer) {
     $register_hooks("show-pulse-rod-balls");
 
     $override
-    bool init(GJGameLevel* p0, bool p1) {
-        if (!LevelEditorLayer::init(p0, p1)) return false;
-
-        generateRodIndex();
-
-        m_fields->objectListener = ObjectEvent().listen([this](GameObject* object, bool created) {
-            if (!ie::object::isPulseRod(object)) return;
-
-            if (created) {
-                addPulseRodBall(static_cast<PulseRodGameObject*>(object));
-            } else {
-                removePulseRodBall(static_cast<PulseRodGameObject*>(object));
-            }
-        });
-
-        return true;
-    }
-
-    $override
     void onPlaytest() {
         LevelEditorLayer::onPlaytest();
 
@@ -118,22 +97,38 @@ class $modify(SPRBLevelEditorLayer, LevelEditorLayer) {
     }
 };
 
+$on_enable("show-pulse-rod-balls") {
+    auto lel = static_cast<SPRBLevelEditorLayer*>(ctx.m_lel);
+
+    lel->generateRodIndex();
+
+    ctx.addEventListener(ObjectEvent(), [lel](GameObject* object, bool created) {
+        if (!ie::object::isPulseRod(object)) return;
+
+        if (created) {
+            lel->addPulseRodBall(static_cast<PulseRodGameObject*>(object));
+        } else {
+            lel->removePulseRodBall(static_cast<PulseRodGameObject*>(object));
+        }
+    });
+}
+
+$on_disable("show-pulse-rod-balls") {
+    auto lel = static_cast<SPRBLevelEditorLayer*>(ctx.m_lel);
+    auto& pulseRods = lel->m_fields->pulseRods;
+
+    for (const auto& rod : pulseRods) {
+        if (!rod->m_ball) continue;
+
+        rod->m_ball->removeFromParent();
+        rod->m_ball = nullptr;
+    }
+
+    pulseRods.clear();
+}
+
 void ie::updatePulseRodBalls(LevelEditorLayer* lel, float audioScale) {
     auto& pulseRods = static_cast<SPRBLevelEditorLayer*>(lel)->m_fields->pulseRods;
-
-    if (!g_showPulseRodBalls) {
-        if (pulseRods.empty()) return;
-
-        for (const auto& rod : pulseRods) {
-            if (rod->m_ball) {
-                rod->m_ball->removeFromParent();
-                rod->m_ball = nullptr;
-            }
-        }
-
-        pulseRods.clear();
-        return;
-    }
 
     if (audioScale == -1.f) audioScale = 1.f;
 

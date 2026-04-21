@@ -17,23 +17,6 @@ class $modify(SGELevelEditorLayer, LevelEditorLayer) {
 
     $register_hooks("show-gravity-effect");
 
-    $override
-    bool init(GJGameLevel* p0, bool p1) {
-        if (!LevelEditorLayer::init(p0, p1)) return false;
-
-        auto hook = VMTHookManager::get().addHook<
-            ResolveC<SGELevelEditorLayer>::func(&SGELevelEditorLayer::playGravityEffect)
-        >(this, "LevelEditorLayer::playGravityEffect");
-
-        m_fields->gravityEffects.reserve(4);
-
-        for (int i = 0; i < 4; i++) {
-            m_fields->gravityEffects.push_back(GravityEffectSprite::create());
-        }
-
-        return true;
-    }
-
     void playGravityEffect(bool upsideDown) {
         bool disabledGravityEffects = GameManager::get()->getGameVariable("0072");
         if (GameManager::get()->m_performanceMode || disabledGravityEffects) return;
@@ -109,3 +92,29 @@ class $modify(PlayerObject) {
         }
     }
 };
+
+$on_enable("show-gravity-effect") {
+    LevelEditorLayer* lel = ctx.m_lel;
+    auto& gravityEffects = static_cast<SGELevelEditorLayer*>(lel)->m_fields->gravityEffects;
+
+    ctx.addVirtualHook<
+        ResolveC<SGELevelEditorLayer>::func(&SGELevelEditorLayer::playGravityEffect)
+    >(lel, "LevelEditorLayer::playGravityEffect");
+
+    gravityEffects.reserve(4);
+
+    for (int i = 0; i < 4; i++) {
+        gravityEffects.push_back(GravityEffectSprite::create());
+    }
+}
+
+$on_disable("show-gravity-effect") {
+    LevelEditorLayer* lel = ctx.m_lel;
+    auto& gravityEffects = static_cast<SGELevelEditorLayer*>(lel)->m_fields->gravityEffects;
+
+    for (auto& effect : gravityEffects) {
+        effect->removeFromParent();
+    }
+
+    gravityEffects.clear();
+}

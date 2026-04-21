@@ -42,31 +42,27 @@ class $modify(HTGameObject, GameObject) {
     }
 };
 
-class $modify(LevelEditorLayer) {
-    struct Fields {
-        ListenerHandle playtestListener;
-    };
-
+class $modify(HTLevelEditorLayer, LevelEditorLayer) {
     $register_hooks("hide-triggers");
 
     $override
-    bool init(GJGameLevel* p0, bool p1) {
-        // ⏺️ hide triggers and other editor-only objects when playtesting
+    void updateDebugDraw() {
+        // ⏺️ hide guide trigger lines when playtesting
+        // ⏺️ hide keyframe lines when playtesting
+        // ⏺️ hide trigger boxes when playtesting
 
-        if (!LevelEditorLayer::init(p0, p1)) return false;
+        if (m_playbackMode != PlaybackMode::Playing) {
+            LevelEditorLayer::updateDebugDraw();
+            return;
+        }
 
-        m_fields->playtestListener = PlaytestEvent().listen([this](PlaytestMode mode) {
-            for (const auto& object : CCArrayExt<GameObject*>(m_objects)) {
-                if (showInPlaytest(object)) continue;
-
-                auto htObject = static_cast<HTGameObject*>(object);
-
-                if (mode.isPlaying()) htObject->lockVisibility();
-                else htObject->unlockVisibility();
-            }
+        ie::withTemporary({
+            { &m_cameraGuideTriggers, CCArray::create() },
+            { &m_keyframeGroups, CCDictionary::create() },
+            { &m_drawTriggerBoxes, false },
+        }, [&] {
+            LevelEditorLayer::updateDebugDraw();
         });
-
-        return true;
     }
 
     bool showInPlaytest(GameObject* object) {
@@ -94,24 +90,19 @@ class $modify(LevelEditorLayer) {
 
         return true;
     }
-
-    $override
-    void updateDebugDraw() {
-        // ⏺️ hide guide trigger lines when playtesting
-        // ⏺️ hide keyframe lines when playtesting
-        // ⏺️ hide trigger boxes when playtesting
-
-        if (m_playbackMode != PlaybackMode::Playing) {
-            LevelEditorLayer::updateDebugDraw();
-            return;
-        }
-
-        ie::withTemporary({
-            { &m_cameraGuideTriggers, CCArray::create() },
-            { &m_keyframeGroups, CCDictionary::create() },
-            { &m_drawTriggerBoxes, false },
-        }, [&] {
-            LevelEditorLayer::updateDebugDraw();
-        });
-    }
 };
+
+$on_enable("hide-triggers") {
+    auto lel = static_cast<HTLevelEditorLayer*>(ctx.m_lel);
+
+    ctx.addEventListener(PlaytestEvent(), [lel](PlaytestMode mode) {
+        for (const auto& object : CCArrayExt<GameObject*>(lel->m_objects)) {
+            if (lel->showInPlaytest(object)) continue;
+
+            auto htObject = static_cast<HTGameObject*>(object);
+
+            if (mode.isPlaying()) htObject->lockVisibility();
+            else htObject->unlockVisibility();
+        }
+    });
+}

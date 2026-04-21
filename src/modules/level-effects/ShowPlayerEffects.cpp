@@ -3,7 +3,6 @@
 #include "util/Temporary.hpp"
 
 #include <Geode/modify/PlayerObject.hpp>
-#include <Geode/modify/LevelEditorLayer.hpp>
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
@@ -126,19 +125,14 @@ class $modify(PlayerObject) {
     }
 };
 
-class $modify(LevelEditorLayer) {
-    $register_hooks("show-player-effects");
-
-    $override
-    bool init(GJGameLevel* p0, bool p1) {
-        // ⏺️ wave trail drag fix mod compatibility
-
-        if (!LevelEditorLayer::init(p0, p1)) return false;
-
-        if (auto mod = Loader::get()->getLoadedMod("nytelyte.wave_trail_drag_fix")) {
-            mod->setSavedValue("show-in-editor", true);
-        }
-
-        return true;
+$on_enable("show-player-effects") {
+    if (auto mod = Loader::get()->getLoadedMod("nytelyte.wave_trail_drag_fix")) {
+        mod->setSavedValue("show-in-editor", true);
     }
-};
+}
+
+$on_disable("show-player-effects") {
+    if (auto mod = Loader::get()->getLoadedMod("nytelyte.wave_trail_drag_fix")) {
+        mod->setSavedValue("show-in-editor", false);
+    }
+}

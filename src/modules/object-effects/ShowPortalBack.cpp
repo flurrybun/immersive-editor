@@ -8,35 +8,15 @@
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
 
-$bind_setting(g_showPortalBacks, "show-portal-backs");
-
 // portal backs are a special object (id 38) with the portal's properties duplicated over, but this method
 // wouldn't work in the editor. instead, each portal gets a back sprite that follows its pos/rot/scale/color/opacity
 
 class $modify(SPBLevelEditorLayer, LevelEditorLayer) {
     struct Fields {
-        ListenerHandle objectListener;
         std::unordered_map<WeakRef<GameObject>, Ref<CCSprite>> portalBacks;
     };
 
     $register_hooks("show-portal-backs");
-
-    $override
-    bool init(GJGameLevel* p0, bool p1) {
-        if (!LevelEditorLayer::init(p0, p1)) return false;
-
-        m_fields->objectListener = ObjectEvent().listen([this](GameObject* object, bool created) {
-            if (!ie::object::isPortal(object)) return;
-
-            if (created) {
-                addPortalBack(object);
-            } else {
-                removePortalBack(object);
-            }
-        });
-
-        return true;
-    }
 
     void addPortalBack(GameObject* object) {
         auto back = CCSprite::createWithSpriteFrameName(getPortalBackFrameName(object->m_objectID));
@@ -102,19 +82,33 @@ class $modify(SPBLevelEditorLayer, LevelEditorLayer) {
     }
 };
 
+$on_enable("show-portal-backs") {
+    auto lel = static_cast<SPBLevelEditorLayer*>(ctx.m_lel);
+
+    ctx.addEventListener(ObjectEvent(), [lel](GameObject* object, bool created) {
+        if (!ie::object::isPortal(object)) return;
+
+        if (created) {
+            lel->addPortalBack(object);
+        } else {
+            lel->removePortalBack(object);
+        }
+    });
+}
+
+$on_disable("show-portal-backs") {
+    auto lel = static_cast<SPBLevelEditorLayer*>(ctx.m_lel);
+    auto& portalBacks = lel->m_fields->portalBacks;
+
+    for (auto& [_, back] : portalBacks) {
+        back->removeFromParent();
+    }
+
+    portalBacks.clear();
+}
+
 void ie::updatePortalBacks(LevelEditorLayer* lel) {
     auto& portalBacks = static_cast<SPBLevelEditorLayer*>(lel)->m_fields->portalBacks;
-
-    if (!g_showPortalBacks) {
-        if (portalBacks.empty()) return;
-
-        for (auto& [_, back] : portalBacks) {
-            back->removeFromParent();
-        }
-
-        portalBacks.clear();
-        return;
-    }
 
     for (auto it = portalBacks.begin(); it != portalBacks.end(); ) {
         GameObject* portal = it->first.lock();

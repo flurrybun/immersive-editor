@@ -15,7 +15,6 @@ class $modify(ASLevelEditorLayer, LevelEditorLayer) {
     $register_hooks("audio-scale");
 
     struct Fields {
-        ListenerHandle playtestListener;
         int prevAudioTrack = -1;
         int prevSongID = -1;
 
@@ -23,22 +22,6 @@ class $modify(ASLevelEditorLayer, LevelEditorLayer) {
             FMODAudioEngine::get()->disableMetering();
         }
     };
-
-    $override
-    bool init(GJGameLevel* p0, bool p1) {
-        if (!LevelEditorLayer::init(p0, p1)) return false;
-
-        FMODAudioEngine::get()->enableMetering();
-        m_fields.self(); // ensure fields dtor is called
-
-        m_fields->playtestListener = PlaytestEvent().listen([this](PlaytestMode mode) {
-            if (!mode.isPlaying()) {
-                resetAudioScale();
-            }
-        });
-
-        return true;
-    }
 
     $override
     void levelSettingsUpdated() {
@@ -137,6 +120,19 @@ class $modify(EditorUI) {
         static_cast<ASLevelEditorLayer*>(m_editorLayer)->resetAudioScale();
     }
 };
+
+$on_enable("audio-scale") {
+    auto lel = static_cast<ASLevelEditorLayer*>(ctx.m_lel);
+
+    FMODAudioEngine::get()->enableMetering();
+    lel->m_fields.self(); // ensure fields dtor is called
+
+    ctx.addEventListener(PlaytestEvent(), [lel](PlaytestMode mode) {
+        if (!mode.isPlaying()) {
+            lel->resetAudioScale();
+        }
+    });
+}
 
 float ie::preUpdateAudioScale(LevelEditorLayer* lel, float dt) {
     if (!g_audioScale) return -1.f;
