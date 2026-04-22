@@ -6,7 +6,13 @@
 using namespace geode::prelude;
 
 $on_enable("show-colorblind-indicators") {
-    ctx.addEventListener(ObjectEvent(), [lel = ctx.m_lel](GameObject* object, bool created) {
+    LevelEditorLayer* lel = ctx.m_lel;
+
+    for (const auto& object : CCArrayExt<GameObject*>(lel->m_objects)) {
+        lel->addGuideArt(object);
+    }
+
+    ctx.addEventListener(ObjectEvent(), [lel](GameObject* object, bool created) {
         if (created) lel->addGuideArt(object);
     });
 }
@@ -16,12 +22,11 @@ $on_disable("show-colorblind-indicators") {
         if (!ie::object::isPortal(object) && !ie::object::isOrb(object)) continue;
         if (!object->m_hasCustomChild) continue;
 
-        CCNode* child = object->getChildByTag(100);
-        if (!child) child = object->getChildByTag(101);
+        for (const auto& child : object->getChildrenExt()) {
+            if (child->getZOrder() != 100 && child->getZOrder() != 101) continue;
 
-        if (!child) continue;
-
-        child->removeFromParent();
-        object->m_hasCustomChild = false;
+            child->removeFromParent();
+            object->m_hasCustomChild = false;
+        }
     }
 }
