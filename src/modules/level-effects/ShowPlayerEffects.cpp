@@ -3,26 +3,13 @@
 #include "util/Temporary.hpp"
 
 #include <Geode/modify/PlayerObject.hpp>
+#include <Geode/modify/GJBaseGameLayer.hpp>
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
 
 class $modify(PlayerObject) {
     $register_hooks("show-player-effects");
-
-    $override
-    bool init(int player, int ship, GJBaseGameLayer* gameLayer, CCLayer* layer, bool playLayer) {
-        // ⏺️ player particles
-        // ⏺️ hard streak
-
-        if (!PlayerObject::init(player, ship, gameLayer, layer, playLayer)) return false;
-
-        if (ie::inEditor()) {
-            addAllParticles();
-        }
-
-        return true;
-    }
 
     $override
     void flipGravity(bool p0, bool p1) {
@@ -125,14 +112,67 @@ class $modify(PlayerObject) {
     }
 };
 
+class $modify(SPEGJBaseGameLayer, GJBaseGameLayer) {
+    $register_hooks("show-player-effects");
+
+    $override
+    void toggleDualMode(GameObject* object, bool dual, PlayerObject* player, bool noEffects) {
+        // ⏺️ add player 2 particles
+
+        bool changed = m_gameState.m_isDualMode != dual;
+
+        GJBaseGameLayer::toggleDualMode(object, dual, player, noEffects);
+
+        if (!changed || !m_gameState.m_isDualMode || !ie::inEditor()) return;
+
+        toggleAllParticles(m_player2, true);
+    }
+
+    void toggleAllParticles(PlayerObject* player, bool show) {
+        // decomp of PlayerObject::addAllParticles but toggles instead of just adding
+
+        toggleParticle(player, show, player->m_playerGroundParticles, 39);
+        toggleParticle(player, show, player->m_ufoClickParticles, 39);
+        toggleParticle(player, show, player->m_dashParticles, 39);
+        toggleParticle(player, show, player->m_robotBurstParticles, 39);
+        toggleParticle(player, show, player->m_trailingParticles, 39);
+        toggleParticle(player, show, player->m_shipClickParticles, 39);
+
+        toggleParticle(player, show, player->m_vehicleGroundParticles, 61);
+        toggleParticle(player, show, player->m_landParticles0, 61);
+        toggleParticle(player, show, player->m_landParticles1, 61);
+
+        toggleParticle(player, show, player->m_swingBurstParticles1, 39);
+        toggleParticle(player, show, player->m_swingBurstParticles2, 39);
+    }
+
+    void toggleParticle(PlayerObject* player, bool show, CCParticleSystemQuad* particle, int zOrder) {
+        if (show) {
+            player->m_parentLayer->addChild(particle, zOrder);
+        } else {
+            particle->removeFromParent();
+        }
+    }
+};
+
 $on_enable("show-player-effects") {
     if (auto mod = Loader::get()->getLoadedMod("nytelyte.wave_trail_drag_fix")) {
         mod->setSavedValue("show-in-editor", true);
     }
+
+    auto bgl = modify_cast<SPEGJBaseGameLayer*>(ctx.m_lel);
+
+    bgl->toggleAllParticles(bgl->m_player1, true);
+    bgl->toggleAllParticles(bgl->m_player2, true);
 }
 
 $on_disable("show-player-effects") {
     if (auto mod = Loader::get()->getLoadedMod("nytelyte.wave_trail_drag_fix")) {
         mod->setSavedValue("show-in-editor", false);
     }
+
+    auto bgl = modify_cast<SPEGJBaseGameLayer*>(ctx.m_lel);
+
+    bgl->toggleAllParticles(bgl->m_player1, false);
+    bgl->toggleAllParticles(bgl->m_player2, false);
 }
