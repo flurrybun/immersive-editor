@@ -71,20 +71,39 @@ namespace ie {
     void addHookForSetting(const std::string& setting, const std::shared_ptr<geode::Hook>& hook);
 }
 
-#define $bind_setting(name, setting) \
-    static bool name = false; \
-    $on_mod(DataLoaded) { \
-        name = geode::Mod::get()->getSettingValue<bool>(setting); \
-        listenForSettingChanges<bool>(setting, [](bool value) { \
-            name = value; \
-        }); \
-    }
-
 #define $register_hooks(setting) \
     static void onModify(const auto& self) { \
         for (const auto& [key, hook] : self.m_hooks) { \
             ie::addHookForSetting(setting, hook); \
         } \
+    }
+
+#define $bind_setting(name, setting) \
+    static bool name = false; \
+    $on_mod(DataLoaded) { \
+        name = geode::Mod::get()->getSettingValue<bool>(setting); \
+        geode::listenForSettingChanges<bool>(setting, [](bool value) { \
+            name = value; \
+        }); \
+    }
+
+template<typename T>
+auto deduceEnumType(const geode::utils::StringMap<T>& map) {
+    return map;
+}
+
+#define $bind_enum_setting(name, setting, type, default_value, ...) \
+    static type name; \
+    $on_mod(DataLoaded) { \
+        static const geode::utils::StringMap<type> _map = __VA_ARGS__; \
+        auto _convert = [](const std::string& value) { \
+            auto it = _map.find(value); \
+            return it != _map.end() ? it->second : default_value; \
+        }; \
+        name = _convert(geode::Mod::get()->getSettingValue<std::string>(setting)); \
+        geode::listenForSettingChanges<std::string>(setting, [&](std::string value) { \
+            name = _convert(value); \
+        }); \
     }
 
 // mostly stolen from geode's $execute macro

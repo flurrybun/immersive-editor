@@ -9,7 +9,18 @@
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
 
+enum class InvisStyle {
+    Balanced,
+    InGame,
+    NoFade
+};
+
 $bind_setting(g_showGlow, "show-glow");
+$bind_enum_setting(g_invisStyle, "invisible-block-style", InvisStyle, InvisStyle::Balanced, {
+    { "Balanced", InvisStyle::Balanced },
+    { "In-Game", InvisStyle::InGame },
+    { "No Fade", InvisStyle::NoFade }
+});
 
 class $modify(GameObject) {
     $register_hooks("show-glow");
@@ -102,8 +113,7 @@ std::optional<ccColor3B> getSpecialGlowColor(LevelEditorLayer* lel, GameObject* 
 void updateInvisibleBlock(LevelEditorLayer* lel, GameObject* object, const ie::GlowContext& context) {
     if (!object->m_isInvisibleBlock || !lel->m_previewMode) return;
 
-    std::string style = Mod::get()->getSettingValue<std::string>("invisible-block-style");
-    bool isInGame = lel->m_playbackMode == PlaybackMode::Playing || style == "In-Game";
+    bool isInGame = lel->m_playbackMode == PlaybackMode::Playing || g_invisStyle == InvisStyle::InGame;
 
     float layerOpacity = ie::isObjectLayerVisible(object, lel) ? 1.f : 0.2f;
 
@@ -118,7 +128,7 @@ void updateInvisibleBlock(LevelEditorLayer* lel, GameObject* object, const ie::G
     float leftFadeWidth = context.leftFadeWidth;
     float rightFadeWidth = context.rightFadeWidth;
 
-    if (style == "No Fade") {
+    if (g_invisStyle == InvisStyle::NoFade) {
         object->setOpacity(layerOpacity * 255.f);
         object->setGlowColor(GJEffectManager::getMixedColor(lel->m_lightBGColor, lbgColor, 0.9f));
         return;
