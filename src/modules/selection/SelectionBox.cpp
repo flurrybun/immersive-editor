@@ -1,5 +1,4 @@
 #include "Selection.hpp"
-#include "events/ObjectEvent.hpp"
 #include "core/SettingManager.hpp"
 
 #include <Geode/modify/LevelEditorLayer.hpp>
@@ -49,7 +48,7 @@ class $modify(SBLevelEditorLayer, LevelEditorLayer) {
 $on_enable("select-preview") {
     auto lel = static_cast<SBLevelEditorLayer*>(ctx.m_lel);
 
-    ctx.addEventListener(ObjectEvent(), [lel](GameObject* object, bool created) {
+    ctx.onObjectEvent([lel](GameObject* object, bool created) {
         if (!created) {
             lel->m_fields->selectionBoxCache.erase(object);
         }
@@ -244,16 +243,6 @@ ie::SelectionBox::SelectionBox(CCAffineTransform transform, CCSize halfSize) {
         scaleY > 0 ? std::max(m_halfSize.height, FUZZY_RADIUS / scaleY) : m_halfSize.height
     );
 }
-
-// void ie::SelectionBox::computeFuzzySize() {
-//     float scaleX = std::sqrt(m_transform.a * m_transform.a + m_transform.b * m_transform.b);
-//     float scaleY = std::sqrt(m_transform.c * m_transform.c + m_transform.d * m_transform.d);
-
-//     m_fuzzyHalfSize = CCSize(
-//         scaleX > 0 ? std::max(m_halfSize.width, FUZZY_RADIUS / scaleX) : m_halfSize.width,
-//         scaleY > 0 ? std::max(m_halfSize.height, FUZZY_RADIUS / scaleY) : m_halfSize.height
-//     );
-// }
 
 const CCSize& ie::SelectionBox::getHalfSize(bool fuzzy) const {
     return fuzzy ? m_fuzzyHalfSize : m_halfSize;

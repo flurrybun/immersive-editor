@@ -1,11 +1,14 @@
 #pragma once
 
+#include <Geode/binding/GameObject.hpp>
 #include <Geode/loader/Hook.hpp>
 #include <Geode/utils/VMTHookManager.hpp>
 
 namespace ie {
     class ModuleContext {
         std::string m_name;
+        bool m_isEditorInit;
+
         geode::ListenerHandle m_disableListener;
 
         std::vector<geode::ListenerHandle*> m_listeners;
@@ -14,7 +17,7 @@ namespace ie {
     public:
         LevelEditorLayer* const m_lel;
 
-        ModuleContext(LevelEditorLayer* lel, std::string name);
+        ModuleContext(LevelEditorLayer* lel, std::string name, bool isEditorInit);
 
         ModuleContext(const ModuleContext&) = delete;
         ModuleContext& operator=(const ModuleContext&) = delete;
@@ -24,6 +27,9 @@ namespace ie {
             geode::ListenerHandle* listener = m_lel->addEventListener(event, std::forward<Callback>(callback));
             m_listeners.push_back(listener);
         }
+
+        void onObjectEvent(geode::CopyableFunction<void(GameObject*, bool)> callback);
+
         template <auto Function, class Class>
         void addVirtualHook(Class* instance, const std::string& name) {
             auto it = m_toggleVirtuals.find(name);

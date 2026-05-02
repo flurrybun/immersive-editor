@@ -1,6 +1,5 @@
 #include "core/SettingManager.hpp"
 #include "core/UpdateVisibility.hpp"
-#include "events/ObjectEvent.hpp"
 #include "util/Editor.hpp"
 #include "util/ObjectIDs.hpp"
 
@@ -102,7 +101,7 @@ $on_enable("show-pulse-rod-balls") {
 
     lel->generateRodIndex();
 
-    ctx.addEventListener(ObjectEvent(), [lel](GameObject* object, bool created) {
+    ctx.onObjectEvent([lel](GameObject* object, bool created) {
         if (!ie::object::isPulseRod(object)) return;
 
         if (created) {

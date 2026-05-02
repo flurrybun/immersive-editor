@@ -1,5 +1,4 @@
 #include "core/SettingManager.hpp"
-#include "events/ObjectEvent.hpp"
 #include "util/ObjectIDs.hpp"
 
 #include <Geode/Geode.hpp>
@@ -8,11 +7,7 @@ using namespace geode::prelude;
 $on_enable("show-colorblind-indicators") {
     LevelEditorLayer* lel = ctx.m_lel;
 
-    for (const auto& object : CCArrayExt<GameObject*>(lel->m_objects)) {
-        lel->addGuideArt(object);
-    }
-
-    ctx.addEventListener(ObjectEvent(), [lel](GameObject* object, bool created) {
+    ctx.onObjectEvent([lel](GameObject* object, bool created) {
         if (created) lel->addGuideArt(object);
     });
 }

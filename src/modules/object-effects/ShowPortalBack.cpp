@@ -1,6 +1,5 @@
 #include "core/SettingManager.hpp"
 #include "core/UpdateVisibility.hpp"
-#include "events/ObjectEvent.hpp"
 #include "util/ObjectIDs.hpp"
 
 #include <Geode/modify/LevelEditorLayer.hpp>
@@ -85,7 +84,7 @@ class $modify(SPBLevelEditorLayer, LevelEditorLayer) {
 $on_enable("show-portal-backs") {
     auto lel = static_cast<SPBLevelEditorLayer*>(ctx.m_lel);
 
-    ctx.addEventListener(ObjectEvent(), [lel](GameObject* object, bool created) {
+    ctx.onObjectEvent([lel](GameObject* object, bool created) {
         if (!ie::object::isPortal(object)) return;
 
         if (created) {

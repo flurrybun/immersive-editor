@@ -1,12 +1,14 @@
 #include "SettingManager.hpp"
+#include "events/ObjectEvent.hpp"
 
 #include <Geode/modify/LevelEditorLayer.hpp>
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
 
-ie::ModuleContext::ModuleContext(LevelEditorLayer* lel, std::string name)
-    : m_lel(lel), m_name(std::move(name)) {
+ie::ModuleContext::ModuleContext(LevelEditorLayer* lel, std::string name, bool isEditorInit)
+    : m_lel(lel), m_name(std::move(name)), m_isEditorInit(isEditorInit)
+{
     m_disableListener = DisableModuleEvent(m_name).listen([this](ie::ModuleContext&) {
         for (auto listener : m_listeners) {
             m_lel->removeEventListener(listener);
@@ -20,10 +22,23 @@ ie::ModuleContext::ModuleContext(LevelEditorLayer* lel, std::string name)
     });
 }
 
+void ie::ModuleContext::onObjectEvent(geode::CopyableFunction<void(GameObject*, bool)> callback) {
+    if (!m_isEditorInit) {
+        for (auto obj : CCArrayExt<GameObject>(m_lel->m_objects)) {
+            callback(obj, true);
+        }
+    }
+
+    geode::ListenerHandle* listener = m_lel->addEventListener(
+        ObjectEvent(), std::move(callback)
+    );
+    m_listeners.push_back(listener);
+}
+
 static StringMap<ie::ModuleContext> g_contexts;
 
-void addContextForSetting(const std::string& setting, LevelEditorLayer* lel) {
-    auto [ctx, _] = g_contexts.try_emplace(setting, lel, setting);
+void addContextForSetting(const std::string& setting, LevelEditorLayer* lel, bool isEditorInit) {
+    auto [ctx, _] = g_contexts.try_emplace(setting, lel, setting, isEditorInit);
     ie::EnableModuleEvent(setting).send(ctx->second);
 }
 
@@ -52,7 +67,7 @@ class $modify(LevelEditorLayer) {
         for (const auto& key : Mod::get()->getSettingKeys()) {
             if (!Mod::get()->getSettingValue<bool>(key)) continue;
 
-            addContextForSetting(key, this);
+            addContextForSetting(key, this, true);
         }
 
         return true;
@@ -89,7 +104,7 @@ $on_game(Loaded) {
         auto& hooks = getHooks();
 
         if (auto lel = LevelEditorLayer::get()) {
-            if (enable) addContextForSetting(key, lel);
+            if (enable) addContextForSetting(key, lel, false);
             else removeContextForSetting(key);
         }
 
