@@ -37,6 +37,7 @@ namespace ie::object {
     GAME_OBJECT(BubbleParticle, 1700);
     GAME_OBJECT(CustomParticle, 2065);
 
+    GAME_OBJECT(StartPos, 31);
     GAME_OBJECT(EnableGhostTrailTrigger, 32);
     GAME_OBJECT(DisableGhostTrailTrigger, 33);
     GAME_OBJECT(EnableBGEffectTrigger, 1818);
