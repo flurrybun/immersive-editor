@@ -17,6 +17,9 @@ $on_enable("better-duration-lines") {
         lines.setPropertiesForObject([lel](LineColor& color, EffectGameObject* object, float& lineWidth) {
             if (!g_betterDurationLines || !object) return;
 
+            // sometimes the editor is invalid and i don't really know why
+            if (lel != LevelEditorLayer::get()) return;
+
             GLubyte lineOpacity = ie::isObjectLayerVisible(object, lel) ? 115 : 23;
             color = LineColor(255, 255, 255, lineOpacity);
         });
