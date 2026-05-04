@@ -31,11 +31,11 @@ class $modify(HEUILevelEditorLayer, LevelEditorLayer) {
         if (!LevelEditorLayer::init(p0, p1)) return false;
 
         DrawGridAPI::get().getNode<Ground>("ground").inspect([](Ground& ground) {
-            ground.setEnabled(g_hideGridLines);
+            ground.setEnabled(!g_hideGridLines);
         });
 
         DrawGridAPI::get().getNode<PositionLines>("position-lines").inspect([](PositionLines& posLines) {
-            posLines.setEnabled(g_hideGridLines);
+            posLines.setEnabled(!g_hideGridLines);
         });
 
         m_fields->playtestListener = PlaytestEvent().listen([this](PlaytestMode mode) {
@@ -45,18 +45,30 @@ class $modify(HEUILevelEditorLayer, LevelEditorLayer) {
                 m_fields->hidePath = GameManager::get()->getGameVariable("0152");
                 if (g_hideEditorTrail) GameManager::get()->setGameVariable("0152", true);
 
-                m_fields->showGround = m_showGround;
-                m_hideGround = false;
-                updateCameraBGArt(m_gameState.m_cameraPosition, m_gameState.m_cameraZoom);
+                if (g_showGround) {
+                    m_fields->showGround = m_showGround;
+                    m_hideGround = false;
+                    updateCameraBGArt(m_gameState.m_cameraPosition, m_gameState.m_cameraZoom);
+                }
             } else {
                 GameManager::get()->setGameVariable("0152", m_fields->hidePath);
 
-                toggleGround(m_fields->showGround);
-                if (m_middleground) m_middleground->toggleVisible02(true);
+                if (g_showGround) {
+                    toggleGround(m_fields->showGround);
+                    if (m_middleground) m_middleground->toggleVisible02(true);
+                }
             }
+
+            DrawGridAPI::get().getNode<Grid>("grid").inspect([isPlaying](Grid& grid) {
+                grid.setEnabled(g_hideGridLines ? !isPlaying : true);
+            });
 
             DrawGridAPI::get().getNode<Bounds>("bounds").inspect([isPlaying](Bounds& bounds) {
                 bounds.setEnabled(g_hideGridLines ? !isPlaying : true);
+            });
+
+            DrawGridAPI::get().getNode<GuideObjects>("guide-objects").inspect([isPlaying](GuideObjects& guides) {
+                guides.setEnabled(g_hideGridLines ? !isPlaying : true);
             });
 
             DrawGridAPI::get().getNode<BPMTriggers>("bpm-triggers").inspect([isPlaying](BPMTriggers& bpmTriggers) {
