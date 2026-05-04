@@ -3,7 +3,6 @@
 
 #include <Geode/modify/LevelEditorLayer.hpp>
 #include <Geode/modify/PlayerObject.hpp>
-#include <Geode/utils/VMTHookManager.hpp>
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
@@ -15,9 +14,7 @@ class $modify(SGELevelEditorLayer, LevelEditorLayer) {
         int gravityEffectIndex = 0;
     };
 
-    $register_hooks("show-gravity-effect");
-
-    void playGravityEffect(bool upsideDown) {
+    void VMT_playGravityEffect(bool upsideDown) {
         bool disabledGravityEffects = GameManager::get()->getGameVariable("0072");
         if (GameManager::get()->m_performanceMode || disabledGravityEffects) return;
 
@@ -98,7 +95,7 @@ $on_enable("show-gravity-effect") {
     auto& gravityEffects = static_cast<SGELevelEditorLayer*>(lel)->m_fields->gravityEffects;
 
     ctx.addVirtualHook<
-        ResolveC<SGELevelEditorLayer>::func(&SGELevelEditorLayer::playGravityEffect)
+        ResolveC<SGELevelEditorLayer>::func(&SGELevelEditorLayer::VMT_playGravityEffect)
     >(lel, "LevelEditorLayer::playGravityEffect");
 
     gravityEffects.reserve(4);

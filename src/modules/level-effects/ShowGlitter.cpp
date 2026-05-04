@@ -3,7 +3,6 @@
 #include "events/PlaytestEvent.hpp"
 
 #include <Geode/modify/LevelEditorLayer.hpp>
-#include <Geode/utils/VMTHookManager.hpp>
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
@@ -20,7 +19,16 @@ class $modify(SGLevelEditorLayer, LevelEditorLayer) {
     $register_hooks("show-glitter");
 
     $override
-    void toggleGlitter(bool visible) {
+    void postUpdate(float dt) {
+        LevelEditorLayer::postUpdate(dt);
+
+        CCSize winSize = CCDirector::get()->getWinSize();
+        CCPoint cameraCenter = winSize * 0.5f / m_gameState.m_cameraZoom;
+
+        m_glitterParticles->setPosition(cameraCenter + m_gameState.m_cameraPosition);
+    }
+
+    void VMT_toggleGlitter(bool visible) {
         if (GameManager::get()->m_performanceMode) return;
 
         m_fields->glitterVisible = visible;
@@ -31,23 +39,13 @@ class $modify(SGLevelEditorLayer, LevelEditorLayer) {
             m_glitterParticles->stopSystem();
         }
     }
-
-    $override
-    void postUpdate(float dt) {
-        LevelEditorLayer::postUpdate(dt);
-
-        CCSize winSize = CCDirector::get()->getWinSize();
-        CCPoint cameraCenter = winSize * 0.5f / m_gameState.m_cameraZoom;
-
-        m_glitterParticles->setPosition(cameraCenter + m_gameState.m_cameraPosition);
-    }
 };
 
 $on_enable("show-glitter") {
     LevelEditorLayer* lel = ctx.m_lel;
 
     ctx.addVirtualHook<
-        ResolveC<SGLevelEditorLayer>::func(&SGLevelEditorLayer::toggleGlitter)
+        ResolveC<SGLevelEditorLayer>::func(&SGLevelEditorLayer::VMT_toggleGlitter)
     >(lel, "LevelEditorLayer::toggleGlitter");
 
     ctx.addEventListener(PlaytestEvent(), [lel](PlaytestMode mode) {
