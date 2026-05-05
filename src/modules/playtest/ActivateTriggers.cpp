@@ -6,6 +6,7 @@
 #include <Geode/modify/GameObject.hpp>
 #include <Geode/modify/EffectGameObject.hpp>
 #include <Geode/modify/LevelEditorLayer.hpp>
+#include <Geode/utils/VMTHookManager.hpp>
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
@@ -65,12 +66,14 @@ class $modify(EffectGameObject) {
 };
 
 class $modify(ATLevelEditorLayer, LevelEditorLayer) {
-    void VMT_toggleGroundVisibility(bool visible) {
+    $register_hooks("activate-triggers");
+
+    void toggleGroundVisibility(bool visible) {
         m_groundLayer->toggleVisible02(visible);
         m_groundLayer2->toggleVisible02(visible);
     }
 
-    void VMT_toggleMGVisibility(bool visible) {
+    void toggleMGVisibility(bool visible) {
         if (!m_middleground) return;
         m_middleground->toggleVisible02(visible);
     }
@@ -80,10 +83,10 @@ $on_enable("activate-triggers") {
     LevelEditorLayer* lel = ctx.m_lel;
 
     ctx.addVirtualHook<
-        ResolveC<ATLevelEditorLayer>::func(&ATLevelEditorLayer::VMT_toggleGroundVisibility)
+        ResolveC<ATLevelEditorLayer>::func(&ATLevelEditorLayer::toggleGroundVisibility)
     >(lel, "LevelEditorLayer::toggleGroundVisibility");
 
     ctx.addVirtualHook<
-        ResolveC<ATLevelEditorLayer>::func(&ATLevelEditorLayer::VMT_toggleMGVisibility)
+        ResolveC<ATLevelEditorLayer>::func(&ATLevelEditorLayer::toggleMGVisibility)
     >(lel, "LevelEditorLayer::toggleMGVisibility");
 }

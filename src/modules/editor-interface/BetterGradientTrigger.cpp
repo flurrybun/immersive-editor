@@ -30,29 +30,29 @@ class $modify(BGTGradientTriggerObject, GradientTriggerObject) {
         auto& vmt = VMTHookManager::get();
 
         (void)vmt.addHook<
-            ResolveC<BGTGradientTriggerObject>::func(&BGTGradientTriggerObject::VMT_customSetup)
+            ResolveC<BGTGradientTriggerObject>::func(&BGTGradientTriggerObject::customSetup)
         >(this, "GradientTriggerObject::customSetup");
 
         (void)vmt.addHook<
-            ResolveC<BGTGradientTriggerObject>::func(&BGTGradientTriggerObject::VMT_setObjectColor)
+            ResolveC<BGTGradientTriggerObject>::func(&BGTGradientTriggerObject::setObjectColor)
         >(this, "GradientTriggerObject::setObjectColor");
 
         (void)vmt.addHook<
-            ResolveC<BGTGradientTriggerObject>::func(&BGTGradientTriggerObject::VMT_setChildColor)
+            ResolveC<BGTGradientTriggerObject>::func(&BGTGradientTriggerObject::setChildColor)
         >(this, "GradientTriggerObject::setChildColor");
 
         (void)vmt.addHook<
-            ResolveC<BGTGradientTriggerObject>::func(&BGTGradientTriggerObject::VMT_setOpacity)
+            ResolveC<BGTGradientTriggerObject>::func(&BGTGradientTriggerObject::setOpacity)
         >(this, "GradientTriggerObject::setOpacity");
 
         (void)vmt.addHook<
-            ResolveC<BGTGradientTriggerObject>::func(&BGTGradientTriggerObject::VMT_selectObject)
+            ResolveC<BGTGradientTriggerObject>::func(&BGTGradientTriggerObject::selectObject)
         >(this, "GradientTriggerObject::selectObject");
 
         return true;
     }
 
-    void VMT_customSetup() {
+    void customSetup() {
         EffectGameObject::customSetup();
         if (!m_editorEnabled) return;
 
@@ -70,17 +70,17 @@ class $modify(BGTGradientTriggerObject, GradientTriggerObject) {
         m_fields->gradient = gradient;
     }
 
-    void VMT_setObjectColor(const ccColor3B& color) {
+    void setObjectColor(const ccColor3B& color) {
         if (!m_isSelected) setColor({ 255, 255, 255 });
 
         m_fields->gradient->setStartColor(color);
     }
 
-    void VMT_setChildColor(const ccColor3B& color) {
+    void setChildColor(const ccColor3B& color) {
         m_fields->gradient->setEndColor(color);
     }
 
-    void VMT_setOpacity(unsigned char) {
+    void setOpacity(unsigned char) {
         bool isObjectLayerVisible = ie::isObjectLayerVisible(this, LevelEditorLayer::get());
         float opacityMod = isObjectLayerVisible ? 1.f : (50.f / 255.f);
 
@@ -91,7 +91,7 @@ class $modify(BGTGradientTriggerObject, GradientTriggerObject) {
         m_colorSprite->setVisible(false);
     }
 
-    void VMT_selectObject(ccColor3B color) {
+    void selectObject(ccColor3B color) {
         GameObject::selectObject(color);
 
         setColor(color);
