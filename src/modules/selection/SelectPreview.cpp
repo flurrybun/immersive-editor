@@ -206,7 +206,7 @@ void ie::postUpdateSelectPreview(LevelEditorLayer* lel) {
         if (previewed.contains(object)) continue;
         if (!eui->canSelectObject(object)) continue;
 
-        setPreviewColor(object, selectColor, !selecting);
+        setPreviewColor(object, selectColor, selecting);
         previewed.insert(object);
 
         if (object->m_linkedGroup == 0 || !ie::isLinkControlsEnabled(lel)) continue;
@@ -215,7 +215,7 @@ void ie::postUpdateSelectPreview(LevelEditorLayer* lel) {
         for (const auto& linked : CCArrayExt<GameObject*>(group)) {
             if (previewed.contains(linked)) continue;
 
-            setPreviewColor(linked, selectColor, !selecting);
+            setPreviewColor(linked, selectColor, selecting);
             previewed.insert(linked);
         }
     }
