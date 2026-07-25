@@ -1,2 +1,3 @@
-# 1.0.0
-- Edit this file to change your mod's changelog.
+### <c-8BC81A>1.0.0 (7/5/2026)</c>
+
+- Initial release

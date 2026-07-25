@@ -4,31 +4,31 @@ A modern level editor for the modern creator.
 
 This mod features many quality-of-life tweaks, visual polish, and long-overdue bugfixes:
 
-### <c-8BC81A>Object Effects</c>
+### Object Effects
 
 - Object glow/particles
 - Pulsing objects
 - Portal backsides
 - Colorblind indicators
 
-### <c-B6C81A>Level Effects</c>
+### Level Effects
 
 - Fade/enter effects
 - Gravity switch effects
 - Player effects (particles, trails)
 
-### <c-C8AE1A>Playtest</c>
+### Playtest
 
 - Activate shake, show/hide ground, BG effect, and ghost effect triggers
 - Hide triggers/duration lines while playtesting
 - Automatically hide playtest buttons when not in use
 
-### <c-C8821A>Selection</c>
+### Selection
 
 - Improve selection hitboxes
 - Preview to-be-selected objects
 
-### <c-C8561A>Bugfixes</c>
+### Bugfixes
 
 - Object rotations no longer drift after saving/re-entering the editor
 - Follow trigger miscalculations no longer cause massive, laggy memory allocations

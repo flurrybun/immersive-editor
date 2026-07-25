@@ -1,23 +1,66 @@
-# ImmersiveEditor
-This is where she makes a mod.
+# <img src="logo.png" width="40"> NinKaz's Immersive Editor
 
-<img src="logo.png" width="150" alt="the mod's logo" />
+A modern level editor for the modern creator.
 
-*Update logo.png to change your mod's icon (please)*
+This mod is available on the [Geode index](https://geode-sdk.org/mods/ninkaz.immersive_editor) for Windows, Mac, Android, and iOS. After installing Geode, search for it in the in-game mod browser and click install.
 
-## Getting started
-We recommend heading over to [the getting started section on our docs](https://docs.geode-sdk.org/getting-started/) for useful info on what to do next.
+## Features
+
+This mod features many quality-of-life tweaks, visual polish, and long-overdue bugfixes:
+
+### Object Effects
+
+- Object glow/particles
+- Pulsing objects
+- Portal backsides
+- Colorblind indicators
+
+### Level Effects
+
+- Fade/enter effects
+- Gravity switch effects
+- Player effects (particles, trails)
+
+### Playtest
+
+- Activate shake, show/hide ground, BG effect, and ghost effect triggers
+- Hide triggers/duration lines while playtesting
+- Automatically hide playtest buttons when not in use
+
+### Selection
+
+- Improve selection hitboxes
+- Preview to-be-selected objects
+
+### Bugfixes
+
+- Object rotations no longer drift after saving/re-entering the editor
+- Follow trigger miscalculations no longer cause massive, laggy memory allocations
+- Shader/camera triggers work properly from start positions
+
+## API
+
+The `SelectionBox` class is a helper class that implements the better selection hitboxes logic. It should be used when creating custom selection logic.
+
+```cpp
+#include <ninkaz.immersive_editor/include/Selection.hpp>
+
+ie::SelectionBox box = ie::SelectionBox::fromObject(m_editorLayer, object, false);
+bool intersects = box.intersectsRect(rect);
+
+ie::SelectionBox other = ie::SelectionBox::fromRotatedRect(rect, pivot, rotation);
+bool intersectsOther = box.intersectsBox(other);
+```
+
+The `setPreviewColor` function should be used when reimplementing the default selection box.
 
 ## Build instructions
-For more info, see [our docs](https://docs.geode-sdk.org/getting-started/create-mod#build)
+
+This mod can be built just like any other Geode mod. For more information, see the [geode docs](https://docs.geode-sdk.org/getting-started/cpp-stuff/).
+
 ```sh
 # Assuming you have the Geode CLI set up already
 geode build
 ```
 
-# Resources
-* [Geode SDK Documentation](https://docs.geode-sdk.org/)
-* [Geode SDK Source Code](https://github.com/geode-sdk/geode/)
-* [Geode CLI](https://github.com/geode-sdk/cli)
-* [Bindings](https://github.com/geode-sdk/bindings/)
-* [Dev Tools](https://github.com/geode-sdk/DevTools)
+Some Geode-specific macros don't compile on MSVC. If you're having issues, try using Clang.
