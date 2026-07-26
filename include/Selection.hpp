@@ -9,10 +9,12 @@
 #endif
 #define MY_MOD_ID "ninkaz.immersive_editor"
 
-#ifndef GEODE_DEFINE_EVENT_EXPORTS
-#define $_export(...) GEODE_EVENT_EXPORT_NORES(__VA_ARGS__)
-#else
+#ifdef GEODE_DEFINE_EVENT_EXPORTS
+#define $_export_nores(...)
 #define $_export(...)
+#else
+#define $_export_nores(...) GEODE_EVENT_EXPORT_NORES(__VA_ARGS__)
+#define $_export(...) GEODE_EVENT_EXPORT(__VA_ARGS__)
 #endif
 
 namespace ie {
@@ -27,7 +29,7 @@ namespace ie {
          * @param lel The current editor layer
          * @param object The object to create a selection box for
          */
-        static const SelectionBox& fromObject(LevelEditorLayer* lel, GameObject* object)
+        static geode::Result<SelectionBox> fromObject(LevelEditorLayer* lel, GameObject* object)
             $_export(&SelectionBox::fromObject, (lel, object));
 
         /**
@@ -36,7 +38,7 @@ namespace ie {
          * @param pivot The pivot point to rotate around
          * @param rotation The rotation in degrees
          */
-        static SelectionBox fromRotatedRect(const cocos2d::CCRect& rect, const cocos2d::CCPoint& pivot, float rotation)
+        static geode::Result<SelectionBox> fromRotatedRect(const cocos2d::CCRect& rect, const cocos2d::CCPoint& pivot, float rotation)
             $_export(&SelectionBox::fromRotatedRect, (rect, pivot, rotation));
 
         /**
@@ -44,7 +46,7 @@ namespace ie {
          * @param corners The corners of the box, in clockwise or counter-clockwise order
          * @note The corners must form a parallelogram
          */
-        static SelectionBox fromCorners(const std::array<cocos2d::CCPoint, 4>& corners)
+        static geode::Result<SelectionBox> fromCorners(const std::array<cocos2d::CCPoint, 4>& corners)
             $_export(&SelectionBox::fromCorners, (corners));
 
         /**
@@ -54,7 +56,7 @@ namespace ie {
          * @return Whether the point is inside the box
          */
         bool containsPoint(const cocos2d::CCPoint& point, bool fuzzy) const
-            $_export(&SelectionBox::containsPoint, (this, point, fuzzy));
+            $_export_nores(&SelectionBox::containsPoint, (this, point, fuzzy));
 
         /**
          * Checks if the box intersects with a rect.
@@ -62,7 +64,7 @@ namespace ie {
          * @return Whether the box intersects with the rect
          */
         bool intersectsRect(const cocos2d::CCRect& rect) const
-            $_export(&SelectionBox::intersectsRect, (this, rect));
+            $_export_nores(&SelectionBox::intersectsRect, (this, rect));
 
         /**
          * Checks if the box intersects with another box.
@@ -70,15 +72,22 @@ namespace ie {
          * @return Whether the two boxes intersect
          */
         bool intersectsBox(const SelectionBox& box) const
-            $_export(&SelectionBox::intersectsBox, (this, box));
+            $_export_nores(&SelectionBox::intersectsBox, (this, box));
 
         /**
          * Draws the box using a CCDrawNode.
          * @param drawNode The CCDrawNode to draw with (such as m_debugDrawNode)
          * @param color The color to draw the box with
          */
-        void draw(cocos2d::CCDrawNode* drawNode, const cocos2d::ccColor4F& color = { 0.f, 1.f, 0.f, 1.f }) const
-            $_export(&SelectionBox::draw, (this, drawNode, color));
+        void draw(cocos2d::CCDrawNode* drawNode, const cocos2d::ccColor4F& color) const
+            $_export_nores(&SelectionBox::draw, (this, drawNode, color));
+
+        /**
+         * Calculates the corners of the box in clockwise order.
+         * @return The corners of the box: bottom-left, bottom-right, top-right, top-left
+         */
+        std::array<cocos2d::CCPoint, 4> getCorners() const
+            $_export_nores(&SelectionBox::getCorners, (this));
 
     private:
         SelectionBox() = delete;
@@ -90,7 +99,6 @@ namespace ie {
         cocos2d::CCSize m_fuzzyHalfSize;
 
         const cocos2d::CCSize& getHalfSize(bool fuzzy) const;
-        std::array<cocos2d::CCPoint, 4> getCorners() const;
 
         static std::array<cocos2d::CCPoint, 4> getAxes(const std::array<cocos2d::CCPoint, 4>& corners);
         static bool separatedOnAxis(
@@ -111,19 +119,18 @@ namespace ie {
      * @param selecting Whether the object is being selected via a rect, instead of just being hovered over
      * @note This must be called every frame
      */
-    void setPreviewColor(GameObject* object, const cocos2d::ccColor3B& color, bool selecting)
-        $_export(&setPreviewColor, (object, color, selecting));
+    inline void setPreviewColor(GameObject* object, const cocos2d::ccColor3B& color, bool selecting)
+        GEODE_EVENT_EXPORT_NORES(&setPreviewColor, (object, color, selecting));
 
     #ifdef GEODE_DEFINE_EVENT_EXPORTS
         GEODE_EVENT_EXPORT(&SelectionBox::fromObject, (lel, object));
         GEODE_EVENT_EXPORT(&SelectionBox::fromRotatedRect, (rect, pivot, rotation));
         GEODE_EVENT_EXPORT(&SelectionBox::fromCorners, (corners));
-        GEODE_EVENT_EXPORT(&SelectionBox::containsPoint, (this, point, fuzzy));
-        GEODE_EVENT_EXPORT(&SelectionBox::intersectsRect, (this, rect));
-        GEODE_EVENT_EXPORT(&SelectionBox::intersectsBox, (this, box));
-        GEODE_EVENT_EXPORT(&SelectionBox::draw, (this, drawNode, color));
-
-        GEODE_EVENT_EXPORT(&setPreviewColor, (object, color, selecting));
+        GEODE_EVENT_EXPORT_NORES(&SelectionBox::containsPoint, (this, point, fuzzy));
+        GEODE_EVENT_EXPORT_NORES(&SelectionBox::intersectsRect, (this, rect));
+        GEODE_EVENT_EXPORT_NORES(&SelectionBox::intersectsBox, (this, box));
+        GEODE_EVENT_EXPORT_NORES(&SelectionBox::draw, (this, drawNode, color));
+        GEODE_EVENT_EXPORT_NORES(&SelectionBox::getCorners, (this));
     #endif
 }
 

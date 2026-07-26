@@ -1,4 +1,5 @@
 #include "Selection.hpp"
+#include "core/SettingManager.hpp"
 #include "core/UpdateVisibility.hpp"
 #include "util/Editor.hpp"
 #include "util/Color.hpp"
@@ -8,6 +9,10 @@
 
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
+
+$bind_setting(g_betterSelectHitboxes, "better-select-hitboxes");
+$bind_setting(g_selectionBoxPreview, "selection-box-preview");
+$bind_setting(g_selectionHoverPreview, "selection-hover-preview");
 
 // i moved some functions to other files so now this hook just looks silly :(
 
@@ -149,6 +154,8 @@ bool hoveringOverEditorUI(LevelEditorLayer* lel, const CCPoint& pos) {
 }
 
 void ie::updateSelectPreview(LevelEditorLayer* lel, GameObject* object) {
+    if (!g_betterSelectHitboxes) return;
+
     object->m_cycleIndex = 0;
 
     // lel->m_debugDrawNode->drawRect(
@@ -158,20 +165,26 @@ void ie::updateSelectPreview(LevelEditorLayer* lel, GameObject* object) {
     // EditorUI* eui = lel->m_editorUI;
     // bool selecting = eui->m_swipeActive && ccpDistance(eui->m_swipeStart, eui->m_swipeEnd) > 2.f;
 
-    // SelectionBox box(lel, object, !selecting);
-    // box.draw(lel->m_debugDrawNode);
+    // SelectionBox box = SelectionBox::fromObject(lel, object).unwrap();
+    // box.draw(lel->m_debugDrawNode, { 0.f, 1.f, 0.f, 1.f });
 }
 
 void ie::postUpdateSelectPreview(LevelEditorLayer* lel) {
-    if (lel->m_playbackMode == PlaybackMode::Playing || !ie::isEditorTopLevel(lel)) return;
+    if (
+        !g_betterSelectHitboxes ||
+        lel->m_playbackMode == PlaybackMode::Playing ||
+        !ie::isEditorTopLevel(lel)
+    ) return;
 
     EditorUI* eui = lel->m_editorUI;
     eui->m_cycledObjectIndex = 0;
 
     bool selecting = eui->m_swipeActive && ccpDistance(eui->m_swipeStart, eui->m_swipeEnd) > 2.f;
-    CCArray* objects;
+    CCArray* objects = nullptr;
 
     if (selecting) {
+        if (!g_selectionBoxPreview) return;
+
         CCPoint start = lel->m_objectLayer->convertToNodeSpace(eui->m_swipeStart);
         CCPoint end = lel->m_objectLayer->convertToNodeSpace(eui->m_swipeEnd);
 
@@ -180,24 +193,35 @@ void ie::postUpdateSelectPreview(LevelEditorLayer* lel) {
         float width = std::abs(start.x - end.x);
         float height = std::abs(start.y - end.y);
 
-        objects = lel->objectsInRect({x, y, width, height}, false);
+        objects = lel->objectsInRect({ x, y, width, height }, false);
     } else {
+        if (!g_selectionHoverPreview) return;
+
 #ifdef GEODE_IS_DESKTOP
         CCPoint mousePos = getMousePos();
         if (!hoveringOverEditorUI(lel, mousePos)) return;
         if (eui->m_snapObjectExists && eui->m_continueSwipe) return; // dragging an object with free move
 
+        float angle = lel->m_gameState.m_cameraAngle;
         CCPoint pos = lel->m_objectLayer->convertToNodeSpace(mousePos);
 
-        objects = CCArray::create();
+        if (angle != 0.f) {
+            // compatibility with tinker's canvas rotate
+
+            CCSize winSize = CCDirector::get()->getWinSize();
+            CCPoint center = lel->m_objectLayer->convertToNodeSpace(winSize / 2.f);
+
+            pos = ccpRotateByAngle(pos, center, CC_DEGREES_TO_RADIANS(angle));
+        }
 
         if (auto object = ie::objectAtPosition(lel, pos, false)) {
+            objects = CCArray::create();
             objects->addObject(object);
         }
-#else
-        return;
 #endif
     }
+
+    if (!objects || objects->count() == 0) return;
 
     constexpr ccColor3B selectColor = { 0, 255, 0 };
     std::unordered_set<GameObject*> previewed;

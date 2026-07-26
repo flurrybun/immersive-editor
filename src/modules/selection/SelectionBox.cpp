@@ -45,7 +45,7 @@ class $modify(SBLevelEditorLayer, LevelEditorLayer) {
     };
 };
 
-$on_enable("select-preview") {
+$on_enable("selection-box-preview") {
     auto lel = static_cast<SBLevelEditorLayer*>(ctx.m_lel);
 
     ctx.onObjectEvent([lel](GameObject* object, bool created) {
@@ -79,11 +79,11 @@ const ie::SelectionBox& addToCache(LevelEditorLayer* lel, GameObject* object, ie
     return it->second.box;
 }
 
-const ie::SelectionBox& ie::SelectionBox::fromObject(LevelEditorLayer* lel, GameObject* object) {
+Result<ie::SelectionBox> ie::SelectionBox::fromObject(LevelEditorLayer* lel, GameObject* object) {
     auto& cache = getSelectionBoxCache(lel);
 
     auto it = cache.find(object);
-    if (it != cache.end() && it->second.transform == CachedTransform(object)) return it->second.box;
+    if (it != cache.end() && it->second.transform == CachedTransform(object)) return Ok(it->second.box);
 
     bool useTextureRect = object->m_useTextureRectForSelection ||
         (!object->m_colorSprite && !object->m_hasCustomChild && !object->m_hasAnimatedChild);
@@ -98,7 +98,7 @@ const ie::SelectionBox& ie::SelectionBox::fromObject(LevelEditorLayer* lel, Game
             CCAffineTransform transform = CCAffineTransformMakeIdentity();
             transform = CCAffineTransformTranslate(transform, center.x, center.y);
 
-            return addToCache(lel, object, { transform, rect.size * 0.5f });
+            return Ok(addToCache(lel, object, { transform, rect.size * 0.5f }));
         }
 
         halfSize = useTextureRect
@@ -122,10 +122,10 @@ const ie::SelectionBox& ie::SelectionBox::fromObject(LevelEditorLayer* lel, Game
         offset += object->m_obUnflippedOffsetPositionFromCenter;
     }
 
-    return addToCache(lel, object, { CCAffineTransformTranslate(transform, offset.x, offset.y), halfSize });
+    return Ok(addToCache(lel, object, { CCAffineTransformTranslate(transform, offset.x, offset.y), halfSize }));
 }
 
-ie::SelectionBox ie::SelectionBox::fromRotatedRect(const CCRect& rect, const CCPoint& pivot, float rotation) {
+Result<ie::SelectionBox> ie::SelectionBox::fromRotatedRect(const CCRect& rect, const CCPoint& pivot, float rotation) {
     CCPoint center = ccp(rect.getMidX(), rect.getMidY());
 
     float radians = -CC_DEGREES_TO_RADIANS(rotation);
@@ -140,10 +140,10 @@ ie::SelectionBox ie::SelectionBox::fromRotatedRect(const CCRect& rect, const CCP
     transform = CCAffineTransformTranslate(transform, rotatedCenter.x, rotatedCenter.y);
     transform = CCAffineTransformRotate(transform, radians);
 
-    return { transform, rect.size * 0.5f };
+    return Ok(SelectionBox(transform, rect.size * 0.5f));
 }
 
-ie::SelectionBox ie::SelectionBox::fromCorners(const std::array<CCPoint, 4>& corners) {
+Result<ie::SelectionBox> ie::SelectionBox::fromCorners(const std::array<CCPoint, 4>& corners) {
     CCPoint center = ranges::reduce<CCPoint>(
         corners,
         [](CCPoint& acc, CCPoint corner) {
@@ -170,7 +170,7 @@ ie::SelectionBox ie::SelectionBox::fromCorners(const std::array<CCPoint, 4>& cor
         halfSize.height = std::max(halfSize.height, std::abs(ccpDot(dist, axisY)));
     }
 
-    return { transform, halfSize };
+    return Ok(SelectionBox(transform, halfSize));
 }
 
 bool ie::SelectionBox::containsPoint(const CCPoint& point, bool fuzzy) const {
@@ -244,10 +244,6 @@ ie::SelectionBox::SelectionBox(CCAffineTransform transform, CCSize halfSize) {
     );
 }
 
-const CCSize& ie::SelectionBox::getHalfSize(bool fuzzy) const {
-    return fuzzy ? m_fuzzyHalfSize : m_halfSize;
-}
-
 std::array<CCPoint, 4> ie::SelectionBox::getCorners() const {
     const CCSize& halfSize = getHalfSize(false);
 
@@ -257,6 +253,10 @@ std::array<CCPoint, 4> ie::SelectionBox::getCorners() const {
         CCPointApplyAffineTransform(halfSize * ccp(1.f, 1.f), m_transform),
         CCPointApplyAffineTransform(halfSize * ccp(-1.f, 1.f), m_transform)
     };
+}
+
+const CCSize& ie::SelectionBox::getHalfSize(bool fuzzy) const {
+    return fuzzy ? m_fuzzyHalfSize : m_halfSize;
 }
 
 std::array<CCPoint, 4> ie::SelectionBox::getAxes(const std::array<CCPoint, 4>& corners) {

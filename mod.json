@@ -1,5 +1,5 @@
 {
-    "geode": "5.7.1",
+    "geode": "5.8.2",
     "gd": {
         "win": "2.2081",
         "android": "2.2081",
@@ -27,9 +27,7 @@
     },
     "resources": {
         "spritesheets": {
-            "editor-sheet": [
-                "resources/*.png"
-            ]
+            "editor-sheet": ["resources/*.png"]
         }
     },
     "settings": {
@@ -205,11 +203,31 @@
             "type": "bool",
             "default": true
         },
-        "select-preview": {
-            "name": "Select Preview",
-            "description": "Shows a preview of what objects will be selected when dragging a selection box.",
+        "title-selection": {
+            "type": "title",
+            "name": "Selection"
+        },
+        "better-select-hitboxes": {
+            "name": "Better Select Hitboxes",
+            "description": "Improves the logic that determines which objects should be selected.",
             "type": "bool",
             "default": true
+        },
+        "selection-box-preview": {
+            "name": "Selection Box Preview",
+            "description": "Highlights the objects that are currently within the selection box.",
+            "type": "bool",
+            "default": true,
+            "enable-if": "better-select-hitboxes",
+            "enable-if-description": "Requires 'Better Select Hitboxes' to be enabled"
+        },
+        "selection-hover-preview": {
+            "name": "Selection Hover Preview",
+            "description": "Highlights the object that's currently being hovered over.",
+            "type": "bool",
+            "default": false,
+            "enable-if": "better-select-hitboxes",
+            "enable-if-description": "Requires 'Better Select Hitboxes' to be enabled"
         },
         "title-bugfixes": {
             "type": "title",
@@ -233,7 +251,7 @@
             "type": "bool",
             "default": true,
             "enable-if": "fix-rotation-drift",
-            "enable-if-description": "Requires 'Fix Object Rotation Drift' to be enabled."
+            "enable-if-description": "Requires 'Fix Object Rotation Drift' to be enabled"
         },
         "fix-startpos-follow": {
             "name": "Fix Follow Trigger Calculation",
@@ -261,8 +279,6 @@
         }
     },
     "api": {
-		"include": [
-			"include/*.hpp"
-		]
-	}
+        "include": ["include/*.hpp"]
+    }
 }

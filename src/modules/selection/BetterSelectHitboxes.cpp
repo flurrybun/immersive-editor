@@ -1,4 +1,5 @@
 #include "Selection.hpp"
+#include "core/SettingManager.hpp"
 #include "util/Editor.hpp"
 
 #include <Geode/modify/LevelEditorLayer.hpp>
@@ -6,15 +7,23 @@
 #include <Geode/Geode.hpp>
 using namespace geode::prelude;
 
+$bind_setting(g_betterSelectHitboxes, "better-select-hitboxes");
+
 class $modify(BSHLevelEditorLayer, LevelEditorLayer) {
     struct Fields {
         std::deque<WeakRef<GameObject>> cycledObjects;
     };
 
+    static void onModify(auto& self) {
+        // ensure tinker's canvas rotate doesn't overwrite better select hitboxes
+        (void)self.setHookPriorityBeforePre("LevelEditorLayer::objectsInRect", "alphalaneous.tinker");
+    }
+
     $override
     CCArray* objectsAtPosition(CCPoint position) {
-        std::vector<GameObject*> objects = ie::objectsAtPosition(this, position, false);
+        if (!g_betterSelectHitboxes) return LevelEditorLayer::objectsAtPosition(position);
 
+        std::vector<GameObject*> objects = ie::objectsAtPosition(this, position, true);
         CCArray* ret = CCArray::create();
 
         for (const auto& object : objects) {
@@ -26,13 +35,29 @@ class $modify(BSHLevelEditorLayer, LevelEditorLayer) {
 
     $override
     GameObject* objectAtPosition(CCPoint position) {
+        if (!g_betterSelectHitboxes) return LevelEditorLayer::objectAtPosition(position);
+
         return ie::objectAtPosition(this, position, false);
     }
 
     $override
     CCArray* objectsInRect(CCRect rect, bool ignoreGroups) {
         // only false when called from EditorUI::selectObjectsInRect
-        if (ignoreGroups) return LevelEditorLayer::objectsInRect(rect, ignoreGroups);
+        if (ignoreGroups || !g_betterSelectHitboxes) {
+            return LevelEditorLayer::objectsInRect(rect, ignoreGroups);
+        }
+
+        float angle = m_gameState.m_cameraAngle;
+        std::optional<ie::SelectionBox> rectBox = std::nullopt;
+
+        if (angle != 0.f) {
+            // compatibility with tinker's canvas rotate
+
+            CCSize winSize = CCDirector::get()->getWinSize();
+            CCPoint center = m_objectLayer->convertToNodeSpace(winSize / 2.f);
+
+            rectBox = ie::SelectionBox::fromRotatedRect(rect, center, -angle).unwrap();
+        }
 
         // unlike with objectsAtPosition, m_activeObjects can't be solely relied on, since it's possible for
         // the rect to be partially off-screen. however, relying solely on sections also doesn't work
@@ -47,10 +72,12 @@ class $modify(BSHLevelEditorLayer, LevelEditorLayer) {
             if (!seen.insert(object).second) return;
             if (!ie::isObjectLayerVisible(object, this)) return;
 
-            ie::SelectionBox box = ie::SelectionBox::fromObject(this, object);
-            if (!box.intersectsRect(rect)) return;
+            ie::SelectionBox box = ie::SelectionBox::fromObject(this, object).unwrap();
+            bool intersects = rectBox
+                ? box.intersectsBox(*rectBox)
+                : box.intersectsRect(rect);
 
-            objects->addObject(object);
+            if (intersects) objects->addObject(object);
         };
 
         for (int i = 0; i < m_activeObjectsCount; i++) {
@@ -113,6 +140,18 @@ std::vector<GameObject*> ie::objectsInSections(LevelEditorLayer* lel, const CCRe
 }
 
 std::vector<GameObject*> ie::objectsAtPosition(LevelEditorLayer* lel, const CCPoint& position, bool selecting) {
+    if (!g_betterSelectHitboxes) {
+        CCArray* objects = lel->objectsAtPosition(position);
+        std::vector<GameObject*> ret;
+        ret.reserve(objects->count());
+
+        for (const auto& object : CCArrayExt<GameObject*>(objects)) {
+            ret.push_back(object);
+        }
+
+        return ret;
+    }
+
     // this function normally uses sections and obb2d, which is perhaps more performant and works off-screen
     // however it should be safe to assume this will only ever be used for on-screen objects
     // and relying on sections doesn't work for heavily upscaled objects with large bounding boxes
@@ -125,8 +164,8 @@ std::vector<GameObject*> ie::objectsAtPosition(LevelEditorLayer* lel, const CCPo
     for (GameObject* object : ie::objectsInSections(lel, rect)) {
         if (!ie::isObjectLayerVisible(object, lel)) continue;
 
-        ie::SelectionBox box = ie::SelectionBox::fromObject(lel, object);
-        if (!box.containsPoint(position, true)) continue;
+        auto box = ie::SelectionBox::fromObject(lel, object);
+        if (!box || !box.unwrap().containsPoint(position, true)) continue;
 
         objects.push_back(object);
     }
@@ -218,8 +257,9 @@ std::vector<GameObject*> ie::objectsAtPosition(LevelEditorLayer* lel, const CCPo
 }
 
 GameObject* ie::objectAtPosition(LevelEditorLayer* lel, const CCPoint& position, bool selecting) {
-    std::vector<GameObject*> objects = ie::objectsAtPosition(lel, position, selecting);
+    if (!g_betterSelectHitboxes) return lel->objectAtPosition(position);
 
+    std::vector<GameObject*> objects = ie::objectsAtPosition(lel, position, selecting);
     if (objects.empty()) return nullptr;
 
     for (const auto& object : objects) {
