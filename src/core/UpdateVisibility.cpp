@@ -21,7 +21,7 @@ void ie::updateVisibility(LevelEditorLayer* lel, float dt) {
     g_audioScale = ie::preUpdateAudioScale(lel, dt);
     g_cameraXCenter = ie::preUpdateFadeAndEnter(lel);
     g_glowContext = ie::preUpdateGlow(lel);
-    g_flipping = ie::preUpdateMirrorEffect(lel);
+    // g_flipping = ie::preUpdateMirrorEffect(lel);
 
     // using a range-based for loop on m_activeObjects can crash due to a use-after-free
     // place 2 objects, undo 2x, place an object -> crash
@@ -33,7 +33,7 @@ void ie::updateVisibility(LevelEditorLayer* lel, float dt) {
         ie::updateGradientTrigger(object);
         ie::updateParticleIcon(lel, object);
         ie::updateFadeAndEnter(lel, object, g_cameraXCenter);
-        ie::updateMirrorEffect(lel, object, g_flipping);
+        // ie::updateMirrorEffect(lel, object, g_flipping);
         ie::updateGlow(lel, object, g_glowContext);
         ie::updateObjectParticle(lel, object);
         ie::updateDetailColorOpacity(lel, object);

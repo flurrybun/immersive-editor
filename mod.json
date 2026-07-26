@@ -106,12 +106,6 @@
             "type": "bool",
             "default": true
         },
-        "show-mirror-effect": {
-            "name": "Show Mirror Effect",
-            "description": "Flip the level upon entering a mirror portal in the editor.",
-            "type": "bool",
-            "default": true
-        },
         "show-player-effects": {
             "name": "Show Player Effects",
             "description": "Show various player effects (e.g. particles, dash orb fire, trail, wave trail) in the editor.",
