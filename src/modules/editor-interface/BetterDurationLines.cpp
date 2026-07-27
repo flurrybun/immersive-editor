@@ -15,13 +15,17 @@ $on_enable("better-duration-lines") {
 
     DrawGridAPI::get().getNode<DurationLines>("duration-lines").inspect([lel](DurationLines& lines) {
         lines.setPropertiesForObject([lel](LineColor& color, EffectGameObject* object, float& lineWidth) {
-            if (!g_betterDurationLines || !object) return;
+            if (
+                !g_betterDurationLines ||
+                !object ||
+                // sometimes the editor is invalid and i don't really know why
+                lel != LevelEditorLayer::get()
+            ) return;
 
-            // sometimes the editor is invalid and i don't really know why
-            if (lel != LevelEditorLayer::get()) return;
-
-            GLubyte lineOpacity = ie::isObjectLayerVisible(object, lel) ? 115 : 23;
-            color = LineColor(255, 255, 255, lineOpacity);
+            // color uses premultiplied alpha
+            color = ie::isObjectLayerVisible(object, lel)
+                ? { 100, 100, 100, 75 }
+                : { 20, 20, 20, 15 };
         });
     });
 }
