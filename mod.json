@@ -8,9 +8,9 @@
     },
     "id": "ninkaz.immersive_editor",
     "name": "NinKaz's Immersive Editor",
-    "version": "v1.0.0",
+    "version": "v1.0.0-prerelease.1",
     "developer": "NinKaz",
-    "description": "",
+    "description": "A modern editor for the modern creator",
     "dependencies": {
         "alphalaneous.good_grid": "1.1.4",
         "geode.node-ids": "1.22.0"
