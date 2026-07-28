@@ -24,8 +24,8 @@ $on_enable("better-duration-lines") {
 
             // color uses premultiplied alpha
             color = ie::isObjectLayerVisible(object, lel)
-                ? { 100, 100, 100, 75 }
-                : { 20, 20, 20, 15 };
+                ? LineColor(100, 100, 100, 75)
+                : LineColor(20, 20, 20, 15);
         });
     });
 }
