@@ -75,19 +75,44 @@ class $modify(PlayerObject) {
     $register_hooks("show-gravity-effect");
 
     $override
-    void ringJump(RingObject* ring, bool p1) {
+    void ringJump(RingObject* ring, bool skipCheck) {
         // orbs check if m_playEffects is true before calling playGravityEffect
         // even though this check is completely redundant
 
-        PlayerObject::ringJump(ring, p1);
+        if (!ie::inEditor()) {
+            PlayerObject::ringJump(ring, skipCheck);
+            return;
+        }
+
+        // dear god so many early returns to account for
 
         GameObjectType type = ring->getType();
+        bool isCustomOrb = type == GameObjectType::CustomRing;
+        bool isTeleportOrb = type == GameObjectType::TeleportOrb;
+
+        bool playGravityEffect = (
+            !m_isDead &&
+            ring &&
+            m_ringRelatedSet.find(ring->m_uniqueID) == m_ringRelatedSet.end() &&
+            m_stateRingJump2 &&
+            !m_isDashing &&
+            m_stateJumpBuffered &&
+            (
+                (!isCustomOrb && !isTeleportOrb && !m_touchedRing) ||
+                (isCustomOrb && !m_touchedCustomRing) ||
+                (isTeleportOrb && !m_touchedGravityPortal)
+            ) &&
+            !ring->m_hasNoEffects
+        );
+
+        PlayerObject::ringJump(ring, skipCheck);
+
         bool isGravityRing =
             type == GameObjectType::GravityRing ||
             type == GameObjectType::GreenRing ||
             type == GameObjectType::GravityDashRing;
 
-        if (ie::inEditor() && isGravityRing) {
+        if (playGravityEffect && isGravityRing) {
             m_gameLayer->playGravityEffect(m_isUpsideDown);
         }
     }
