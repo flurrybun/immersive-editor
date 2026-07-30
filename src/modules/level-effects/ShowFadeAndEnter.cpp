@@ -50,7 +50,7 @@ float ie::preUpdateFadeAndEnter(LevelEditorLayer* lel) {
         GEODE_WINDOWS(0x6c10bc)
         GEODE_INTEL_MAC(0x9a3ebc)
         GEODE_ARM_MAC(0x8bb30c)
-        GEODE_ANDROID64(0x341ee4)
+        GEODE_ANDROID64(0x1241ee4)
         GEODE_ANDROID32(0xac5b48)
         GEODE_IOS(0x885cf4)
     );
