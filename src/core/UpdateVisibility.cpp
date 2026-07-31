@@ -45,6 +45,7 @@ void ie::postUpdateVisibility(LevelEditorLayer* lel) {
     ie::postUpdateSelectPreview(lel);
     ie::updatePortalBacks(lel);
     ie::updatePulseRodBalls(lel, g_audioScale);
+    ie::updateColorblindIndicators(lel);
 }
 
 class $modify(GJBaseGameLayer) {

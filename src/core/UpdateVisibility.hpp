@@ -30,4 +30,5 @@ namespace ie {
     void postUpdateSelectPreview(LevelEditorLayer* lel);
     void updatePortalBacks(LevelEditorLayer* lel);
     void updatePulseRodBalls(LevelEditorLayer* lel, float audioScale);
+    void updateColorblindIndicators(LevelEditorLayer* lel);
 }
